@@ -1,14 +1,14 @@
 import glob
 import os, csv
 
-machine = 'focus'
+machine = 'local'
 
 if machine == 'local':
     expedia_path = '/Users/abby/Documents/datasets/resized_expedia/'
     traffickcam_path = '/Users/abby/Documents/datasets/resized_traffickcam/'
     expedia_im_file = '/Users/abby/Documents/datasets/resized_expedia/current_expedia_ims.txt'
     traffickcam_im_file = '/Users/abby/Documents/datasets/resized_traffickcam/current_traffickcam_ims.txt'
-    output_folder = '/Users/abby/Documents/datasets//triplepalooza/'
+    output_folder = '/Users/abby/Documents/repos/triplepalooza/inputs/traffickcam/'
 else:
     expedia_path = '/project/focus/datasets/traffickcam/resized_expedia/'
     traffickcam_path = '/project/focus/datasets/traffickcam/resized_traffickcam/'

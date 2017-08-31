@@ -11,17 +11,20 @@ import os.path
 import time
 from alexnet import CaffeNetPlaces365
 import numpy as np
+from PIL import Image
 
 def main():
     ckpt_dir = './output/ckpts'
     log_dir = './output/logs'
-    filename = './inputs/mnist/train.txt'
-    img_size = [28, 28]
-    crop_size = [24, 24]
-    num_iters = 1000
-    summary_iters = 1
-    save_iters = 100
-    learning_rate = .01
+    filename = './inputs/traffickcam/train.txt'
+    mean_file = './models/places365/places365CNN_mean.npy'
+    pretrained_net = None
+    img_size = [256, 256]
+    crop_size = [227, 227]
+    num_iters = 100000
+    summary_iters = 10
+    save_iters = 1000
+    learning_rate = .0001
     margin = 10
     featLayer = 'fc7'
 
@@ -63,10 +66,11 @@ def main():
 
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
-    posDistsFinal = tf.multiply(mask,posDistsRep)
-    allDistsFinal = tf.multiply(mask,allDists)
+    # posDistsFinal = tf.multiply(mask,posDistsRep)
+    # allDistsFinal = tf.multiply(mask,allDists)
+    # loss = tf.maximum(0., margin + posDistsFinal - allDistsFinal)
 
-    loss = tf.maximum(0., margin + posDistsFinal - allDistsFinal)
+    loss = tf.maximum(0., tf.multiply(mask,margin + posDistsRep - allDists))
     loss = tf.reduce_mean(loss)
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
@@ -78,27 +82,35 @@ def main():
     saver = tf.train.Saver(max_to_keep=20)
 
     # Create data "batcher"
-    data = CombinatorialTripletSet(filename, img_size, crop_size, batch_size, num_pos_examples)
+    data = CombinatorialTripletSet(filename, mean_file, img_size, crop_size, batch_size, num_pos_examples)
+
+    # tf will consume any GPU it finds on the system. Following lines restrict it to "first" GPU
+    c = tf.ConfigProto()
+    c.gpu_options.visible_device_list="0,1"
 
     print("Starting session...")
-    with tf.Session() as sess:
+    with tf.Session(config=c) as sess:
         sess.run(init_op)
 
         writer = tf.summary.FileWriter(log_dir, sess.graph)
 
-        # net.load('./models/mnist/mnist_model.npy', sess)
+        if pretrained_net is not None:
+            net.load(pretrained_net, sess)
 
         print("Start training...")
         for step in range(num_iters):
             start_time = time.time()
             batch, labels = data.getBatch()
             _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, label_batch: labels})
+            pd = sess.run(posDistsRep,feed_dict={image_batch: batch, label_batch: labels})
+            ad = sess.run(allDists,feed_dict={image_batch: batch, label_batch: labels})
+            ft = sess.run(feat,feed_dict={image_batch: batch, label_batch: labels})
+            ls = sess.run(tf.multiply(mask,margin + posDistsRep - allDists),feed_dict={image_batch: batch, label_batch: labels})
             duration = time.time() - start_time
 
-            # Write the summaries and print an overview
-            if step % summary_iters == 0:
-                print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_val, duration))
-                # Update the events file.
+            # if step % summary_iters == 0:
+            print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_val, duration))
+            # Update the events file.
 #                summary_str = sess.run(summary_op)
 #                writer.add_summary(summary_str, step)
 #                writer.flush()

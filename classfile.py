@@ -10,8 +10,8 @@ import cv2
 import random
 
 class CombinatorialTripletSet:
-    def __init__(self, image_list, image_size, crop_size, batch_size=100, num_pos=10, isTraining=True):
-        self.meanFile = './models/mnist/mnist_mean.npy'
+    def __init__(self, image_list, mean_file, image_size, crop_size, batch_size=100, num_pos=10, isTraining=True):
+        self.meanFile = mean_file
         tmp = np.load(self.meanFile)
         self.meanImage = np.moveaxis(tmp, 0, -1)
         if len(self.meanImage.shape) < 3:
@@ -51,8 +51,8 @@ class CombinatorialTripletSet:
         labels = np.zeros([self.batchSize],dtype='int')
         for i in np.arange(self.numPos):
             img = self.getProcessedImage(self.files[posClass][i])
-
-            batch[i,:,:,:] = img
+            if img is not None:
+                batch[i,:,:,:] = img
             labels[i] = posClass
 
         ctr = self.numPos
@@ -60,8 +60,8 @@ class CombinatorialTripletSet:
             random.shuffle(self.files[negClass])
             for j in np.arange(self.numPos):
                 img = self.getProcessedImage(self.files[negClass][j])
-
-                batch[ctr,:,:,:] = img
+                if img is not None:
+                    batch[ctr,:,:,:] = img
                 labels[ctr] = negClass
                 ctr += 1
 
@@ -69,6 +69,9 @@ class CombinatorialTripletSet:
 
     def getProcessedImage(self, image_file):
         img = cv2.imread(image_file)
+        if img is None:
+            return None
+
         img = cv2.resize(img, (self.image_size[0], self.image_size[1]))
         img = img - self.meanImage
 
