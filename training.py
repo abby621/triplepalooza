@@ -23,13 +23,13 @@ def main():
     crop_size = [227, 227]
     num_iters = 100000
     summary_iters = 10
-    save_iters = 1000
+    save_iters = 100
     learning_rate = .0001
     margin = 10
     featLayer = 'fc7'
 
     batch_size = 100
-    num_pos_examples = 10
+    num_pos_examples = batch_size/10
 
     # Queuing op loads data into input tensor
     image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
@@ -102,10 +102,6 @@ def main():
             start_time = time.time()
             batch, labels = data.getBatch()
             _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, label_batch: labels})
-            pd = sess.run(posDistsRep,feed_dict={image_batch: batch, label_batch: labels})
-            ad = sess.run(allDists,feed_dict={image_batch: batch, label_batch: labels})
-            ft = sess.run(feat,feed_dict={image_batch: batch, label_batch: labels})
-            ls = sess.run(tf.multiply(mask,margin + posDistsRep - allDists),feed_dict={image_batch: batch, label_batch: labels})
             duration = time.time() - start_time
 
             # if step % summary_iters == 0:
