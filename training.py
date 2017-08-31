@@ -59,10 +59,10 @@ def main():
 
     allDists = tf.tile(tf.expand_dims(D,2),(1,1,num_pos_examples))
 
-    ra, rb, rc = np.meshgrid(np.arange(0,100),np.arange(0,100),np.arange(0,10))
+    ra, rb, rc = np.meshgrid(np.arange(0,batch_size),np.arange(0,batch_size),np.arange(0,num_pos_examples))
 
-    bad_negatives = np.floor((ra)/10) == np.floor((rb)/10)
-    bad_positives = np.mod(rb,10) == np.mod(rc,10)
+    bad_negatives = np.floor((ra)/num_pos_examples) == np.floor((rb)/num_pos_examples)
+    bad_positives = np.mod(rb,num_pos_examples) == np.mod(rc,num_pos_examples)
 
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
