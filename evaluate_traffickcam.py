@@ -13,14 +13,14 @@ from alexnet import CaffeNetPlaces365
 import numpy as np
 
 filename = './inputs/traffickcam/test.txt'
-checkpoint_file = './output/ckpts/checkpoint-999'
+checkpoint_file = './output/ckpts/checkpoint-9599'
 img_size = [256, 256]
 crop_size = [227, 227]
 featLayer = 'fc7'
 mean_file = './models/places365/places365CNN_mean.npy'
 
-batch_size = 100
-num_pos_examples = 10
+batch_size = 200
+num_pos_examples = batch_size/10
 
 image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
 label_batch = tf.placeholder(tf.int32, shape=(batch_size))

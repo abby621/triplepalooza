@@ -27,9 +27,9 @@ class CombinatorialTripletSet:
         f = open(image_list, 'r')
         ctr = 0
         for line in f:
-            temp = line[:-1].split(' ')
+            temp = line.strip('\n').split(' ')
             while len(temp) < self.numPos: # make sure we have at least 10 images available per class
-                temp.extend(random.choice(temp))
+                temp.append(random.choice(temp))
             self.files.append(temp)
             self.classes.append(ctr)
             ctr += 1
