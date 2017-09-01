@@ -55,7 +55,7 @@ class CombinatorialTripletSet:
             if img is not None:
                 batch[i,:,:,:] = img
             labels[i] = posClass
-            ims.append(self.files[posClass][i]))
+            ims.append(self.files[posClass][i])
 
         ctr = self.numPos
         for negClass in classes[1:]:
