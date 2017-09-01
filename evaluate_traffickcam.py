@@ -13,13 +13,13 @@ from alexnet import CaffeNetPlaces365
 import numpy as np
 
 filename = './inputs/traffickcam/test.txt'
-checkpoint_file = './output/ckpts/checkpoint-9599'
+checkpoint_file = './output/ckpts/checkpoint-999'
 img_size = [256, 256]
 crop_size = [227, 227]
 featLayer = 'fc7'
 mean_file = './models/places365/places365CNN_mean.npy'
 
-batch_size = 200
+batch_size = 100
 num_pos_examples = batch_size/10
 
 image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
@@ -41,11 +41,12 @@ saver.restore(sess, checkpoint_file)
 
 allFeats = []
 allLabels = []
+allIms = []
 num_iters = np.sum([len(data.files[ix]) for ix in range(0,len(data.files))]) / batch_size
 
 for step in range(num_iters):
     start_time = time.time()
-    batch, labels = data.getBatch()
+    batch, labels, ims = data.getBatch()
     f = sess.run(feat, feed_dict={image_batch: batch})
     allFeats.extend(f)
     allLabels.extend(labels)
@@ -67,6 +68,7 @@ for feat,cls in zip(npAllFeats,npAllLabels):
     hits = np.where(npAllLabels[sortInds]==cls)[0][1:]
     topHit = np.min(hits)-1
     if topHit < 100:
+        print ctr, topHit
         success[ctr,topHit:] = 1
     ctr += 1
 

@@ -100,7 +100,7 @@ def main():
         print("Start training...")
         for step in range(num_iters):
             start_time = time.time()
-            batch, labels = data.getBatch()
+            batch, labels, ims = data.getBatch()
             _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, label_batch: labels})
             duration = time.time() - start_time
 

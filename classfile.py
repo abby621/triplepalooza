@@ -49,11 +49,13 @@ class CombinatorialTripletSet:
         batch = np.zeros([self.batchSize, self.crop_size[0], self.crop_size[1], 3])
 
         labels = np.zeros([self.batchSize],dtype='int')
+        ims = []
         for i in np.arange(self.numPos):
             img = self.getProcessedImage(self.files[posClass][i])
             if img is not None:
                 batch[i,:,:,:] = img
             labels[i] = posClass
+            ims.append(self.files[posClass][i]))
 
         ctr = self.numPos
         for negClass in classes[1:]:
@@ -63,9 +65,10 @@ class CombinatorialTripletSet:
                 if img is not None:
                     batch[ctr,:,:,:] = img
                 labels[ctr] = negClass
+                ims.append(self.files[negClass][j])
                 ctr += 1
 
-        return batch, labels
+        return batch, labels, ims
 
     def getProcessedImage(self, image_file):
         img = cv2.imread(image_file)
