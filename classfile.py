@@ -75,6 +75,7 @@ class CombinatorialTripletSet:
         return batch, labels, ims
 
     def getProcessedImage(self, image_file,ind):
+        print image_file
         img = cv2.imread(image_file)
         if img is None or len(img.shape)<3:
             return None
