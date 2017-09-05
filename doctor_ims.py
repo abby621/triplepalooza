@@ -32,48 +32,48 @@ words = txt.splitlines()
 # things we need to load for people insertion
 people_crops = glob.glob(os.path.join(peopleDir,'*.png'))
 
-def doctor_im(img,ind):
+def doctor_im(im,ind):
     percent_insta_filters = .4
     percent_rotate = .2
     percent_crop = .5
     percent_text = .1
     percent_people = .5
 
-    print img.shape
-    img = Image.fromarray(img)
-    b, g, r = img.split()
-    img = Image.merge("RGB", (r, g, b))
+    print im.shape
+    im = Image.fromarray(im)
+    b, g, r = im.split()
+    im = Image.merge("RGB", (r, g, b))
     # crop_size
     if random.random() <= percent_crop:
-        img = crop_im(img)
+        im = crop_im(im)
 
     # people
     if random.random() <= percent_people:
-        img = draw_person(img)
+        im = draw_person(im)
 
     # rotate
     if random.random() <= percent_rotate:
-        img = rotate_im(img)
+        im = rotate_im(im)
 
     # filter
     if random.random() <= percent_insta_filters:
         possible_filters = ['hscb_filter','color_filter']
         whichFilter = random.choice(possible_filters)
         if whichFilter == 'hscb_filter':
-            img = Image.fromarray(hscb_filter(np.asarray(img)))
+            im = Image.fromarray(hscb_filter(np.asarray(im)))
         else:
-            img = Image.fromarray(color_filter(np.asarray(img)))
+            im = Image.fromarray(color_filter(np.asarray(im)))
 
     # text
     if random.random() <= percent_text:
-        draw = ImageDraw.Draw(img)
-        word_x_loc = random.choice(range(10,img.size[0]/2))
-        word_y_loc = random.choice(range(img.size[1]/2,3*img.size[1]/4))
+        draw = ImageDraw.Draw(im)
+        word_x_loc = random.choice(range(10,im.size[0]/2))
+        word_y_loc = random.choice(range(im.size[1]/2,3*im.size[1]/4))
         phone_x_loc = word_x_loc+random.choice(range(10,100))
         phone_y_loc = word_y_loc+random.choice(range(10,100))
         fontStyle = random.choice(possible_fonts)
-        sz1 = int(np.mean(img.size)*.05)
-        sz2 = np.min((phone_y_loc-word_y_loc,int(np.mean(img.size)*.1)))
+        sz1 = int(np.mean(im.size)*.05)
+        sz2 = np.min((phone_y_loc-word_y_loc,int(np.mean(im.size)*.1)))
         if sz2 <= sz1:
             fontSize = sz2
         else:
@@ -86,95 +86,95 @@ def doctor_im(img,ind):
         draw = draw_text(draw,phoneNum,font,phone_x_loc,phone_y_loc,textColor)
 
     # save sample ims
-    # img = img.convert('RGB')
-    # img.save('/Users/abby/Desktop/'+str(ind)+'.jpg')
+    # im = im.convert('RGB')
+    # im.save('/Users/abby/Desktop/'+str(ind)+'.jpg')
 
-    b, g, r = img.split()
-    img = Image.merge("RGB", (b, g, r))
+    b, g, r = im.split()
+    im = Image.merge("RGB", (b, g, r))
 
-    img = np.array(img)
+    im = np.array(im)
 
-    return img
+    return im
 
 ## INSTAGRAM FILTERS
 # instagram filter code from: https://github.com/weilunzhong/image-filters
-def brightness_contrast(img, alpha = 1.0, beta = 0):
-    img_contrast = img * (alpha)
-    img_bright = img_contrast + (beta)
-    # img_bright = img_bright.astype(int)
-    img_bright = stats.threshold(img_bright,threshmax=255, newval=255)
-    img_bright = stats.threshold(img_bright,threshmin=0, newval=0)
-    img_bright = img_bright.astype(np.uint8)
-    return img_bright
+def brightness_contrast(im, alpha = 1.0, beta = 0):
+    im_contrast = im * (alpha)
+    im_bright = im_contrast + (beta)
+    # im_bright = im_bright.astype(int)
+    im_bright = stats.threshold(im_bright,threshmax=255, newval=255)
+    im_bright = stats.threshold(im_bright,threshmin=0, newval=0)
+    im_bright = im_bright.astype(np.uint8)
+    return im_bright
 
-def channel_enhance(img, channel, level=1):
-    img = img.copy()
+def channel_enhance(im, channel, level=1):
+    im = im.copy()
     if channel == 'B':
-        blue_channel = img[:,:,0]
+        blue_channel = im[:,:,0]
         # blue_channel = (blue_channel - 128) * (level) +128
         blue_channel = blue_channel * level
         blue_channel = stats.threshold(blue_channel,threshmax=255, newval=255)
-        img[:,:,0] = blue_channel
+        im[:,:,0] = blue_channel
     elif channel == 'G':
-        green_channel = img[:,:,1]
+        green_channel = im[:,:,1]
         # green_channel = (green_channel - 128) * (level) +128
         green_channel = green_channel * level
         green_channel = stats.threshold(green_channel,threshmax=255, newval=255)
-        img[:,:,0] = green_channel
+        im[:,:,0] = green_channel
     elif channel == 'R':
-        red_channel = img[:,:,2]
+        red_channel = im[:,:,2]
         # red_channel = (red_channel - 128) * (level) +128
         red_channel = red_channel * level
         red_channel = stats.threshold(red_channel,threshmax=255, newval=255)
-        img[:,:,0] = red_channel
-    img = img.astype(np.uint8)
-    return img
+        im[:,:,0] = red_channel
+    im = im.astype(np.uint8)
+    return im
 
-def hue_saturation(img_rgb, alpha = 1, beta = 1):
-    img_hsv = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
-    hue = img_hsv[:,:,0]
-    saturation = img_hsv[:,:,1]
+def hue_saturation(im_rgb, alpha = 1, beta = 1):
+    im_hsv = cv2.cvtColor(im_rgb, cv2.COLOR_BGR2HSV)
+    hue = im_hsv[:,:,0]
+    saturation = im_hsv[:,:,1]
     hue = stats.threshold(hue * alpha ,threshmax=179, newval=179)
     saturation = stats.threshold(saturation * beta,threshmax=255, newval=255)
-    img_hsv[:,:,0] = hue
-    img_hsv[:,:,1] = saturation
-    img_transformed = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
-    return img_transformed
+    im_hsv[:,:,0] = hue
+    im_hsv[:,:,1] = saturation
+    im_transformed = cv2.cvtColor(im_hsv, cv2.COLOR_HSV2BGR)
+    return im_transformed
 
-def hscb_filter(img):
+def hscb_filter(im):
     hue = random.choice(range(95,105))/100.0
     saturation = random.choice(range(90,150))/100.0
     contrast = random.choice(range(90,150))/100.0
     brightness = random.choice(range(-20,100))
-    img2 = hue_saturation(img, hue, saturation)
-    img2 = brightness_contrast(img2, contrast, brightness)
-    return img2
+    im2 = hue_saturation(im, hue, saturation)
+    im2 = brightness_contrast(im2, contrast, brightness)
+    return im2
 
-def color_filter(img):
+def color_filter(im):
     r_channel = random.choice(range(90,120))/100.0
     g_channel = random.choice(range(90,120))/100.0
     b_channel = random.choice(range(90,120))/100.0
-    img2 = channel_enhance(img, "R", r_channel)
-    img2 = channel_enhance(img, "G", g_channel)
-    img2 = channel_enhance(img, "B", b_channel)
-    return img2
+    im2 = channel_enhance(im, "R", r_channel)
+    im2 = channel_enhance(im, "G", g_channel)
+    im2 = channel_enhance(im, "B", b_channel)
+    return im2
 
 ## ROTATION
-def rotate_im(img):
-    alpha = img.convert('RGBA')
+def rotate_im(im):
+    alpha = im.convert('RGBA')
     angle = random.choice(range(-30,30))
     rot = alpha.rotate(angle, resample=Image.BILINEAR)
     pixels = np.asarray(rot)
     solid_pixels = np.where(pixels[:,:,3]>0)
     possible_top_corners = []
-    for iy in range(img.size[1]/2):
-        for ix in range(img.size[0]):
+    for iy in range(im.size[1]/2):
+        for ix in range(im.size[0]):
             if pixels[iy,ix][3] > 0:
                 possible_top_corners.append((iy,ix))
                 break
     possible_bottom_corners = []
-    for iy in range(img.size[1]-1,img.size[1]/2,-1):
-        for ix in range(img.size[0]-1,img.size[0]/2,-1):
+    for iy in range(im.size[1]-1,im.size[1]/2,-1):
+        for ix in range(im.size[0]-1,im.size[0]/2,-1):
             if pixels[iy,ix][3] > 0:
                 possible_bottom_corners.append((iy,ix))
                 break
@@ -205,23 +205,23 @@ def rotate_im(img):
         new_y2 = center_y+new_height/2
         cropped_rot = cropped_rot.crop((0,new_y1,cropped_rot.size[0],new_y2))
     if cropped_rot.size[0]*cropped_rot.size[1] < 50000:
-        cropped_rot = img
+        cropped_rot = im
     return cropped_rot
 
-def crop_im(img):
+def crop_im(im):
     crop_ratio = float(3)/float(5)
-    width = img.size[0]
-    height = img.size[1]
+    width = im.size[0]
+    height = im.size[1]
     possible_x = range(0,int(width-width*crop_ratio))
     possible_y = range(0,int(height-height*crop_ratio))
     new_start_x = random.choice(possible_x)
     new_start_y = random.choice(possible_y)
     new_end_x = new_start_x + int(width*crop_ratio)
     new_end_y = new_start_y + int(height*crop_ratio)
-    img2 = img.crop((new_start_x,new_start_y,new_end_x,new_end_y))
-    if img2.size[0]*img2.size[1] < 50000:
-        img2 = img
-    return img2
+    im2 = im.crop((new_start_x,new_start_y,new_end_x,new_end_y))
+    if im2.size[0]*im2.size[1] < 50000:
+        im2 = im
+    return im2
 
 def random_words():
     randWords = random.sample(words,2)
@@ -252,24 +252,24 @@ def draw_text(draw,text,font,x,y,textColor):
     return draw
 
 # people
-def draw_person(img):
+def draw_person(im):
     try: # ugh, fix in the future, just trying to get it running right now
-        img2 = img.convert('RGBA')
+        im2 = im.convert('RGBA')
         person = Image.open(random.choice(people_crops)).convert('RGBA')
         if random.random() > .5:
             person = ImageOps.mirror(person)
         angle = random.choice(range(-30,30))
         rotated_person = person.rotate(angle,resample=Image.BILINEAR, expand=1)
-        y_offset = random.choice(range(0,int(img2.height*.2)))
-        new_height = random.choice(range(int(img2.height*.7),img.height-y_offset))
-        new_width = (img2.width/img2.height)*new_height
-        while (new_width > .5*img.width):
-            y_offset = random.choice(range(0,int(img2.height*.2)))
-            new_height = random.choice(range(int(img2.height*.7),img2.height)) - y_offset
-            new_width = (img2.width/img2.height)*new_height
-        x_offset = random.choice(range(int(img2.width*.1),int((img2.width-new_width)*.9)))
+        y_offset = random.choice(range(0,int(im2.height*.2)))
+        new_height = random.choice(range(int(im2.height*.7),im.height-y_offset))
+        new_width = (im2.width/im2.height)*new_height
+        while (new_width > .5*im.width):
+            y_offset = random.choice(range(0,int(im2.height*.2)))
+            new_height = random.choice(range(int(im2.height*.7),im2.height)) - y_offset
+            new_width = (im2.width/im2.height)*new_height
+        x_offset = random.choice(range(int(im2.width*.1),int((im2.width-new_width)*.9)))
         new_person = rotated_person.resize((new_width,new_height), Image.ANTIALIAS)
-        img2.paste(new_person, (x_offset, y_offset), new_person)
-        return img2
+        im2.paste(new_person, (x_offset, y_offset), new_person)
+        return im2
     except:
-        return img
+        return im
