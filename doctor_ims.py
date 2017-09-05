@@ -43,22 +43,18 @@ def doctor_im(img,ind):
     b, g, r = im.split()
     im = Image.merge("RGB", (r, g, b))
     # crop_size
-    print 'crop'
     if random.random() <= percent_crop:
         im = crop_im(im)
 
     # people
-    print 'draw person'
     if random.random() <= percent_people:
         im = draw_person(im)
 
     # rotate
-    print 'rotate'
     if random.random() <= percent_rotate:
         im = rotate_im(im)
 
     # filter
-    print 'filter'
     if random.random() <= percent_insta_filters:
         possible_filters = ['hscb_filter','color_filter']
         whichFilter = random.choice(possible_filters)
@@ -68,7 +64,6 @@ def doctor_im(img,ind):
             im = Image.fromarray(color_filter(np.asarray(im)))
 
     # text
-    print 'text'
     if random.random() <= percent_text:
         draw = ImageDraw.Draw(im)
         word_x_loc = random.choice(range(10,im.size[0]/2))
@@ -89,7 +84,6 @@ def doctor_im(img,ind):
         draw = draw_text(draw,wordStr,font,word_x_loc,word_y_loc,textColor)
         draw = draw_text(draw,phoneNum,font,phone_x_loc,phone_y_loc,textColor)
 
-    print 'save back'
     im = im.convert('RGB')
     # im.save('/Users/abby/Desktop/'+str(ind)+'.jpg')
     b, g, r = im.split()
