@@ -32,15 +32,15 @@ words = txt.splitlines()
 # things we need to load for people insertion
 people_crops = glob.glob(os.path.join(peopleDir,'*.png'))
 
-def doctor_im(im,ind):
+def doctor_im(img,ind):
     percent_insta_filters = .4
     percent_rotate = .2
     percent_crop = .5
     percent_text = .1
     percent_people = .5
 
-    print im.shape
-    im = Image.fromarray(im)
+    im = Image.fromarray(img)
+    print len(im.split())
     b, g, r = im.split()
     im = Image.merge("RGB", (r, g, b))
     # crop_size
