@@ -44,45 +44,60 @@ def doctor_im(img,ind):
     im = Image.merge("RGB", (r, g, b))
     # crop_size
     if random.random() <= percent_crop:
-        im = crop_im(im)
+        try:
+            im = crop_im(im)
+        except:
+            continue
 
     # people
     if random.random() <= percent_people:
-        im = draw_person(im)
+        try:
+            im = draw_person(im)
+        except:
+            continue
 
     # rotate
     if random.random() <= percent_rotate:
-        im = rotate_im(im)
+        try:
+            im = rotate_im(im)
+        except:
+            continue
 
     # filter
     if random.random() <= percent_insta_filters:
-        possible_filters = ['hscb_filter','color_filter']
-        whichFilter = random.choice(possible_filters)
-        if whichFilter == 'hscb_filter':
-            im = Image.fromarray(hscb_filter(np.asarray(im)))
-        else:
-            im = Image.fromarray(color_filter(np.asarray(im)))
+        try:
+            possible_filters = ['hscb_filter','color_filter']
+            whichFilter = random.choice(possible_filters)
+            if whichFilter == 'hscb_filter':
+                im = Image.fromarray(hscb_filter(np.asarray(im)))
+            else:
+                im = Image.fromarray(color_filter(np.asarray(im)))
+        except:
+            continue
 
     # text
     if random.random() <= percent_text:
-        draw = ImageDraw.Draw(im)
-        word_x_loc = random.choice(range(10,im.size[0]/2))
-        word_y_loc = random.choice(range(im.size[1]/2,3*im.size[1]/4))
-        phone_x_loc = word_x_loc+random.choice(range(10,100))
-        phone_y_loc = word_y_loc+random.choice(range(10,100))
-        fontStyle = random.choice(possible_fonts)
-        sz1 = int(np.mean(im.size)*.05)
-        sz2 = np.min((phone_y_loc-word_y_loc,int(np.mean(im.size)*.1)))
-        if sz2 <= sz1:
-            fontSize = sz2
-        else:
-            fontSize = random.choice(range(sz1,sz2))
-        font = ImageFont.truetype(fontStyle,fontSize)
-        wordStr = random_words()
-        phoneNum = random_phone_number()
-        textColor = random_color()
-        draw = draw_text(draw,wordStr,font,word_x_loc,word_y_loc,textColor)
-        draw = draw_text(draw,phoneNum,font,phone_x_loc,phone_y_loc,textColor)
+        try:
+            draw = ImageDraw.Draw(im)
+            word_x_loc = random.choice(range(10,im.size[0]/2))
+            word_y_loc = random.choice(range(im.size[1]/2,3*im.size[1]/4))
+            phone_x_loc = word_x_loc+random.choice(range(10,100))
+            phone_y_loc = word_y_loc+random.choice(range(10,100))
+            fontStyle = random.choice(possible_fonts)
+            sz1 = int(np.mean(im.size)*.05)
+            sz2 = np.min((phone_y_loc-word_y_loc,int(np.mean(im.size)*.1)))
+            if sz2 <= sz1:
+                fontSize = sz2
+            else:
+                fontSize = random.choice(range(sz1,sz2))
+            font = ImageFont.truetype(fontStyle,fontSize)
+            wordStr = random_words()
+            phoneNum = random_phone_number()
+            textColor = random_color()
+            draw = draw_text(draw,wordStr,font,word_x_loc,word_y_loc,textColor)
+            draw = draw_text(draw,phoneNum,font,phone_x_loc,phone_y_loc,textColor)
+        except:
+            continue
 
     im = im.convert('RGB')
     # im.save('/Users/abby/Desktop/'+str(ind)+'.jpg')
