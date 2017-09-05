@@ -11,8 +11,9 @@ import os.path
 import time
 from alexnet import CaffeNetPlaces365
 import numpy as np
+from PIL import Image
 
-filename = './inputs/traffickcam/test.txt'
+filename = './inputs/traffickcam/test_equal.txt'
 checkpoint_file = './output/ckpts/checkpoint-999'
 img_size = [256, 256]
 crop_size = [227, 227]
@@ -33,9 +34,12 @@ feat = net.layers[featLayer]
 saver = tf.train.Saver()
 
 # Create data "batcher"
-data = CombinatorialTripletSet(filename, mean_file, img_size, crop_size, batch_size, num_pos_examples)
+data = CombinatorialTripletSet(filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=False)
 
-sess = tf.Session()
+c = tf.ConfigProto()
+c.gpu_options.visible_device_list="3"
+
+sess = tf.Session(config=c)
 # Here's where we need to load saved weights
 saver.restore(sess, checkpoint_file)
 
@@ -45,11 +49,16 @@ allIms = []
 num_iters = np.sum([len(data.files[ix]) for ix in range(0,len(data.files))]) / batch_size
 
 for step in range(num_iters):
+    print float(step)/float(num_iters)
     start_time = time.time()
     batch, labels, ims = data.getBatch()
     f = sess.run(feat, feed_dict={image_batch: batch})
-    allFeats.extend(f)
-    allLabels.extend(labels)
+    for ix in range(0,len(ims)):
+        im = ims[ix]
+        if im not in allIms:
+            allIms.append(im)
+            allFeats.append(f[ix])
+            allLabels.append(labels[ix])
     duration = time.time() - start_time
 
 def getDist(feat,otherFeats):
@@ -58,18 +67,46 @@ def getDist(feat,otherFeats):
     dist = np.sqrt(dist)
     return dist
 
+def combine_horz(ims):
+    images = map(Image.open, [ims[0],ims[1],ims[2],ims[3],ims[4],ims[5],ims[6]])
+    widths, heights = zip(*(i.size for i in images))
+    total_width = sum(widths)
+    max_height = max(heights)
+    new_im = Image.new('RGB', (total_width, max_height))
+    x_offset = 0
+    for im in images:
+        new_im.paste(im, (x_offset,0))
+        x_offset += im.size[0]
+    return new_im
+
+good_dir = '/project/focus/abby/triplepalooza/example_results/good'
+bad_dir = '/project/focus/abby/triplepalooza/example_results/bad'
+
 npAllFeats = np.array(allFeats)
 npAllLabels = np.array(allLabels)
 success = np.zeros((len(npAllFeats),100))
 ctr = 0
-for feat,cls in zip(npAllFeats,npAllLabels):
+for im,feat,cls in zip(allIms,npAllFeats,npAllLabels):
     dists = getDist(feat,npAllFeats)
     sortInds = np.argsort(dists)
     hits = np.where(npAllLabels[sortInds]==cls)[0][1:]
     topHit = np.min(hits)-1
+    topHitIm = allIms[sortInds[hits[0]]]
+    topMatchIm1 = allIms[sortInds[1]]
+    topMatchIm2 = allIms[sortInds[2]]
+    topMatchIm3 = allIms[sortInds[3]]
+    topMatchIm4 = allIms[sortInds[4]]
+    topMatchIm5 = allIms[sortInds[5]]
+    new_im = combine_horz([im,topMatchIm1,topMatchIm2,topMatchIm3,topMatchIm4,topMatchIm5,topHitIm])
     if topHit < 100:
-        print ctr, topHit
+        print 'Good ', topHit
+        print im, topHitIm
+        save_path = os.path.join(good_dir,str(ctr)+'_'+str(topHit)+'.jpg')
         success[ctr,topHit:] = 1
+    else:
+        save_path = os.path.join(bad_dir,str(ctr)+'_'+str(topHit)+'.jpg')
+        print 'Bad ', topHit
+    new_im.save(save_path)
     ctr += 1
 
 np.mean(success,axis=0)

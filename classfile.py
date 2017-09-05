@@ -79,7 +79,9 @@ class CombinatorialTripletSet:
         if img is None or len(img.shape)<3:
             return None
 
-        img = doctor_im(img,ind)
+        if self.isTraining:
+            img = doctor_im(img,ind)
+        
         img = cv2.resize(img, (self.image_size[0], self.image_size[1]))
         img = img - self.meanImage
 
