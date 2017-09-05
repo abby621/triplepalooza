@@ -55,7 +55,7 @@ class CombinatorialTripletSet:
         for i in np.arange(self.numPos):
             if i < len(self.files[posClass]):
                 img = self.getProcessedImage(self.files[posClass][i],i)
-                if img is not None and len(img.size)>2:
+                if img is not None:
                     batch[i,:,:,:] = img
                 labels[i] = posClass
                 ims.append(self.files[posClass][i])
@@ -66,7 +66,7 @@ class CombinatorialTripletSet:
             for j in np.arange(self.numPos):
                 if j < len(self.files[negClass]):
                     img = self.getProcessedImage(self.files[negClass][j],ctr)
-                    if img is not None and len(img.size)>2:
+                    if img is not None:
                         batch[ctr,:,:,:] = img
                     labels[ctr] = negClass
                     ims.append(self.files[negClass][j])
@@ -76,7 +76,7 @@ class CombinatorialTripletSet:
 
     def getProcessedImage(self, image_file,ind):
         img = cv2.imread(image_file)
-        if img is None:
+        if img is None or len(img.size)>2:
             return None
 
         img = doctor_im(img,ind)
