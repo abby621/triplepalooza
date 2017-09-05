@@ -55,7 +55,7 @@ class CombinatorialTripletSet:
         for i in np.arange(self.numPos):
             if i < len(self.files[posClass]):
                 img = self.getProcessedImage(self.files[posClass][i],i)
-                if img is not None:
+                if img is not None and len(img.size)>2:
                     batch[i,:,:,:] = img
                 labels[i] = posClass
                 ims.append(self.files[posClass][i])
@@ -66,7 +66,7 @@ class CombinatorialTripletSet:
             for j in np.arange(self.numPos):
                 if j < len(self.files[negClass]):
                     img = self.getProcessedImage(self.files[negClass][j],ctr)
-                    if img is not None:
+                    if img is not None and len(img.size)>2:
                         batch[ctr,:,:,:] = img
                     labels[ctr] = negClass
                     ims.append(self.files[negClass][j])
