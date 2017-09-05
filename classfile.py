@@ -76,7 +76,7 @@ class CombinatorialTripletSet:
 
     def getProcessedImage(self, image_file,ind):
         img = cv2.imread(image_file)
-        if img is None or len(img.size)>2:
+        if img is None or len(img.shape)>2:
             return None
 
         img = doctor_im(img,ind)
