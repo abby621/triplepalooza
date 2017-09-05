@@ -39,22 +39,26 @@ def doctor_im(img,ind):
     percent_text = .1
     percent_people = .5
 
-    im = Image.fromarray(img).convert('RGB')
+    im = Image.fromarray(img)
     b, g, r = im.split()
     im = Image.merge("RGB", (r, g, b))
     # crop_size
+    print 'crop'
     if random.random() <= percent_crop:
         im = crop_im(im)
 
     # people
+    print 'draw person'
     if random.random() <= percent_people:
         im = draw_person(im)
 
     # rotate
+    print 'rotate'
     if random.random() <= percent_rotate:
         im = rotate_im(im)
 
     # filter
+    print 'filter'
     if random.random() <= percent_insta_filters:
         possible_filters = ['hscb_filter','color_filter']
         whichFilter = random.choice(possible_filters)
@@ -64,6 +68,7 @@ def doctor_im(img,ind):
             im = Image.fromarray(color_filter(np.asarray(im)))
 
     # text
+    print 'text'
     if random.random() <= percent_text:
         draw = ImageDraw.Draw(im)
         word_x_loc = random.choice(range(10,im.size[0]/2))
@@ -84,10 +89,9 @@ def doctor_im(img,ind):
         draw = draw_text(draw,wordStr,font,word_x_loc,word_y_loc,textColor)
         draw = draw_text(draw,phoneNum,font,phone_x_loc,phone_y_loc,textColor)
 
-    # save sample ims
-    # im = im.convert('RGB')
+    print 'save back'
+    im = im.convert('RGB')
     # im.save('/Users/abby/Desktop/'+str(ind)+'.jpg')
-
     b, g, r = im.split()
     im = Image.merge("RGB", (b, g, r))
 
@@ -262,10 +266,6 @@ def draw_person(im):
         y_offset = random.choice(range(0,int(im2.height*.2)))
         new_height = random.choice(range(int(im2.height*.7),im.height-y_offset))
         new_width = (im2.width/im2.height)*new_height
-        while (new_width > .5*im.width):
-            y_offset = random.choice(range(0,int(im2.height*.2)))
-            new_height = random.choice(range(int(im2.height*.7),im2.height)) - y_offset
-            new_width = (im2.width/im2.height)*new_height
         x_offset = random.choice(range(int(im2.width*.1),int((im2.width-new_width)*.9)))
         new_person = rotated_person.resize((new_width,new_height), Image.ANTIALIAS)
         im2.paste(new_person, (x_offset, y_offset), new_person)
