@@ -47,21 +47,21 @@ def doctor_im(img,ind):
         try:
             im = crop_im(im)
         except:
-            continue
+            pass
 
     # people
     if random.random() <= percent_people:
         try:
             im = draw_person(im)
         except:
-            continue
+            pass
 
     # rotate
     if random.random() <= percent_rotate:
         try:
             im = rotate_im(im)
         except:
-            continue
+            pass
 
     # filter
     if random.random() <= percent_insta_filters:
@@ -73,7 +73,7 @@ def doctor_im(img,ind):
             else:
                 im = Image.fromarray(color_filter(np.asarray(im)))
         except:
-            continue
+            pass
 
     # text
     if random.random() <= percent_text:
@@ -97,7 +97,7 @@ def doctor_im(img,ind):
             draw = draw_text(draw,wordStr,font,word_x_loc,word_y_loc,textColor)
             draw = draw_text(draw,phoneNum,font,phone_x_loc,phone_y_loc,textColor)
         except:
-            continue
+            pass
 
     im = im.convert('RGB')
     # im.save('/Users/abby/Desktop/'+str(ind)+'.jpg')
