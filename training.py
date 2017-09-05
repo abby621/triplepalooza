@@ -16,7 +16,7 @@ from PIL import Image
 def main():
     ckpt_dir = './output/ckpts'
     log_dir = './output/logs'
-    filename = './inputs/traffickcam/train.txt'
+    filename = './inputs/traffickcam/train_equal.txt'
     mean_file = './models/places365/places365CNN_mean.npy'
     pretrained_net = None
     img_size = [256, 256]
@@ -28,7 +28,7 @@ def main():
     margin = 10
     featLayer = 'fc7'
 
-    batch_size = 100
+    batch_size = 300
     num_pos_examples = batch_size/10
 
     # Queuing op loads data into input tensor

@@ -8,6 +8,7 @@ Created on Fri Oct 14 11:49:13 2016
 import numpy as np
 import cv2
 import random
+from doctor_ims import *
 
 class CombinatorialTripletSet:
     def __init__(self, image_list, mean_file, image_size, crop_size, batch_size=100, num_pos=10, isTraining=True):
@@ -28,8 +29,8 @@ class CombinatorialTripletSet:
         ctr = 0
         for line in f:
             temp = line.strip('\n').split(' ')
-            while len(temp) < self.numPos: # make sure we have at least 10 images available per class
-                temp.append(random.choice(temp))
+            # while len(temp) < self.numPos: # make sure we have at least 10 images available per class
+            #     temp.append(random.choice(temp))
             self.files.append(temp)
             self.classes.append(ctr)
             ctr += 1
@@ -50,31 +51,35 @@ class CombinatorialTripletSet:
 
         labels = np.zeros([self.batchSize],dtype='int')
         ims = []
+
         for i in np.arange(self.numPos):
-            img = self.getProcessedImage(self.files[posClass][i])
-            if img is not None:
-                batch[i,:,:,:] = img
-            labels[i] = posClass
-            ims.append(self.files[posClass][i])
+            if i < len(self.files[posClass]):
+                img = self.getProcessedImage(self.files[posClass][i],i)
+                if img is not None:
+                    batch[i,:,:,:] = img
+                labels[i] = posClass
+                ims.append(self.files[posClass][i])
 
         ctr = self.numPos
         for negClass in classes[1:]:
             random.shuffle(self.files[negClass])
             for j in np.arange(self.numPos):
-                img = self.getProcessedImage(self.files[negClass][j])
-                if img is not None:
-                    batch[ctr,:,:,:] = img
-                labels[ctr] = negClass
-                ims.append(self.files[negClass][j])
+                if j < len(self.files[negClass]):
+                    img = self.getProcessedImage(self.files[negClass][j],ctr)
+                    if img is not None:
+                        batch[ctr,:,:,:] = img
+                    labels[ctr] = negClass
+                    ims.append(self.files[negClass][j])
                 ctr += 1
 
         return batch, labels, ims
 
-    def getProcessedImage(self, image_file):
+    def getProcessedImage(self, image_file,ind):
         img = cv2.imread(image_file)
         if img is None:
             return None
 
+        img = doctor_im(img,ind)
         img = cv2.resize(img, (self.image_size[0], self.image_size[1]))
         img = img - self.meanImage
 
@@ -123,6 +128,7 @@ class VanillaTripletSet:
 
         batch = np.zeros([self.batchSize, self.crop_size[0], self.crop_size[1], 3])
         labels = np.zeros([self.batchSize],dtype='int')
+        dont_use_flag = np.zeros([self.batchSize],dtype='bool')
 
         ctr = 0
         for posClass in classes:
