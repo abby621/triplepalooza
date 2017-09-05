@@ -76,7 +76,6 @@ class CombinatorialTripletSet:
 
     def getProcessedImage(self, image_file,ind):
         img = cv2.imread(image_file)
-        print len(img.shape)
         if img is None or len(img.shape)<3:
             return None
 

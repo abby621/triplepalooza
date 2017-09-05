@@ -39,8 +39,8 @@ def doctor_im(img,ind):
     percent_text = .1
     percent_people = .5
 
+    print img
     img = Image.fromarray(img)
-    print img.size
     b, g, r = img.split()
     img = Image.merge("RGB", (r, g, b))
     # crop_size
