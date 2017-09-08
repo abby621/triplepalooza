@@ -29,8 +29,8 @@ class CombinatorialTripletSet:
         ctr = 0
         for line in f:
             temp = line.strip('\n').split(' ')
-            # while len(temp) < self.numPos: # make sure we have at least 10 images available per class
-            #     temp.append(random.choice(temp))
+            while len(temp) < self.numPos: # make sure we have at least 10 images available per class
+                temp.append(random.choice(temp))
             self.files.append(temp)
             self.classes.append(ctr)
             ctr += 1
@@ -76,12 +76,12 @@ class CombinatorialTripletSet:
 
     def getProcessedImage(self, image_file,ind):
         img = cv2.imread(image_file)
-        if img is None or len(img.shape)<3:
+        if img is None:
             return None
 
         if self.isTraining:
             img = doctor_im(img,ind)
-        
+
         img = cv2.resize(img, (self.image_size[0], self.image_size[1]))
         img = img - self.meanImage
 

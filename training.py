@@ -70,9 +70,11 @@ def main():
     # allDistsFinal = tf.multiply(mask,allDists)
     # loss = tf.maximum(0., margin + posDistsFinal - allDistsFinal)
 
-    loss = tf.maximum(0., tf.multiply(mask,margin + posDistsRep - allDists))
+    loss = tf.multiply(mask,margin + posDistsRep - allDists)
+    loss = tf.clip_by_value(loss, 5, tf.reduce_max(loss))
+    loss = tf.maximum(0., loss)
     loss = tf.reduce_mean(loss)
-
+    
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
     train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
     summary_op = tf.summary.merge_all()
