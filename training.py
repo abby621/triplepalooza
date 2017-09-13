@@ -12,6 +12,10 @@ import time
 from alexnet import CaffeNetPlaces365
 import numpy as np
 from PIL import Image
+from tensorflow.python.ops.image_ops_impl import *
+from tensorflow.python.ops import gen_image_ops
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import math_ops
 
 def main():
     ckpt_dir = './output/ckpts'
@@ -33,10 +37,112 @@ def main():
 
     # Queuing op loads data into input tensor
     image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
+    people_mask_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 1])
     label_batch = tf.placeholder(tf.int32, shape=(batch_size))
 
+    # Create data "batcher"
+    data = CombinatorialTripletSet(filename, mean_file, img_size, crop_size, batch_size, num_pos_examples)
+
+    # doctor image params
+    percent_crop = .5
+    percent_people = .5
+    percent_rotate = .2
+    percent_filters = .4
+    percent_text = .1
+
+    # richard's argument: since the data is randomly loaded, we don't need to change the indices that we perform operations on every time; i am on board with this, but had already implemented the random crops, so will leave that for now
+    # apply random rotations
+    num_rotate = int(batch_size*percent_rotate)
+    rotate_inds = np.random.choice(np.arange(0,batch_size),num_rotate,replace=False)
+    rotate_vals = np.random.randint(-65,65,num_rotate).astype('float32')/float(100)
+    rotate_angles = np.zeros((batch_size))
+    rotate_angles[rotate_inds] = rotate_vals
+    rotated_batch = tf.contrib.image.rotate(image_batch,rotate_angles,interpolation='BILINEAR')
+
+    # do random crops
+    num_to_crop = int(batch_size*percent_crop)
+    num_to_not_crop = batch_size - num_to_crop
+    shuffled_inds = tf.random_shuffle(np.arange(0,batch_size,dtype='int32'))
+    crop_inds = tf.slice(shuffled_inds,[0],[num_to_crop])
+    uncropped_inds = tf.slice(shuffled_inds,[num_to_crop],[num_to_not_crop])
+
+    crop_ratio = float(3)/float(5)
+    crop_yx = tf.random_uniform([num_to_crop,2], 0,1-crop_ratio, dtype=tf.float32, seed=0)
+    crop_sz = tf.add(crop_yx,np.tile([crop_ratio,crop_ratio],[num_to_crop, 1]))
+    crop_boxes = tf.concat([crop_yx,crop_sz],axis=1)
+
+    uncropped_boxes = np.tile([0,0,1,1],[num_to_not_crop,1])
+
+    all_inds = tf.concat([crop_inds,uncropped_inds],axis=0)
+    all_boxes = tf.concat([crop_boxes,uncropped_boxes],axis=0)
+
+    cropped_batch = tf.image.crop_and_resize(rotated_batch,all_boxes,all_inds,crop_size)
+
+    # insert people masks
+    num_people_masks = int(batch_size*percent_people)
+    mask_inds = np.random.choice(np.arange(0,batch_size),num_people_masks,replace=False)
+
+    start_masks = np.zeros([batch_size, crop_size[0], crop_size[0], 1],dtype='float32')
+    start_masks[mask_inds,:,:,:] = 1
+
+    inv_start_masks = np.ones([batch_size, crop_size[0], crop_size[0], 1],dtype='float32')
+    inv_start_masks[mask_inds,:,:,:] = 0
+
+    masked_masks = tf.add(inv_start_masks,tf.cast(tf.multiply(people_mask_batch,start_masks),dtype=tf.float32))
+    masked_masks2 = tf.cast(tf.tile(masked_masks,[1, 1, 1, 3]),dtype=tf.float32)
+    masked_batch = tf.multiply(masked_masks,cropped_batch)
+
+    # apply different filters
+    flt_image = convert_image_dtype(masked_batch, dtypes.float32)
+
+    num_to_filter = int(batch_size*percent_filters)
+
+    filter_inds = np.random.choice(np.arange(0,batch_size),num_to_filter,replace=False)
+    filter_mask = np.zeros(batch_size)
+    filter_mask[filter_inds] = 1
+    filter_mask = filter_mask.astype('float32')
+    inv_filter_mask = np.ones(batch_size)
+    inv_filter_mask[filter_inds] = 0
+    inv_filter_mask = inv_filter_mask.astype('float32')
+
+    #
+    hsv = gen_image_ops.rgb_to_hsv(flt_image)
+    hue = array_ops.slice(hsv, [0, 0, 0, 0], [batch_size, -1, -1, 1])
+    saturation = array_ops.slice(hsv, [0, 0, 0, 1], [batch_size, -1, -1, 1])
+    value = array_ops.slice(hsv, [0, 0, 0, 2], [batch_size, -1, -1, 1])
+
+    # hue
+    delta_vals = random_ops.random_uniform([batch_size],-.15,.15)
+    hue_deltas = tf.multiply(filter_mask,delta_vals)
+    hue_deltas2 = tf.expand_dims(tf.transpose(tf.tile(tf.reshape(hue_deltas,[1,1,batch_size]),(crop_size[0],crop_size[1],1)),(2,0,1)),3)
+    hue = math_ops.mod(hue + (hue_deltas2 + 1.), 1.)
+
+    # saturation
+    saturation_factor = random_ops.random_uniform([batch_size],.75,1.25)
+    saturation_factor2 = tf.multiply(filter_mask,saturation_factor)
+    saturation_factor3 = tf.add(inv_filter_mask,saturation_factor2)
+    saturation_factor4 = tf.expand_dims(tf.transpose(tf.tile(tf.reshape(saturation_factor3,[1,1,batch_size]),(crop_size[0],crop_size[1],1)),(2,0,1)),3)
+
+    saturation *= saturation_factor4
+    saturation = clip_ops.clip_by_value(saturation, 0.0, 1.0)
+
+    hsv_altered = array_ops.concat([hue, saturation, value], 3)
+    rgb_altered = gen_image_ops.hsv_to_rgb(hsv_altered)
+
+    # brightness
+    brightness_factor = random_ops.random_uniform([batch_size],-.25,.25)
+    brightness_factor2 = tf.multiply(filter_mask,brightness_factor)
+    brightness_factor3 = tf.expand_dims(tf.transpose(tf.tile(tf.reshape(brightness_factor2,[1,1,batch_size]),(crop_size[0],crop_size[1],1)),(2,0,1)),3)
+    adjusted = math_ops.add(rgb_altered,math_ops.cast(brightness_factor3,dtypes.float32))
+
+    filtered_batch = clip_ops.clip_by_value(adjusted,0.0,1.0)
+
+    # after we've doctored everything, we need to remember to subtract off the mean
+    repMeanIm = np.tile(np.expand_dims(data.meanImage,0),[batch_size,1,1,1])
+    final_batch = tf.subtract(filtered_batch,repMeanIm)
+
     print("Preparing network...")
-    net = CaffeNetPlaces365({'data': image_batch})
+    net = CaffeNetPlaces365({'data': final_batch})
     feat = net.layers[featLayer]
 
     r = tf.reduce_sum(feat*feat,1)
@@ -66,15 +172,11 @@ def main():
 
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
-    # posDistsFinal = tf.multiply(mask,posDistsRep)
-    # allDistsFinal = tf.multiply(mask,allDists)
-    # loss = tf.maximum(0., margin + posDistsFinal - allDistsFinal)
-
     loss = tf.multiply(mask,margin + posDistsRep - allDists)
     loss = tf.clip_by_value(loss, 5, tf.reduce_max(loss))
     loss = tf.maximum(0., loss)
     loss = tf.reduce_mean(loss)
-    
+
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
     train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
     summary_op = tf.summary.merge_all()
@@ -100,10 +202,22 @@ def main():
             net.load(pretrained_net, sess)
 
         print("Start training...")
+        ctr  = 0
         for step in range(num_iters):
             start_time = time.time()
             batch, labels, ims = data.getBatch()
-            _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, label_batch: labels})
+            people_masks = data.getPeopleMasks()
+            _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
+            ib = sess.run(filtered_batch,feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
+            for im, im_path in zip(ib,ims):
+                if np.max(im) != 0:
+                    im2 = (im*255).astype('uint8')
+                    img = Image.fromarray(im2)
+                    b, g, r = img.split()
+                    img2 = Image.merge("RGB", (r, g, b))
+                    img2.save('/Users/abby/Desktop/doctored_ims/' + str(ctr) + '_' + im_path.split('/')[-1])
+                ctr += 1
+
             duration = time.time() - start_time
 
             # if step % summary_iters == 0:
