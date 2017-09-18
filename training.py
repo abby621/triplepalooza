@@ -22,7 +22,7 @@ def main():
     log_dir = './output/logs'
     filename = './inputs/traffickcam/train_equal.txt'
     mean_file = './models/places365/places365CNN_mean.npy'
-    pretrained_net = None
+    pretrained_net = './models/places365/alexnet.npy'
     img_size = [256, 256]
     crop_size = [227, 227]
     num_iters = 100000
@@ -149,6 +149,9 @@ def main():
     r = tf.reshape(r,[-1, 1])
     D = r - 2*tf.matmul(feat, tf.transpose(feat)) + tf.transpose(r)
 
+    D_mean, D_var = tf.nn.moments(D, axes=[1])
+    D = tf.clip_by_value(D, D_mean-(D_var*D_var),  D_mean+(D_var*D_var))
+
     posIdx = np.floor(np.arange(0,batch_size)/num_pos_examples).astype('int')
     posIdx10 = num_pos_examples*posIdx
     posImInds = np.tile(posIdx10,(num_pos_examples,1)).transpose()+np.tile(np.arange(0,num_pos_examples),(batch_size,1))
@@ -173,7 +176,6 @@ def main():
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
     loss = tf.multiply(mask,margin + posDistsRep - allDists)
-    loss = tf.clip_by_value(loss, 5, tf.reduce_max(loss))
     loss = tf.maximum(0., loss)
     loss = tf.reduce_mean(loss)
 
@@ -208,15 +210,7 @@ def main():
             batch, labels, ims = data.getBatch()
             people_masks = data.getPeopleMasks()
             _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
-            ib = sess.run(filtered_batch,feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
-            for im, im_path in zip(ib,ims):
-                if np.max(im) != 0:
-                    im2 = (im*255).astype('uint8')
-                    img = Image.fromarray(im2)
-                    b, g, r = img.split()
-                    img2 = Image.merge("RGB", (r, g, b))
-                    img2.save('/Users/abby/Desktop/doctored_ims/' + str(ctr) + '_' + im_path.split('/')[-1])
-                ctr += 1
+            dd = sess.run(D,feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
 
             duration = time.time() - start_time
 
