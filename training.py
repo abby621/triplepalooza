@@ -27,7 +27,7 @@ def main():
     crop_size = [227, 227]
     num_iters = 100000
     summary_iters = 10
-    save_iters = 100
+    save_iters = 500
     learning_rate = .0001
     margin = 10
     featLayer = 'fc7'
@@ -149,8 +149,10 @@ def main():
     r = tf.reshape(r,[-1, 1])
     D = r - 2*tf.matmul(feat, tf.transpose(feat)) + tf.transpose(r)
 
-    D_mean, D_var = tf.nn.moments(D, axes=[1])
-    D = tf.clip_by_value(D, D_mean-(D_var*D_var),  D_mean+(D_var*D_var))
+    D_mean, D_var = tf.nn.moments(D, axes=[0,1])
+    bool_mask = tf.logical_and(D<=D_mean+tf.sqrt(D_var),D>=D_mean-tf.sqrt(D_var))
+
+    D2 = tf.multiply(D,tf.cast(bool_mask,tf.float32))
 
     posIdx = np.floor(np.arange(0,batch_size)/num_pos_examples).astype('int')
     posIdx10 = num_pos_examples*posIdx
@@ -211,6 +213,7 @@ def main():
             people_masks = data.getPeopleMasks()
             _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
             dd = sess.run(D,feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
+            print dd
 
             duration = time.time() - start_time
 
