@@ -164,11 +164,11 @@ def main():
 
     posPairInds = zip(posImInds_flat,anchorInds_flat)
 
-    posDists = tf.reshape(tf.gather_nd(D,posPairInds),(batch_size,num_pos_examples))
+    posDists = tf.reshape(tf.gather_nd(D2,posPairInds),(batch_size,num_pos_examples))
     shiftPosDists = tf.reshape(posDists,(1,batch_size,num_pos_examples))
     posDistsRep = tf.tile(shiftPosDists,(batch_size,1,1))
 
-    allDists = tf.tile(tf.expand_dims(D,2),(1,1,num_pos_examples))
+    allDists = tf.tile(tf.expand_dims(D2,2),(1,1,num_pos_examples))
 
     ra, rb, rc = np.meshgrid(np.arange(0,batch_size),np.arange(0,batch_size),np.arange(0,num_pos_examples))
 
