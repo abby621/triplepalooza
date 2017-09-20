@@ -212,8 +212,6 @@ def main():
             batch, labels, ims = data.getBatch()
             people_masks = data.getPeopleMasks()
             _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
-            dd = sess.run(D,feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
-            print dd
 
             duration = time.time() - start_time
 
