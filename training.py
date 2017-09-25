@@ -32,7 +32,7 @@ def main():
     margin = 10
     featLayer = 'fc7'
 
-    batch_size = 300
+    batch_size = 100
     num_pos_examples = batch_size/10
 
     # Queuing op loads data into input tensor
@@ -145,9 +145,9 @@ def main():
     net = CaffeNetPlaces365({'data': final_batch})
     feat = net.layers[featLayer]
 
-    r = tf.reduce_sum(feat*feat,1)
-    r = tf.reshape(r,[-1, 1])
-    D = r - 2*tf.matmul(feat, tf.transpose(feat)) + tf.transpose(r)
+    expanded_a = tf.expand_dims(feat, 1)
+    expanded_b = tf.expand_dims(feat, 0)
+    D = tf.reduce_sum(tf.squared_difference(expanded_a, expanded_b), 2)
 
     D_mean, D_var = tf.nn.moments(D, axes=[0,1])
     bool_mask = tf.logical_and(D<=D_mean+tf.sqrt(D_var),D>=D_mean-tf.sqrt(D_var))
@@ -212,6 +212,9 @@ def main():
             batch, labels, ims = data.getBatch()
             people_masks = data.getPeopleMasks()
             _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
+            dd = sess.run(D, feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
+            dd2 = sess.run(D2, feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
+            print len(np.where(dd==0)[0]),len(np.where(dd2==0)[0])
 
             duration = time.time() - start_time
 
