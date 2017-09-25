@@ -212,9 +212,9 @@ def main():
             batch, labels, ims = data.getBatch()
             people_masks = data.getPeopleMasks()
             _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
-            dd = sess.run(D, feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
-            dd2 = sess.run(D2, feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
-            print len(np.where(dd==0)[0]),len(np.where(dd2==0)[0])
+            # dd = sess.run(D, feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
+            # dd2 = sess.run(D2, feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
+            # print len(np.where(dd==0)[0]),len(np.where(dd2==0)[0])
 
             duration = time.time() - start_time
 
