@@ -70,9 +70,12 @@ def main():
 
     # Create a saver for writing training checkpoints.
     saver = tf.train.Saver(max_to_keep=20)
+    
+    c = tf.ConfigProto()
+    c.gpu_options.visible_device_list="0,1"
 
     print("Starting session...")
-    with tf.Session() as sess:
+    with tf.Session(config=c) as sess:
         sess.run(init_op)
 
         writer = tf.summary.FileWriter(log_dir, sess.graph)
