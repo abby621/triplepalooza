@@ -79,11 +79,11 @@ def main():
             start_time1 = time.time()
             batch, labels, ims = data.getBatch()
             end_time1 = time.time()
-            print 'Loaded batch: ', end_time-start_time
+            print 'Loaded batch: ', end_time1-start_time1
             start_time2 = time.time()
             _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, label_batch: labels})
             end_time2 = time.time()
-            print 'Computed loss: ', end_time-start_time
+            print 'Computed loss: ', end_time2-start_time2
 
             duration = end_time2-start_time1
 
