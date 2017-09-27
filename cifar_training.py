@@ -9,7 +9,7 @@ import tensorflow as tf
 from classfile import CombinatorialTripletSet
 import os.path
 import time
-from alexnet import CaffeNetPlaces365
+from cifarnet import CifarNet
 import numpy as np
 from PIL import Image
 from tensorflow.python.ops.image_ops_impl import *
@@ -18,20 +18,19 @@ from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 
 def main():
-    ckpt_dir = './output/ckpts'
-    log_dir = './output/logs'
-    filename = './inputs/traffickcam/train_equal.txt'
-    mean_file = './models/places365/places365CNN_mean.npy'
-    pretrained_net = './models/places365/alexnet.npy'
-
-    img_size = [256, 256]
-    crop_size = [227, 227]
+    ckpt_dir = './output/cifar/ckpts'
+    log_dir = './output/cifar/logs'
+    filename = './inputs/cifar/train.txt'
+    mean_file = './models/cifar/cifar_mean_im.npy'
+    pretrained_net = None
+    img_size = [32, 32]
+    crop_size = [28, 28]
     num_iters = 100000
     summary_iters = 10
     save_iters = 500
-    learning_rate = .0001
+    learning_rate = .001
     margin = 10
-    featLayer = 'vgg_16/fc7'
+    featLayer = 'fc7'
 
     batch_size = 100
     num_pos_examples = batch_size/10
@@ -143,7 +142,7 @@ def main():
     final_batch = tf.subtract(filtered_batch,repMeanIm)
 
     print("Preparing network...")
-    net = CaffeNetPlaces365({'data': final_batch})
+    net = CifarNet({'data': final_batch})
     feat = net.layers[featLayer]
 
     expanded_a = tf.expand_dims(feat, 1)
@@ -229,8 +228,8 @@ def main():
             # Save a checkpoint
             if (step + 1) % save_iters == 0 or (step + 1) == num_iters:
                 print('Saving checkpoint at iteration: %d' % (step))
-                pretrained_net = os.path.join(ckpt_dir, 'checkpoint')
-                saver.save(sess, pretrained_net, global_step=step)
+                checkpoint_file = os.path.join(ckpt_dir, 'checkpoint')
+                saver.save(sess, checkpoint_file, global_step=step)
 
       #  coord.request_stop()
        # coord.join(threads)

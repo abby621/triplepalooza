@@ -27,8 +27,11 @@ class CombinatorialTripletSet:
         self.crop_size = crop_size
 
         self.meanFile = mean_file
-        tmp = np.load(self.meanFile)/255.0
-        meanIm = np.moveaxis(tmp, 0, -1)
+        meanIm = np.load(self.meanFile)/255.0
+
+        if meanIm.shape[0] == 3:
+            meanIm = np.moveaxis(meanIm, 0, -1)
+
         self.meanImage = cv2.resize(meanIm, (self.crop_size[0], self.crop_size[1]))
 
         #img = img - self.meanImage
@@ -116,9 +119,11 @@ class CombinatorialTripletSet:
         if (self.isTraining):
             top = np.random.randint(self.image_size[0] - self.crop_size[0])
             left = np.random.randint(self.image_size[1] - self.crop_size[1])
-            img = img[top:(top+self.crop_size[0]),left:(left+self.crop_size[1]),:]
         else:
-            img = img[14:(self.crop_size[0] + 14), 14:(self.crop_size[1] + 14),:]
+            top = round((self.image_size[0] - self.crop_size[0])/2)
+            left = round((self.image_size[1] - self.crop_size[1])/2)
+
+        img = img[top:(top+self.crop_size[0]),left:(left+self.crop_size[1]),:]
 
         return img
 
@@ -134,7 +139,7 @@ class CombinatorialTripletSet:
         # where should we put the mask?
         top = np.random.randint(0,self.crop_size[0]-resized_img.shape[0])
         left = np.random.randint(0,self.crop_size[1]-resized_img.shape[1])
-        
+
         new_img = np.ones((self.crop_size[0],self.crop_size[1]))*255.0
         new_img[top:top+resized_img.shape[0],left:left+resized_img.shape[1]] = resized_img
 
@@ -144,14 +149,13 @@ class CombinatorialTripletSet:
         return new_img
 
 class VanillaTripletSet:
-    def __init__(self, image_list, image_size, crop_size, batch_size=100, num_pos=10, isTraining=True):
+    def __init__(self, image_list, mean_file, image_size, crop_size, batch_size=100, isTraining=True):
         self.meanFile = './models/mnist/mnist_mean.npy'
         tmp = np.load(self.meanFile)
         self.meanImage = np.moveaxis(tmp, 0, -1)
         if len(self.meanImage.shape) < 3:
             self.meanImage = np.asarray(np.dstack((self.meanImage, self.meanImage, self.meanImage)))
 
-        self.numPos = num_pos
         self.batchSize = batch_size
 
         self.files = []
@@ -162,8 +166,6 @@ class VanillaTripletSet:
         ctr = 0
         for line in f:
             temp = line[:-1].split(' ')
-            while len(temp) < self.numPos: # make sure we have at least 10 images available per class
-                temp.extend(random.choice(temp))
             self.files.append(temp)
             self.classes.append(ctr)
             ctr += 1
@@ -179,24 +181,37 @@ class VanillaTripletSet:
 
         batch = np.zeros([self.batchSize, self.crop_size[0], self.crop_size[1], 3])
         labels = np.zeros([self.batchSize],dtype='int')
+        ims = []
         dont_use_flag = np.zeros([self.batchSize],dtype='bool')
 
         ctr = 0
         for posClass in classes:
             random.shuffle(self.files[posClass])
-
             anchorIm = self.files[posClass][0]
+            anchorImg = self.getProcessedImage(anchorIm)
+            while anchorImg is None:
+                random.shuffle(self.files[posClass])
+                anchorIm = self.files[posClass][0]
+                anchorImg = self.getProcessedImage(anchorIm)
+
             posIm = np.random.choice(self.files[posClass][1:])
+            posImg = self.getProcessedImage(posIm)
+            while posImg is None:
+                posIm = np.random.choice(self.files[posClass][1:])
+                while posIm == anchorIm:
+                    posIm = np.random.choice(self.files[posClass][1:])
+                posImg = self.getProcessedImage(posIm)
 
             negClass = np.random.choice(self.classes)
             while negClass == posClass:
                 negClass = np.random.choice(self.classes)
+
             random.shuffle(self.files[negClass])
             negIm = np.random.choice(self.files[negClass])
-
-            anchorImg = self.getProcessedImage(anchorIm)
-            posImg = self.getProcessedImage(posIm)
             negImg = self.getProcessedImage(negIm)
+            while negImg is None:
+                negIm = np.random.choice(self.files[negClass])
+                negImg = self.getProcessedImage(negIm)
 
             batch[ctr,:,:,:] = anchorImg
             batch[ctr+1,:,:,:] = posImg
@@ -205,20 +220,28 @@ class VanillaTripletSet:
             labels[ctr] = posClass
             labels[ctr+1] = posClass
             labels[ctr+2] = negClass
+
+            ims.append(anchorIm)
+            ims.append(posIm)
+            ims.append(negIm)
+
             ctr += 3
 
-        return batch, labels
+        return batch, labels, ims
 
     def getProcessedImage(self, image_file):
         img = cv2.imread(image_file)
+        if img is None:
+            return img
+
         img = cv2.resize(img, (self.image_size[0], self.image_size[1]))
-        img = img - self.meanImage
 
         if (self.isTraining):
             top = np.random.randint(self.image_size[0] - self.crop_size[0])
             left = np.random.randint(self.image_size[1] - self.crop_size[1])
-            img = img[top:(top+self.crop_size[0]),left:(left+self.crop_size[1]),:]
         else:
-            img = img[14:(self.crop_size[0] + 14), 14:(self.crop_size[1] + 14),:]
+            top = round((self.image_size[0] - self.crop_size[0])/2)
+            left = round((self.image_size[1] - self.crop_size[1])/2)
 
+        img = img[top:(top+self.crop_size[0]),left:(left+self.crop_size[1]),:]
         return img
