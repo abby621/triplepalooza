@@ -52,7 +52,7 @@ def main():
             _, layers = vgg.vgg_16(final_batch, is_training=True)
 
     feat = tf.squeeze(layers[featLayer])
-    labels_1hot = tf.one_hot(label_batch,100,on_value=1,off_value=0,axis=-1)
+    labels_1hot = tf.one_hot(label_batch,feat.shape[1],on_value=1,off_value=0,axis=-1)
 
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=feat, labels=labels_1hot))
 
@@ -76,14 +76,16 @@ def main():
         print("Start training...")
         ctr  = 0
         for step in range(num_iters):
-            start_time = time.time()
+            start_time1 = time.time()
             batch, labels, ims = data.getBatch()
+            end_time1 = time.time()
+            print 'Loaded batch: ', end_time-start_time
+            start_time2 = time.time()
             _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, label_batch: labels})
-            # dd = sess.run(D, feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
-            # dd2 = sess.run(D2, feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
-            # print len(np.where(dd==0)[0]),len(np.where(dd2==0)[0])
+            end_time2 = time.time()
+            print 'Computed loss: ', end_time-start_time
 
-            duration = time.time() - start_time
+            duration = end_time2-start_time1
 
             # if step % summary_iters == 0:
             print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_val, duration))
