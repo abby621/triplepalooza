@@ -101,10 +101,7 @@ def main():
             pretrained_net = os.path.join(ckpt_dir, 'checkpoint')
             saver.save(sess, pretrained_net, global_step=step)
 
-      #  coord.request_stop()
-       # coord.join(threads)
-
-      sess.close()
+    sess.close()
 
 if __name__ == "__main__":
     main()
