@@ -52,9 +52,8 @@ def main():
             _, layers = vgg.vgg_16(final_batch, is_training=True)
 
     feat = tf.squeeze(layers[featLayer])
-    labels_1hot = tf.one_hot(label_batch,feat.shape[1],on_value=1,off_value=0,axis=-1)
 
-    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=feat, labels=labels_1hot))
+    loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=feat, labels=label_batch))
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
     train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
