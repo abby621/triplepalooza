@@ -150,6 +150,9 @@ class CombinatorialTripletSet:
 
 class VanillaTripletSet:
     def __init__(self, image_list, mean_file, image_size, crop_size, batch_size=100, isTraining=True):
+        self.image_size = image_size
+        self.crop_size = crop_size
+
         self.meanFile = mean_file
         meanIm = np.load(self.meanFile)/255.0
 
@@ -254,6 +257,9 @@ class VanillaTripletSet:
 
 class NonTripletSet:
     def __init__(self, image_list, mean_file, image_size, crop_size, batch_size=100, isTraining=True):
+        self.image_size = image_size
+        self.crop_size = crop_size
+        
         self.meanFile = mean_file
         meanIm = np.load(self.meanFile)/255.0
 
