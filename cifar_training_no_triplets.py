@@ -16,7 +16,7 @@ from tensorflow.python.ops import gen_image_ops
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 import tensorflow.contrib.slim as slim
-from tensorflow.contrib.slim.python.slim.nets import vgg
+from tensorflow.contrib.slim.python.slim.nets import alexnet
 
 def main():
     ckpt_dir = './output/cifar/no_triplets/ckpts'
@@ -28,12 +28,12 @@ def main():
     crop_size = [224, 224]
     num_iters = 5000
     summary_iters = 10
-    save_iters = 500
-    learning_rate = .001
+    save_iters = 50000
+    learning_rate = .005
     margin = 10
-    featLayer = 'vgg_16/fc7'
+    featLayer = 'alexnet_v2/fc8'
 
-    batch_size = 30
+    batch_size = 100
     num_pos_examples = batch_size/10
 
     # Queuing op loads data into input tensor
@@ -44,12 +44,12 @@ def main():
     data = NonTripletSet(filename, mean_file, img_size, crop_size, batch_size, num_pos_examples)
 
     # after we've doctored everything, we need to remember to subtract off the mean
-    repMeanIm = np.tile(np.expand_dims(data.meanImage,0),[batch_size,1,1,1])
+    repMeanIm = np.tile(np.expand_dims(data.meanImage,0),[batch_size,1,1,1])*255.
     final_batch = tf.subtract(image_batch,repMeanIm)
 
     print("Preparing network...")
-    with slim.arg_scope(vgg.vgg_arg_scope()):
-            _, layers = vgg.vgg_16(final_batch, num_classes=100, is_training=True)
+    with slim.arg_scope(alexnet.alexnet_v2_arg_scope()):
+        _, layers = alexnet.alexnet_v2(final_batch, num_classes=100, is_training=True)
 
     feat = tf.squeeze(layers[featLayer])
 
@@ -71,34 +71,34 @@ def main():
     sess.run(init_op)
 
     if pretrained_net:
-        saver.restore(sess, pretrained_net)
+    saver.restore(sess, pretrained_net)
 
     writer = tf.summary.FileWriter(log_dir, sess.graph)
 
     print("Start training...")
     ctr  = 0
     for step in range(num_iters):
-        start_time1 = time.time()
-        batch, labels, ims = data.getBatch()
-        end_time1 = time.time()
-        start_time2 = time.time()
-        _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, label_batch: labels})
-        end_time2 = time.time()
+    start_time1 = time.time()
+    batch, labels, ims = data.getBatch()
+    end_time1 = time.time()
+    start_time2 = time.time()
+    _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, label_batch: labels})
+    end_time2 = time.time()
 
-        duration = end_time2-start_time1
+    duration = end_time2-start_time1
 
-        # if step % summary_iters == 0:
-        print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_val, duration))
-        # Update the events file.
-#                summary_str = sess.run(summary_op)
-#                writer.add_summary(summary_str, step)
-#                writer.flush()
-#
-        # Save a checkpoint
-        if (step + 1) % save_iters == 0 or (step + 1) == num_iters:
-            print('Saving checkpoint at iteration: %d' % (step))
-            pretrained_net = os.path.join(ckpt_dir, 'checkpoint')
-            saver.save(sess, pretrained_net, global_step=step)
+    # if step % summary_iters == 0:
+    print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_val, duration))
+    # Update the events file.
+    # summary_str = sess.run(summary_op)
+    # writer.add_summary(summary_str, step)
+    # writer.flush()
+    #
+    # Save a checkpoint
+    if (step + 1) % save_iters == 0 or (step + 1) == num_iters:
+        print('Saving checkpoint at iteration: %d' % (step))
+        pretrained_net = os.path.join(ckpt_dir, 'checkpoint')
+        saver.save(sess, pretrained_net, global_step=step)
 
     sess.close()
 
