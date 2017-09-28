@@ -29,7 +29,7 @@ def main():
     num_iters = 5000
     summary_iters = 10
     save_iters = 50000
-    learning_rate = .005
+    learning_rate = .001
     margin = 10
     featLayer = 'alexnet_v2/fc8'
 
