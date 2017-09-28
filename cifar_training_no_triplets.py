@@ -71,34 +71,34 @@ def main():
     sess.run(init_op)
 
     if pretrained_net:
-    saver.restore(sess, pretrained_net)
+        saver.restore(sess, pretrained_net)
 
     writer = tf.summary.FileWriter(log_dir, sess.graph)
 
     print("Start training...")
     ctr  = 0
     for step in range(num_iters):
-    start_time1 = time.time()
-    batch, labels, ims = data.getBatch()
-    end_time1 = time.time()
-    start_time2 = time.time()
-    _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, label_batch: labels})
-    end_time2 = time.time()
+        start_time1 = time.time()
+        batch, labels, ims = data.getBatch()
+        end_time1 = time.time()
+        start_time2 = time.time()
+        _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, label_batch: labels})
+        end_time2 = time.time()
 
-    duration = end_time2-start_time1
+        duration = end_time2-start_time1
 
-    # if step % summary_iters == 0:
-    print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_val, duration))
-    # Update the events file.
-    # summary_str = sess.run(summary_op)
-    # writer.add_summary(summary_str, step)
-    # writer.flush()
-    #
-    # Save a checkpoint
-    if (step + 1) % save_iters == 0 or (step + 1) == num_iters:
-        print('Saving checkpoint at iteration: %d' % (step))
-        pretrained_net = os.path.join(ckpt_dir, 'checkpoint')
-        saver.save(sess, pretrained_net, global_step=step)
+        # if step % summary_iters == 0:
+        print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_val, duration))
+        # Update the events file.
+        # summary_str = sess.run(summary_op)
+        # writer.add_summary(summary_str, step)
+        # writer.flush()
+        #
+        # Save a checkpoint
+        if (step + 1) % save_iters == 0 or (step + 1) == num_iters:
+            print('Saving checkpoint at iteration: %d' % (step))
+            pretrained_net = os.path.join(ckpt_dir, 'checkpoint')
+            saver.save(sess, pretrained_net, global_step=step)
 
     sess.close()
 
