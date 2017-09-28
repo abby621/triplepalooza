@@ -18,7 +18,7 @@ filename = './inputs/traffickcam/test_equal.txt'
 pretrained_net = './output/ckpts/checkpoint-9999'
 img_size = [256, 256]
 crop_size = [227, 227]
-featLayer = 'vgg_16/fc6'
+featLayer = 'alexnet_v2/fc7'
 mean_file = './models/places365/places365CNN_mean.npy'
 
 batch_size = 30

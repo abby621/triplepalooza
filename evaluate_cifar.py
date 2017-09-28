@@ -18,7 +18,7 @@ filename = './inputs/cifar/test.txt'
 pretrained_net = './output/cifar/no_triplets/ckpts/checkpoint-4999'
 img_size = [256, 256]
 crop_size = [224, 224]
-featLayer = 'vgg_16/fc6'
+featLayer = 'alexnet_v2/fc7'
 mean_file = './models/cifar/cifar_mean_im.npy'
 
 batch_size = 30
