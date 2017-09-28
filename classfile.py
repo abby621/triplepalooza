@@ -151,8 +151,14 @@ class CombinatorialTripletSet:
 class VanillaTripletSet:
     def __init__(self, image_list, mean_file, image_size, crop_size, batch_size=100, isTraining=True):
         self.meanFile = mean_file
-        tmp = np.load(self.meanFile)
-        self.meanImage = np.moveaxis(tmp, 0, -1)
+        meanIm = np.load(self.meanFile)/255.0
+
+        if meanIm.shape[0] == 3:
+            meanIm = np.moveaxis(meanIm, 0, -1)
+
+        self.meanImage = cv2.resize(meanIm, (self.crop_size[0], self.crop_size[1]))
+
+        #img = img - self.meanImage
         if len(self.meanImage.shape) < 3:
             self.meanImage = np.asarray(np.dstack((self.meanImage, self.meanImage, self.meanImage)))
 
@@ -249,8 +255,14 @@ class VanillaTripletSet:
 class NonTripletSet:
     def __init__(self, image_list, mean_file, image_size, crop_size, batch_size=100, isTraining=True):
         self.meanFile = mean_file
-        tmp = np.load(self.meanFile)
-        self.meanImage = np.moveaxis(tmp, 0, -1)
+        meanIm = np.load(self.meanFile)/255.0
+
+        if meanIm.shape[0] == 3:
+            meanIm = np.moveaxis(meanIm, 0, -1)
+
+        self.meanImage = cv2.resize(meanIm, (self.crop_size[0], self.crop_size[1]))
+
+        #img = img - self.meanImage
         if len(self.meanImage.shape) < 3:
             self.meanImage = np.asarray(np.dstack((self.meanImage, self.meanImage, self.meanImage)))
 
