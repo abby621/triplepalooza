@@ -50,7 +50,7 @@ def main():
 
     print("Preparing network...")
     with slim.arg_scope(vgg.vgg_arg_scope()):
-            _, layers = vgg.vgg_16(final_batch, is_training=True)
+            _, layers = vgg.vgg_16(final_batch,num_classes=100, is_training=True)
 
     feat = tf.squeeze(layers[featLayer])
 

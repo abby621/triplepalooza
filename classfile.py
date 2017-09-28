@@ -150,7 +150,7 @@ class CombinatorialTripletSet:
 
 class VanillaTripletSet:
     def __init__(self, image_list, mean_file, image_size, crop_size, batch_size=100, isTraining=True):
-        self.meanFile = './models/mnist/mnist_mean.npy'
+        self.meanFile = mean_file
         tmp = np.load(self.meanFile)
         self.meanImage = np.moveaxis(tmp, 0, -1)
         if len(self.meanImage.shape) < 3:
@@ -226,6 +226,70 @@ class VanillaTripletSet:
             ims.append(negIm)
 
             ctr += 3
+
+        return batch, labels, ims
+
+    def getProcessedImage(self, image_file):
+        img = cv2.imread(image_file)
+        if img is None:
+            return img
+
+        img = cv2.resize(img, (self.image_size[0], self.image_size[1]))
+
+        if (self.isTraining):
+            top = np.random.randint(self.image_size[0] - self.crop_size[0])
+            left = np.random.randint(self.image_size[1] - self.crop_size[1])
+        else:
+            top = round((self.image_size[0] - self.crop_size[0])/2)
+            left = round((self.image_size[1] - self.crop_size[1])/2)
+
+        img = img[top:(top+self.crop_size[0]),left:(left+self.crop_size[1]),:]
+        return img
+
+class NonTripletSet:
+    def __init__(self, image_list, mean_file, image_size, crop_size, batch_size=100, isTraining=True):
+        self.meanFile = mean_file
+        tmp = np.load(self.meanFile)
+        self.meanImage = np.moveaxis(tmp, 0, -1)
+        if len(self.meanImage.shape) < 3:
+            self.meanImage = np.asarray(np.dstack((self.meanImage, self.meanImage, self.meanImage)))
+
+        self.batchSize = batch_size
+
+        self.files = []
+        self.classes = []
+        # Reads a .txt file containing image paths of image sets where each line contains
+        # all images from the same set and the first image is the anchor
+        f = open(image_list, 'r')
+        ctr = 0
+        for line in f:
+            temp = line[:-1].split(' ')
+            self.files.append(temp)
+            self.classes.append(ctr)
+            ctr += 1
+
+        self.image_size = image_size
+        self.crop_size = crop_size
+        self.isTraining = isTraining
+        self.indexes = np.arange(0, len(self.files))
+
+    def getBatch(self):
+        batch = np.zeros([self.batchSize, self.crop_size[0], self.crop_size[1], 3])
+        labels = np.zeros([self.batchSize],dtype='int')
+        ims = []
+
+        for ix in range(0,self.batch_size):
+            randClass = np.random.choice(self.classes)
+            randIm = random.choice(self.files[randClass])
+            randImg = self.getProcessedImage(randIm)
+            while randImg is None:
+                randClass = np.random.choice(self.classes)
+                randIm = random.choice(self.files[randClass])
+                randImg = self.getProcessedImage(randIm)
+
+            batch[ix,:,:,:] = randImg
+            labels[ix] = randClass
+            ims.append(randIm)
 
         return batch, labels, ims
 

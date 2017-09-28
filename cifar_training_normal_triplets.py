@@ -48,7 +48,7 @@ def main():
 
     print("Preparing network...")
     with slim.arg_scope(vgg.vgg_arg_scope()):
-            _, layers = vgg.vgg_16(final_batch, is_training=True)
+            _, layers = vgg.vgg_16(final_batch, num_classes=100, is_training=True)
 
     feat = tf.squeeze(layers[featLayer])
 
@@ -70,7 +70,7 @@ def main():
 
     # Create a saver for writing training checkpoints.
     saver = tf.train.Saver(max_to_keep=20)
-    
+
     c = tf.ConfigProto()
     c.gpu_options.visible_device_list="0,1"
 

@@ -6,7 +6,7 @@ Created on Mon Sep 19 13:02:07 2016
 """
 
 import tensorflow as tf
-from classfile import CombinatorialTripletSet
+from classfile import NonTripletSet
 import os.path
 import time
 import numpy as np
@@ -41,7 +41,7 @@ def main():
     label_batch = tf.placeholder(tf.int32, shape=(batch_size))
 
     # Create data "batcher"
-    data = CombinatorialTripletSet(filename, mean_file, img_size, crop_size, batch_size, num_pos_examples)
+    data = NonTripletSet(filename, mean_file, img_size, crop_size, batch_size, num_pos_examples)
 
     # after we've doctored everything, we need to remember to subtract off the mean
     repMeanIm = np.tile(np.expand_dims(data.meanImage,0),[batch_size,1,1,1])
@@ -49,7 +49,7 @@ def main():
 
     print("Preparing network...")
     with slim.arg_scope(vgg.vgg_arg_scope()):
-            _, layers = vgg.vgg_16(final_batch, is_training=True)
+            _, layers = vgg.vgg_16(final_batch, num_classes=100, is_training=True)
 
     feat = tf.squeeze(layers[featLayer])
 
