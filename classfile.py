@@ -22,7 +22,7 @@ else:
     peopleDir = '/project/focus/datasets/traffickcam/people_crops'
 
 class CombinatorialTripletSet:
-    def __init__(self, image_list, mean_file, image_size, crop_size, batch_size=100, num_pos=10, isTraining=True):
+    def __init__(self, image_list, mean_file, image_size, crop_size, batchSize=100, num_pos=10, isTraining=True):
         self.image_size = image_size
         self.crop_size = crop_size
 
@@ -39,7 +39,7 @@ class CombinatorialTripletSet:
             self.meanImage = np.asarray(np.dstack((self.meanImage, self.meanImage, self.meanImage)))
 
         self.numPos = num_pos
-        self.batchSize = batch_size
+        self.batchSize = batchSize
 
         self.files = []
         self.classes = []
@@ -149,7 +149,7 @@ class CombinatorialTripletSet:
         return new_img
 
 class VanillaTripletSet:
-    def __init__(self, image_list, mean_file, image_size, crop_size, batch_size=100, isTraining=True):
+    def __init__(self, image_list, mean_file, image_size, crop_size, batchSize=100, isTraining=True):
         self.image_size = image_size
         self.crop_size = crop_size
 
@@ -165,7 +165,7 @@ class VanillaTripletSet:
         if len(self.meanImage.shape) < 3:
             self.meanImage = np.asarray(np.dstack((self.meanImage, self.meanImage, self.meanImage)))
 
-        self.batchSize = batch_size
+        self.batchSize = batchSize
 
         self.files = []
         self.classes = []
@@ -256,10 +256,10 @@ class VanillaTripletSet:
         return img
 
 class NonTripletSet:
-    def __init__(self, image_list, mean_file, image_size, crop_size, batch_size=100, isTraining=True):
+    def __init__(self, image_list, mean_file, image_size, crop_size, batchSize=100, isTraining=True):
         self.image_size = image_size
         self.crop_size = crop_size
-        
+
         self.meanFile = mean_file
         meanIm = np.load(self.meanFile)/255.0
 
@@ -272,7 +272,7 @@ class NonTripletSet:
         if len(self.meanImage.shape) < 3:
             self.meanImage = np.asarray(np.dstack((self.meanImage, self.meanImage, self.meanImage)))
 
-        self.batchSize = batch_size
+        self.batchSize = batchSize
 
         self.files = []
         self.classes = []
@@ -296,7 +296,7 @@ class NonTripletSet:
         labels = np.zeros([self.batchSize],dtype='int')
         ims = []
 
-        for ix in range(0,self.batch_size):
+        for ix in range(0,self.batchSize):
             randClass = np.random.choice(self.classes)
             randIm = random.choice(self.files[randClass])
             randImg = self.getProcessedImage(randIm)
