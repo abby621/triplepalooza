@@ -15,7 +15,7 @@ import tensorflow.contrib.slim as slim
 from tensorflow.contrib.slim.python.slim.nets import vgg
 
 filename = './inputs/cifar/test.txt'
-pretrained_net = './output/cifar/normal_triplets/ckpts/checkpoint-4999'
+pretrained_net = './output/cifar/no_triplets/ckpts/checkpoint-4999'
 img_size = [256, 256]
 crop_size = [224, 224]
 featLayer = 'vgg_16/fc6'
