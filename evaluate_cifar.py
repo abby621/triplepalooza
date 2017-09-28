@@ -42,7 +42,7 @@ data = CombinatorialTripletSet(filename, mean_file, img_size, crop_size, batch_s
 c = tf.ConfigProto()
 c.gpu_options.visible_device_list="2,3"
 
-sess = tf.Session(c)
+sess = tf.Session(config=c)
 # Here's where we need to load saved weights
 saver.restore(sess, pretrained_net)
 
