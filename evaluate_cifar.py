@@ -39,7 +39,10 @@ saver = tf.train.Saver()
 # Create data "batcher"
 data = CombinatorialTripletSet(filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=False)
 
-sess = tf.Session()
+c = tf.ConfigProto()
+c.gpu_options.visible_device_list="2,3"
+
+sess = tf.Session(c)
 # Here's where we need to load saved weights
 saver.restore(sess, pretrained_net)
 
