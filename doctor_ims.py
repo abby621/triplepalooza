@@ -18,13 +18,13 @@ HOSTNAME = socket.gethostname()
 if 'abby' in HOSTNAME:
     fontDir = '/Users/abby/Documents/repos/fonts'
     peopleDir = '/Users/abby/Documents/datasets/people_crops'
-else:
+else:s
     fontDir = '/project/focus/datasets/fonts'
     peopleDir = '/project/focus/datasets/traffickcam/people_crops'
 
 possible_fonts = glob.glob(fontDir+'/*/*/*.ttf')
 
-word_site = "http://svnweb.freebsd.org/csrg/share/dict/words?view=co&content-type=text/plain"
+word_site = 'http://svnweb.freebsd.org/csrg/share/dict/words?view=co&content-type=text/plain'
 response = urllib2.urlopen(word_site)
 txt = response.read()
 words = txt.splitlines()
