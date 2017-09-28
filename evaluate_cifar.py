@@ -29,7 +29,7 @@ label_batch = tf.placeholder(tf.int32, shape=(batch_size))
 
 print("Preparing network...")
 with slim.arg_scope(vgg.vgg_arg_scope()):
-    _, layers = vgg.vgg_16(final_batch, is_training=True)
+    _, layers = vgg.vgg_16(image_batch, is_training=False)
 
 feat = tf.squeeze(layers[featLayer])
 
