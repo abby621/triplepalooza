@@ -18,7 +18,7 @@ HOSTNAME = socket.gethostname()
 if 'abby' in HOSTNAME:
     fontDir = '/Users/abby/Documents/repos/fonts'
     peopleDir = '/Users/abby/Documents/datasets/people_crops'
-else:s
+else:
     fontDir = '/project/focus/datasets/fonts'
     peopleDir = '/project/focus/datasets/traffickcam/people_crops'
 
