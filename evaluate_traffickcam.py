@@ -29,7 +29,7 @@ label_batch = tf.placeholder(tf.int32, shape=(batch_size))
 
 print("Preparing network...")
 with slim.arg_scope(alexnet.alexnet_v2_arg_scope()):
-    _, layers = alexnet.alexnet_v2(image_batch, is_training=False)
+    _, layers = alexnet.alexnet_v2(image_batch,num_classes=100, is_training=False)
 
 feat = tf.squeeze(layers[featLayer])
 
