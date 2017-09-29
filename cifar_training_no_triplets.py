@@ -26,10 +26,10 @@ def main():
     pretrained_net = None
     img_size = [256, 256]
     crop_size = [224, 224]
-    num_iters = 5000
+    num_iters = 50000
     summary_iters = 10
     save_iters = 100000
-    learning_rate = .001
+    learning_rate = .0005
     margin = 10
     featLayer = 'alexnet_v2/fc8'
 
