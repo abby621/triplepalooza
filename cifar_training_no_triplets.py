@@ -79,7 +79,7 @@ def main():
     print("Start training...")
     ctr  = 0
     for step in range(num_iters):
-        if mod(step,50000) == 0:
+        if np.mod(step,50000) == 0:
             learning_rate = learning_rate/2
 
         start_time1 = time.time()
