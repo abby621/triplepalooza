@@ -53,10 +53,11 @@ def main():
 
     feat = tf.squeeze(layers[featLayer])
 
-    loss = tf.reduce_max(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=feat, labels=label_batch))
+    loss1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=feat, labels=label_batch)
+    loss2 = tf.reduce_max(loss1)
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
-    train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
+    train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss2)
     summary_op = tf.summary.merge_all()
     init_op = tf.global_variables_initializer()
 
@@ -82,13 +83,15 @@ def main():
         batch, labels, ims = data.getBatch()
         end_time1 = time.time()
         start_time2 = time.time()
-        _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, label_batch: labels})
+        _, loss_val = sess.run([train_op, loss2], feed_dict={image_batch: batch, label_batch: labels})
+        ll = sess.run(loss1, feed_dict={image_batch: batch, label_batch: labels})
         end_time2 = time.time()
 
         duration = end_time2-start_time1
 
         # if step % summary_iters == 0:
         print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_val, duration))
+        print len(np.where(ll==0)[0])
         # Update the events file.
         # summary_str = sess.run(summary_op)
         # writer.add_summary(summary_str, step)
