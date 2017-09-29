@@ -314,7 +314,6 @@ class NonTripletSet:
         for ix in range(0,self.batchSize):
             randClass = random.choice(self.classes)
             randIm = random.choice(self.files[randClass])
-            print randClass,randIm
             randImg = self.getProcessedImage(randIm)
             while randImg is None:
                 randClass = np.random.choice(self.classes)
