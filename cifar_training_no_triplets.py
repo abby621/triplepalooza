@@ -26,7 +26,7 @@ def main():
     pretrained_net = None
     img_size = [256, 256]
     crop_size = [224, 224]
-    num_iters = 50000
+    num_iters = 200000
     summary_iters = 10
     save_iters = 5000
     learning_rate = .001
@@ -78,6 +78,9 @@ def main():
     print("Start training...")
     ctr  = 0
     for step in range(num_iters):
+        if np.mod(step,50000):
+            learning_rate = learning_rate/2
+
         start_time1 = time.time()
         batch, labels, ims = data.getBatch()
         end_time1 = time.time()
