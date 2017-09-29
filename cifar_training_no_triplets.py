@@ -53,7 +53,7 @@ def main():
 
     feat = tf.squeeze(layers[featLayer])
     aa = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=feat, labels=label_batch)
-    loss = tf.reduce_max(aa)
+    loss = tf.reduce_mean(aa)
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
     train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
