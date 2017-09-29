@@ -27,7 +27,7 @@ class CombinatorialTripletSet:
         self.crop_size = crop_size
 
         self.meanFile = mean_file
-        meanIm = np.load(self.meanFile)/255.0
+        meanIm = np.load(self.meanFile)
 
         if meanIm.shape[0] == 3:
             meanIm = np.moveaxis(meanIm, 0, -1)
@@ -105,6 +105,13 @@ class CombinatorialTripletSet:
 
         return batch, labels, ims
 
+    def getBatchFromImageList(self,image_list):
+        batch = np.zeros([len(image_list), self.crop_size[0], self.crop_size[1], 3])
+        for ix in range(0,len(image_list)):
+            img = self.getProcessedImage(image_list[ix])
+            batch[ix,:,:,:] = img
+        return batch
+
     def getProcessedImage(self, image_file):
         img = cv2.imread(image_file)
         if img is None:
@@ -154,7 +161,7 @@ class VanillaTripletSet:
         self.crop_size = crop_size
 
         self.meanFile = mean_file
-        meanIm = np.load(self.meanFile)/255.0
+        meanIm = np.load(self.meanFile)
 
         if meanIm.shape[0] == 3:
             meanIm = np.moveaxis(meanIm, 0, -1)
@@ -238,6 +245,14 @@ class VanillaTripletSet:
 
         return batch, labels, ims
 
+    def getBatchFromImageList(self,image_list):
+        batch = np.zeros([len(image_list), self.crop_size[0], self.crop_size[1], 3])
+        for ix in range(0,len(image_list)):
+            img = self.getProcessedImage(image_list[ix])
+            batch[ix,:,:,:] = img
+
+        return batch
+
     def getProcessedImage(self, image_file):
         img = cv2.imread(image_file)
         if img is None:
@@ -261,7 +276,7 @@ class NonTripletSet:
         self.crop_size = crop_size
 
         self.meanFile = mean_file
-        meanIm = np.load(self.meanFile)/255.0
+        meanIm = np.load(self.meanFile)
 
         if meanIm.shape[0] == 3:
             meanIm = np.moveaxis(meanIm, 0, -1)
@@ -294,11 +309,12 @@ class NonTripletSet:
     def getBatch(self):
         batch = np.zeros([self.batchSize, self.crop_size[0], self.crop_size[1], 3])
         labels = np.zeros([self.batchSize],dtype='int')
-        ims = []
+        ims = np.zeros([self.batchSize],dtype=object)
 
         for ix in range(0,self.batchSize):
-            randClass = np.random.choice(self.classes)
+            randClass = random.choice(self.classes)
             randIm = random.choice(self.files[randClass])
+            print randClass,randIm
             randImg = self.getProcessedImage(randIm)
             while randImg is None:
                 randClass = np.random.choice(self.classes)
@@ -307,9 +323,17 @@ class NonTripletSet:
 
             batch[ix,:,:,:] = randImg
             labels[ix] = randClass
-            ims.append(randIm)
+            ims[ix] = randIm
 
         return batch, labels, ims
+
+    def getBatchFromImageList(self,image_list):
+        batch = np.zeros([len(image_list), self.crop_size[0], self.crop_size[1], 3])
+        for ix in range(0,len(image_list)):
+            img = self.getProcessedImage(image_list[ix])
+            batch[ix,:,:,:] = img
+
+        return batch
 
     def getProcessedImage(self, image_file):
         img = cv2.imread(image_file)
@@ -322,8 +346,8 @@ class NonTripletSet:
             top = np.random.randint(self.image_size[0] - self.crop_size[0])
             left = np.random.randint(self.image_size[1] - self.crop_size[1])
         else:
-            top = round((self.image_size[0] - self.crop_size[0])/2)
-            left = round((self.image_size[1] - self.crop_size[1])/2)
+            top = int(round((self.image_size[0] - self.crop_size[0])/2))
+            left = int(round((self.image_size[1] - self.crop_size[1])/2))
 
         img = img[top:(top+self.crop_size[0]),left:(left+self.crop_size[1]),:]
         return img
