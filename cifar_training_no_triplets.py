@@ -28,8 +28,8 @@ def main():
     crop_size = [224, 224]
     num_iters = 5000
     summary_iters = 10
-    save_iters = 50000
-    learning_rate = .0001
+    save_iters = 100000
+    learning_rate = .001
     margin = 10
     featLayer = 'alexnet_v2/fc8'
 
@@ -54,7 +54,7 @@ def main():
     feat = tf.squeeze(layers[featLayer])
 
     loss1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=feat, labels=label_batch)
-    loss2 = tf.reduce_max(loss1)
+    loss2 = tf.reduce_mean(loss1)
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
     train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss2)
@@ -79,6 +79,9 @@ def main():
     print("Start training...")
     ctr  = 0
     for step in range(num_iters):
+        if mod(step,50000) == 0:
+            learning_rate = learning_rate/2
+
         start_time1 = time.time()
         batch, labels, ims = data.getBatch()
         end_time1 = time.time()
