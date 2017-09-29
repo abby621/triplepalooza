@@ -52,9 +52,7 @@ def main():
         _, layers = alexnet.alexnet_v2(final_batch, num_classes=100, is_training=True)
 
     feat = tf.squeeze(layers[featLayer])
-    f2 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=feat, labels=label_batch)
-
-    loss = tf.reduce_mean(f2)
+    loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=feat, labels=label_batch))
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
     train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
@@ -84,14 +82,12 @@ def main():
         end_time1 = time.time()
         start_time2 = time.time()
         _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, label_batch: labels})
-        ff = sess.run(f2, feed_dict={image_batch: batch, label_batch: labels})
         end_time2 = time.time()
 
         duration = end_time2-start_time1
 
         # if step % summary_iters == 0:
         print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_val, duration))
-        print len(np.where(ff==0)[0])
         # Update the events file.
         # summary_str = sess.run(summary_op)
         # writer.add_summary(summary_str, step)
