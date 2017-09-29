@@ -44,7 +44,7 @@ def main():
     data = NonTripletSet(filename, mean_file, img_size, crop_size, batch_size, num_pos_examples)
 
     # after we've doctored everything, we need to remember to subtract off the mean
-    repMeanIm = np.tile(np.expand_dims(data.meanImage,0),[batch_size,1,1,1])*255.
+    repMeanIm = np.tile(np.expand_dims(data.meanImage,0),[batch_size,1,1,1])
     final_batch = tf.subtract(image_batch,repMeanIm)
 
     print("Preparing network...")
