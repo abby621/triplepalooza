@@ -57,6 +57,7 @@ def main():
         _, layers = alexnet.alexnet_v2(final_batch, num_classes=100, is_training=True)
 
     feat = tf.squeeze(layers[featLayer])
+    prediction=tf.argmax(feat,1)
     aa = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=feat, labels=label_batch)
     loss = tf.reduce_mean(aa)
 
@@ -85,15 +86,13 @@ def main():
     for step in range(num_iters):
         start_time1 = time.time()
         batch, labels, ims = train_data.getBatch()
-        _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, label_batch: labels})
-        prediction=tf.argmax(feat,1)
-        train_best = sess.run([prediction],feed_dict={image_batch: batch, label_batch: labels})
-        train_accuracy = int(100*float(len(np.where(train_best==labels)[0]))/float(batch_size))
+        _, loss_val, pred = sess.run([train_op, loss, prediction], feed_dict={image_batch: batch, label_batch: labels})
+        train_accuracy = int(100*float(len(np.where(pred==labels)[0]))/float(batch_size))
         end_time2 = time.time()
         duration = end_time2-start_time1
         if step % 50 == 0:
             test_batch, test_labels, test_ims = test_data.getBatch()
-            test_best = sess.run([prediction],feed_dict={image_batch: test_batch, label_batch: test_labels})
+            test_best = sess.run([prediction],feed_dict={image_batch:test_batch,label_batch:test_labels})
             test_accuracy = int(100*float(len(np.where(test_best==test_labels)[0]))/float(batch_size))
             end_time2 = time.time()
             duration = end_time2-start_time1
