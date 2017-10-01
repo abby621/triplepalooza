@@ -9,6 +9,7 @@ import tensorflow as tf
 from classfile import NonTripletSet
 import os.path
 import time
+from datetime import datetime
 import numpy as np
 from PIL import Image
 from tensorflow.python.ops.image_ops_impl import *
