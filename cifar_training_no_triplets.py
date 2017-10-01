@@ -78,9 +78,6 @@ def main():
     print("Start training...")
     ctr  = 0
     for step in range(num_iters):
-        if np.mod(step,50000):
-            learning_rate = learning_rate/2
-
         start_time1 = time.time()
         batch, labels, ims = data.getBatch()
         end_time1 = time.time()
@@ -92,8 +89,7 @@ def main():
         duration = end_time2-start_time1
 
         # if step % summary_iters == 0:
-        print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_val, duration))
-        print('Top1 training accuracy:' ),len(np.where(aa2==0)[0])/batch_size
+        print('Step %d: loss = %.2f (%.3f sec), top1: %3f' % (step, loss_val, duration,float(len(np.where(aa2==0)[0]))/float(batch_size)))
         # Update the events file.
         # summary_str = sess.run(summary_op)
         # writer.add_summary(summary_str, step)
