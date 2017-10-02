@@ -50,7 +50,8 @@ def main():
 
     # after we've doctored everything, we need to remember to subtract off the mean
     repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
-    final_batch = tf.subtract(image_batch,repMeanIm)
+    noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 3], mean=0.0, stddev=3, dtype=tf.float32)
+    final_batch = tf.add(tf.subtract(image_batch,repMeanIm),noise)
 
     print("Preparing network...")
     with slim.arg_scope(alexnet.alexnet_v2_arg_scope()):

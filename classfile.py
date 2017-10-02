@@ -117,9 +117,8 @@ class CombinatorialTripletSet:
         if img is None:
             return None
 
-        img = img/255.0
-        # if self.isTraining:
-        #     img = doctor_im(img,ind)
+        if self.isTraining and random.random() > 0.5:
+            img = cv2.flip(img,1)
 
         img = cv2.resize(img, (self.image_size[0], self.image_size[1]))
 
@@ -258,6 +257,9 @@ class VanillaTripletSet:
         if img is None:
             return img
 
+        if self.isTraining and random.random() > 0.5:
+            img = cv2.flip(img,1)
+
         img = cv2.resize(img, (self.image_size[0], self.image_size[1]))
 
         if (self.isTraining):
@@ -338,6 +340,9 @@ class NonTripletSet:
         img = cv2.imread(image_file)
         if img is None:
             return img
+
+        if self.isTraining and random.random() > 0.5:
+            img = cv2.flip(img,1)
 
         img = cv2.resize(img, (self.image_size[0], self.image_size[1]))
 
