@@ -16,41 +16,44 @@ from tensorflow.python.ops import gen_image_ops
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 import tensorflow.contrib.slim as slim
-from tensorflow.contrib.slim.python.slim.nets import vgg
+from tensorflow.contrib.slim.python.slim.nets import resnet_v2
 
 def main():
     ckpt_dir = './output/cifar/no_doctoring/ckpts'
     log_dir = './output/cifar/no_doctoring/logs'
-    filename = './inputs/cifar/train.txt'
+    train_log_file = open(os.path.join(log_dir,str(datetime.now())+'_train.txt'),'a')
+    test_log_file = open(os.path.join(log_dir,str(datetime.now())+'_test.txt'),'a')
+    train_filename = './inputs/cifar/train.txt'
+    test_filename = './inputs/cifar/test.txt'
     mean_file = './models/cifar/cifar_mean_im.npy'
     pretrained_net = None
     img_size = [256, 256]
     crop_size = [224, 224]
-    num_iters = 5000
+    num_iters = 7000
     summary_iters = 10
-    save_iters = 500
-    learning_rate = .001
+    save_iters = 1000
+    learning_rate = .0001
     margin = 10
-    featLayer = 'vgg_16/fc7'
+    featLayer = 'resnet_v2_50/logits'
 
-    batch_size = 30
+    batch_size = 90
     num_pos_examples = batch_size/10
+
+    # Create data "batcher"
+    data = CombinatorialTripletSet(filename, mean_file, img_size, crop_size, batch_size, num_pos_examples)
 
     # Queuing op loads data into input tensor
     image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
     people_mask_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 1])
     label_batch = tf.placeholder(tf.int32, shape=(batch_size))
 
-    # Create data "batcher"
-    data = CombinatorialTripletSet(filename, mean_file, img_size, crop_size, batch_size, num_pos_examples)
-
     # after we've doctored everything, we need to remember to subtract off the mean
     repMeanIm = np.tile(np.expand_dims(data.meanImage,0),[batch_size,1,1,1])
     final_batch = tf.subtract(image_batch,repMeanIm)
 
     print("Preparing network...")
-    with slim.arg_scope(vgg.vgg_arg_scope()):
-            _, layers = vgg.vgg_16(final_batch,num_classes=100, is_training=True)
+    with slim.arg_scope(resnet_v2.resnet_arg_scope()):
+        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=100, is_training=True)
 
     feat = tf.squeeze(layers[featLayer])
 
@@ -122,34 +125,41 @@ def main():
         if pretrained_net:
             saver.restore(sess, pretrained_net)
 
-        print("Start training...")
-        ctr  = 0
-        for step in range(num_iters):
-            start_time = time.time()
-            batch, labels, ims = data.getBatch()
-            people_masks = data.getPeopleMasks()
-            _, loss_val = sess.run([train_op, loss3], feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
-            # dd = sess.run(D, feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
-            # bb = sess.run(bool_mask, feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
-            dd2 = sess.run(D2, feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
-            # l1 = sess.run(loss1, feed_dict={image_batch: batch, people_mask_batch: people_masks, label_batch: labels})
-            # print l1
-            print len(np.where(dd2==0)[0])
+    print("Start training...")
+    ctr  = 0
+    for step in range(num_iters):
+        start_time1 = time.time()
+        batch, labels, ims = train_data.getBatch()
+        _, loss_val, pred = sess.run([train_op, loss3, prediction], feed_dict={image_batch: batch, label_batch: labels})
+        train_accuracy = int(100*float(len(np.where(pred==labels)[0]))/float(batch_size))
+        end_time2 = time.time()
+        duration = end_time2-start_time1
+        if step % 50 == 0:
+            for ix in range(0,10):
+                test_batch, test_labels, test_ims = test_data.getBatch()
+                test_best = sess.run([prediction],feed_dict={image_batch:test_batch,label_batch:test_labels})
+                test_accuracy = int(100*float(len(np.where(test_best==test_labels)[0]))/float(batch_size))
+                # if step % summary_iters == 0:
+                out_str = 'TEST: Step %d: top1-accuracy: %d' % (step,test_accuracy)
+                print(out_str)
+                test_log_file.write(out_str+'\n')
+        out_str = 'Step %d: loss = %.2f (%.3f sec), top1-accuracy: %d' % (step, loss_val, duration,train_accuracy)
+        print(out_str)
+        train_log_file.write(out_str+'\n')
+        # Update the events file.
+        # summary_str = sess.run(summary_op)
+        # writer.add_summary(summary_str, step)
+        # writer.flush()
+        #
+        # Save a checkpoint
+        if (step + 1) % save_iters == 0 or (step + 1) == num_iters:
+            print('Saving checkpoint at iteration: %d' % (step))
+            pretrained_net = os.path.join(ckpt_dir, 'checkpoint')
+            saver.save(sess, pretrained_net, global_step=step)
 
-            duration = time.time() - start_time
-
-            # if step % summary_iters == 0:
-            print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_val, duration))
-            # Update the events file.
-#                summary_str = sess.run(summary_op)
-#                writer.add_summary(summary_str, step)
-#                writer.flush()
-#
-            # Save a checkpoint
-            if (step + 1) % save_iters == 0 or (step + 1) == num_iters:
-                print('Saving checkpoint at iteration: %d' % (step))
-                pretrained_net = os.path.join(ckpt_dir, 'checkpoint')
-                saver.save(sess, pretrained_net, global_step=step)
+    sess.close()
+    train_log_file.close()
+    test_log_file.close()
 
       #  coord.request_stop()
        # coord.join(threads)
