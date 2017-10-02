@@ -96,8 +96,6 @@ def main():
                 test_batch, test_labels, test_ims = test_data.getBatch()
                 test_best = sess.run([prediction],feed_dict={image_batch:test_batch,label_batch:test_labels})
                 test_accuracy = int(100*float(len(np.where(test_best==test_labels)[0]))/float(batch_size))
-                end_time2 = time.time()
-                duration = end_time2-start_time1
                 # if step % summary_iters == 0:
                 out_str = 'TEST: Step %d: top1-accuracy: %d' % (step,test_accuracy)
                 print(out_str)
