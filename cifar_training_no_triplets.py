@@ -17,7 +17,7 @@ from tensorflow.python.ops import gen_image_ops
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 import tensorflow.contrib.slim as slim
-from tensorflow.contrib.slim.python.slim.nets import alexnet
+from tensorflow.contrib.slim.python.slim.nets import resnet_v2
 
 def main():
     ckpt_dir = './output/cifar/no_triplets/ckpts'
@@ -33,11 +33,11 @@ def main():
     num_iters = 200000
     summary_iters = 10
     save_iters = 1000
-    learning_rate = .00005
+    learning_rate = .0001
     margin = 10
-    featLayer = 'alexnet_v2/fc8'
+    featLayer = 'resnet_v2_50/logits'
 
-    batch_size = 100
+    batch_size = 90
     num_pos_examples = batch_size/10
 
     # Queuing op loads train_data into input tensor
@@ -54,8 +54,8 @@ def main():
     final_batch = tf.add(tf.subtract(image_batch,repMeanIm),noise)
 
     print("Preparing network...")
-    with slim.arg_scope(alexnet.alexnet_v2_arg_scope()):
-        _, layers = alexnet.alexnet_v2(final_batch, num_classes=100, is_training=True)
+    with slim.arg_scope(resnet_v2.resnet_arg_scope()):
+        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=100, is_training=True)
 
     feat = tf.squeeze(layers[featLayer])
     prediction=tf.argmax(feat,1)
