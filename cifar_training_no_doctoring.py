@@ -23,9 +23,7 @@ def main():
     ckpt_dir = './output/cifar/no_doctoring/ckpts'
     log_dir = './output/cifar/no_doctoring/logs'
     train_log_file = open(os.path.join(log_dir,str(datetime.now())+'_train.txt'),'a')
-    test_log_file = open(os.path.join(log_dir,str(datetime.now())+'_test.txt'),'a')
     train_filename = './inputs/cifar/train.txt'
-    test_filename = './inputs/cifar/test.txt'
     mean_file = './models/cifar/cifar_mean_im.npy'
     pretrained_net = None
     img_size = [256, 256]
@@ -42,7 +40,6 @@ def main():
 
     # Create data "batcher"
     train_data = CombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples)
-    test_data = CombinatorialTripletSet(test_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples)
 
     # Queuing op loads data into input tensor
     image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
@@ -132,20 +129,10 @@ def main():
     for step in range(num_iters):
         start_time1 = time.time()
         batch, labels, ims = train_data.getBatch()
-        _, loss_val, pred = sess.run([train_op, loss3, prediction], feed_dict={image_batch: batch, label_batch: labels})
-        train_accuracy = int(100*float(len(np.where(pred==labels)[0]))/float(batch_size))
+        _, loss_val = sess.run([train_op, loss3], feed_dict={image_batch: batch, label_batch: labels})
         end_time2 = time.time()
         duration = end_time2-start_time1
-        if step % 50 == 0:
-            for ix in range(0,10):
-                test_batch, test_labels, test_ims = test_data.getBatch()
-                test_best = sess.run([prediction],feed_dict={image_batch:test_batch,label_batch:test_labels})
-                test_accuracy = int(100*float(len(np.where(test_best==test_labels)[0]))/float(batch_size))
-                # if step % summary_iters == 0:
-                out_str = 'TEST: Step %d: top1-accuracy: %d' % (step,test_accuracy)
-                print(out_str)
-                test_log_file.write(out_str+'\n')
-        out_str = 'Step %d: loss = %.2f (%.3f sec), top1-accuracy: %d' % (step, loss_val, duration,train_accuracy)
+        out_str = 'Step %d: loss = %.2f (%.3f sec)' % (step, loss_val, duration)
         print(out_str)
         train_log_file.write(out_str+'\n')
         # Update the events file.
