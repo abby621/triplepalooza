@@ -116,13 +116,13 @@ def main():
     c.gpu_options.visible_device_list="0,1"
 
     print("Starting session...")
-    with tf.Session(config=c) as sess:
-        sess.run(init_op)
+    sess = tf.Session(config=c)
+    sess.run(init_op)
 
-        writer = tf.summary.FileWriter(log_dir, sess.graph)
+    writer = tf.summary.FileWriter(log_dir, sess.graph)
 
-        if pretrained_net:
-            saver.restore(sess, pretrained_net)
+    if pretrained_net:
+        saver.restore(sess, pretrained_net)
 
     print("Start training...")
     ctr  = 0
