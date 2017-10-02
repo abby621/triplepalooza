@@ -41,7 +41,8 @@ def main():
     num_pos_examples = batch_size/10
 
     # Create data "batcher"
-    data = CombinatorialTripletSet(filename, mean_file, img_size, crop_size, batch_size, num_pos_examples)
+    train_data = CombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples)
+    test_data = CombinatorialTripletSet(test_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples)
 
     # Queuing op loads data into input tensor
     image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
@@ -49,7 +50,7 @@ def main():
     label_batch = tf.placeholder(tf.int32, shape=(batch_size))
 
     # after we've doctored everything, we need to remember to subtract off the mean
-    repMeanIm = np.tile(np.expand_dims(data.meanImage,0),[batch_size,1,1,1])
+    repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
     final_batch = tf.subtract(image_batch,repMeanIm)
 
     print("Preparing network...")
