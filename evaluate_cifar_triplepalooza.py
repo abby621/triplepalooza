@@ -155,9 +155,7 @@ sess.close()
 
 print '---Triplepalooza--'
 print 'Network: ', test_net
-print 'Top1 Training Accuracy: ', float(trainingTop1Accuracy)/float(numTrainingIms)
 print 'NN Training Accuracy: ',np.mean(trainingAccuracy,axis=0)
 print '---'
-print 'Top1 Test Accuracy: ', float(testingTop1Accuracy)/float(numTestingIms)
 print 'NN Test Accuracy: ',np.mean(testingAccuracy,axis=0)
 print '---'
