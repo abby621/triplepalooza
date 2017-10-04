@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Sep 19 13:02:07 2016
-
-@author: souvenir
-"""
-
 import tensorflow as tf
 from classfile import NonTripletSet
 import os
@@ -17,22 +10,21 @@ from tensorflow.contrib.slim.python.slim.nets import resnet_v2
 import random
 
 def getDist(feat,otherFeats):
-    dist = (otherFeats - feat)**4
-    dist = np.sum(dist,axis=1)
-    dist = np.power(dist,.25)
-    # dist = (otherFeats - feat)**2
+    # dist = (otherFeats - feat)**4
     # dist = np.sum(dist,axis=1)
-    # dist = np.sqrt(dist)
+    # dist = np.power(dist,.25)
+    dist = (otherFeats - feat)**2
+    dist = np.sum(dist,axis=1)
+    dist = np.sqrt(dist)
     return dist
 
 train_file = './inputs/cifar/train.txt'
 test_file = './inputs/cifar/test.txt'
-train_net = './output/cifar/no_triplets/ckpts/checkpoint-6999'
-test_net = './output/cifar/no_triplets/ckpts/checkpoint-6999'
+train_net = './output/cifar/no_doctoring/ckpts/checkpoint-6999'
+test_net = './output/cifar/no_doctoring/ckpts/checkpoint-6999'
 img_size = [256, 256]
 crop_size = [224, 224]
 featLayer = 'resnet_v2_50/logits'
-featLayer2 = 'predictions'
 mean_file = './models/cifar/cifar_mean_im.npy'
 
 batch_size = 90
@@ -53,12 +45,11 @@ with slim.arg_scope(resnet_v2.resnet_arg_scope()):
     _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=100, is_training=True)
 
 feat = tf.squeeze(layers[featLayer])
-prediction = tf.argmax(feat,1)
 
 c = tf.ConfigProto()
 c.gpu_options.visible_device_list="0,1"
 
-# TRAINING ACCURACY
+# TESTING ACCURACY
 sess = tf.Session(config=c)
 saver = tf.train.Saver(max_to_keep=100)
 saver.restore(sess, train_net)
@@ -72,8 +63,8 @@ trainingIms = np.empty((numTrainingIms),dtype=object)
 trainingLabels = np.empty((numTrainingIms),dtype=np.int32)
 num_iters = numTrainingIms / batch_size
 
-trainingTop1Accuracy = 0
 for step in range(0,num_iters+1):
+    print step, '/', num_iters
     if step == num_iters:
         end_ind = numTrainingIms
     else:
@@ -90,10 +81,7 @@ for step in range(0,num_iters+1):
         labels += [labels[-1]]
         batch = np.vstack((batch,np.expand_dims(batch[-1],0)))
 
-    ff, pred = sess.run([feat,prediction], feed_dict={image_batch: batch, label_batch:labels})
-    top1 = len(np.where(pred==labels)[0])
-    trainingTop1Accuracy += top1
-    print step,'/',num_iters,':', top1
+    ff = sess.run(feat, feed_dict={image_batch: batch, label_batch:labels})
     trainingFeats[step*batch_size:end_ind,:] = ff[:len(il),:]
 
 trainingAccuracy = np.zeros((numTrainingIms,100))
@@ -109,8 +97,6 @@ for idx in range(numTrainingIms):
     if idx%10==0:
         print idx,': ',np.mean(trainingAccuracy[:idx,:],axis=0)[0]
 
-print 'Top1 Training Accuracy: ', float(trainingTop1Accuracy)/float(numTrainingIms)
-print 'NN Training Accuracy: ',np.mean(trainingAccuracy,axis=0)
 sess.close()
 
 # TESTING ACCURACY
@@ -127,8 +113,8 @@ testingIms = np.empty((numTestingIms),dtype=object)
 testingLabels = np.empty((numTestingIms),dtype=np.int32)
 num_iters = numTestingIms / batch_size
 
-testingTop1Accuracy = 0
 for step in range(0,num_iters+1):
+    print step, '/', num_iters
     if step == num_iters:
         end_ind = numTestingIms
     else:
@@ -145,14 +131,11 @@ for step in range(0,num_iters+1):
         labels += [labels[-1]]
         batch = np.vstack((batch,np.expand_dims(batch[-1],0)))
 
-    ff, pred = sess.run([feat,prediction], feed_dict={image_batch: batch, label_batch:labels})
-    top1 = len(np.where(pred==labels)[0])
-    testingTop1Accuracy += top1
-    print step,'/',num_iters,':', top1
+    ff = sess.run(feat, feed_dict={image_batch: batch, label_batch:labels})
     testingFeats[step*batch_size:end_ind,:] = ff[:len(il),:]
 
-testingAccuracy = np.zeros((numTrainingIms,100))
-for idx in range(numTrainingIms):
+testingAccuracy = np.zeros((numTestingIms,100))
+for idx in range(numTestingIms):
     thisFeat = testingFeats[idx,:]
     thisLabel = testingLabels[idx]
     dists = getDist(thisFeat,testingFeats)
@@ -163,8 +146,5 @@ for idx in range(numTrainingIms):
         testingAccuracy[idx,topHit:] = 1
     if idx%10==0:
         print idx,': ',np.mean(testingAccuracy[:idx,:],axis=0)[0]
-
-print 'Top1 Test Accuracy: ', float(testingTop1Accuracy)/float(numTestingIms)
-print 'NN Test Accuracy: ',np.mean(testingAccuracy,axis=0)
 
 sess.close()
