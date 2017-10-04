@@ -48,8 +48,9 @@ def main():
 
     # after we've doctored everything, we need to remember to subtract off the mean
     repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
-    final_batch = tf.subtract(image_batch,repMeanIm)
-
+    noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 3], mean=0.0, stddev=3, dtype=tf.float32)
+    final_batch = tf.add(tf.subtract(image_batch,repMeanIm),noise)
+    
     print("Preparing network...")
     with slim.arg_scope(resnet_v2.resnet_arg_scope()):
         _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=100, is_training=True)
@@ -148,7 +149,6 @@ def main():
 
     sess.close()
     train_log_file.close()
-    test_log_file.close()
 
       #  coord.request_stop()
        # coord.join(threads)
