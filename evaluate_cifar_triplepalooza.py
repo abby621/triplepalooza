@@ -63,6 +63,7 @@ trainingIms = np.empty((numTrainingIms),dtype=object)
 trainingLabels = np.empty((numTrainingIms),dtype=np.int32)
 num_iters = numTrainingIms / batch_size
 
+print 'Computing training set features...'
 for step in range(0,num_iters+1):
     print step, '/', num_iters
     if step == num_iters:
@@ -84,6 +85,7 @@ for step in range(0,num_iters+1):
     ff = sess.run(feat, feed_dict={image_batch: batch, label_batch:labels})
     trainingFeats[step*batch_size:end_ind,:] = ff[:len(il),:]
 
+print 'Computing training set distances...'
 trainingAccuracy = np.zeros((numTrainingIms,100))
 for idx in range(numTrainingIms):
     thisFeat = trainingFeats[idx,:]
@@ -94,8 +96,8 @@ for idx in range(numTrainingIms):
     if thisLabel in sortedLabels:
         topHit = np.where(sortedLabels==thisLabel)[0][0]
         trainingAccuracy[idx,topHit:] = 1
-    if idx%10==0:
-        print idx,': ',np.mean(trainingAccuracy[:idx,:],axis=0)[0]
+    # if idx%10==0:
+    #     print idx,': ',np.mean(trainingAccuracy[:idx,:],axis=0)[0]
 
 sess.close()
 
@@ -113,8 +115,9 @@ testingIms = np.empty((numTestingIms),dtype=object)
 testingLabels = np.empty((numTestingIms),dtype=np.int32)
 num_iters = numTestingIms / batch_size
 
+print 'Computing testing set features...'
 for step in range(0,num_iters+1):
-    print step, '/', num_iters
+    # print step, '/', num_iters
     if step == num_iters:
         end_ind = numTestingIms
     else:
@@ -134,6 +137,7 @@ for step in range(0,num_iters+1):
     ff = sess.run(feat, feed_dict={image_batch: batch, label_batch:labels})
     testingFeats[step*batch_size:end_ind,:] = ff[:len(il),:]
 
+print 'Computing testing set distances...'
 testingAccuracy = np.zeros((numTestingIms,100))
 for idx in range(numTestingIms):
     thisFeat = testingFeats[idx,:]
@@ -144,7 +148,16 @@ for idx in range(numTestingIms):
     if thisLabel in sortedLabels:
         topHit = np.where(sortedLabels==thisLabel)[0][0]
         testingAccuracy[idx,topHit:] = 1
-    if idx%10==0:
-        print idx,': ',np.mean(testingAccuracy[:idx,:],axis=0)[0]
+    # if idx%10==0:
+    #     print idx,': ',np.mean(testingAccuracy[:idx,:],axis=0)[0]
 
 sess.close()
+
+print '---Triplepalooza--'
+print 'Network: ', test_net
+print 'Top1 Training Accuracy: ', float(trainingTop1Accuracy)/float(numTrainingIms)
+print 'NN Training Accuracy: ',np.mean(trainingAccuracy,axis=0)
+print '---'
+print 'Top1 Test Accuracy: ', float(testingTop1Accuracy)/float(numTestingIms)
+print 'NN Test Accuracy: ',np.mean(testingAccuracy,axis=0)
+print '---'
