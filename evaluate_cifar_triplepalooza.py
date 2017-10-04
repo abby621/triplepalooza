@@ -65,7 +65,7 @@ num_iters = numTrainingIms / batch_size
 
 print 'Computing training set features...'
 for step in range(0,num_iters+1):
-    print step, '/', num_iters
+    # print step, '/', num_iters
     if step == num_iters:
         end_ind = numTrainingIms
     else:
