@@ -61,7 +61,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     numClasses = len(train_data.files)
     numIms = np.sum([len(train_data.files[idx]) for idx in range(0,numClasses)])
     datestr = datetime.now().strftime("%Y%m%d_%H%M%S")
-    logfile_path = os.path.join(log_dir,datestr)+'_lr'+str(learning_rate)+'_outputSz'+str(output_size)+'_margin'+str(margin)+'_train.txt'
+    logfile_path = os.path.join(log_dir,datestr)+'_lr'+str(learning_rate).replace('.','pt')+'_outputSz'+str(output_size)+'_margin'+str(margin)+'_train.txt'
     train_log_file = open(logfile_path,'a')
     print '------------'
     print ''
