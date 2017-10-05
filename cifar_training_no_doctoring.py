@@ -47,11 +47,14 @@ def main(margin,output_size,learning_rate,is_overfitting):
     save_iters = 500
     featLayer = 'resnet_v1_50/logits'
     is_training = True
+    if is_overfitting.lower()=='true':
+        is_overfitting = True
+    else:
+        is_overfitting = False
 
     margin = int(margin)
     output_size = int(output_size)
     learning_rate = float(learning_rate)
-    is_overfitting = True
 
     batch_size = 100
     num_pos_examples = batch_size/10
