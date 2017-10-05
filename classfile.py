@@ -22,7 +22,7 @@ else:
     peopleDir = '/project/focus/datasets/traffickcam/people_crops'
 
 class CombinatorialTripletSet:
-    def __init__(self, image_list, mean_file, image_size, crop_size, batchSize=100, num_pos=10, isTraining=True):
+    def __init__(self, image_list, mean_file, image_size, crop_size, batchSize=100, num_pos=10, isTraining=True, isOverfitting=False):
         self.image_size = image_size
         self.crop_size = crop_size
 
@@ -54,6 +54,12 @@ class CombinatorialTripletSet:
             self.files.append(temp)
             self.classes.append(ctr)
             ctr += 1
+
+        if isOverfitting:
+            self.files = self.files[:2]
+            for idx in range(2):
+                self.files[idx] = random.sample(self.files[idx],100)
+            self.classes = self.classes[:2]
 
         self.isTraining = isTraining
         self.indexes = np.arange(0, len(self.files))

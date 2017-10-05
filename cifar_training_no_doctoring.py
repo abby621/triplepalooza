@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Sep 19 13:02:07 2016
-
-@author: souvenir
+# python cifar_training_no_doctoring.py margin output_size learning_rate is_overfitting
+# python cifar_training_no_doctoring.py 5 12 .00005 True
 """
 
 import tensorflow as tf
@@ -23,7 +22,7 @@ import signal
 import time
 import sys
 
-def main():
+def main(margin,output_size,learning_rate,is_overfitting):
     def handler(signum, frame):
         print 'Saving checkpoint before closing'
         pretrained_net = os.path.join(ckpt_dir, 'checkpoint')
@@ -41,19 +40,22 @@ def main():
     pretrained_net = None
     img_size = [256, 256]
     crop_size = [224, 224]
-    num_iters = 7000
+    num_iters = 20000
     summary_iters = 10
     save_iters = 1000
-    learning_rate = .0005
-    margin = 5
     featLayer = 'resnet_v1_50/logits'
-    outputSize = 12
+    is_training = True
+
+    # margin = 5
+    # output_size = 12
+    # learning_rate = .00005
+    # is_overfitting = True
 
     batch_size = 100
     num_pos_examples = batch_size/10
 
     # Create data "batcher"
-    train_data = CombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples)
+    train_data = CombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training, isOverfitting=is_overfitting)
 
     # Queuing op loads data into input tensor
     image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
@@ -168,4 +170,11 @@ def main():
        # coord.join(threads)
 
 if __name__ == "__main__":
-    main()
+    args = sys.argv
+    if len(args) < 5:
+        print 'Expected four input parameters: margin, output_size, learning_rate, is_overfitting'
+    margin = args[1]
+    output_size = args[2]
+    learning_rate = args[3]
+    is_overfitting = args[4]
+    main(margin,output_size,learning_rate,is_overfitting)
