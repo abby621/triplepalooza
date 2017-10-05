@@ -84,8 +84,11 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     # after we've doctored everything, we need to remember to subtract off the mean
     repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
-    noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 3], mean=0.0, stddev=3, dtype=tf.float32)
-    final_batch = tf.add(tf.subtract(image_batch,repMeanIm),noise)
+    if self.isOverfitting:
+        final_batch = tf.subtract(image_batch,repMeanIm)
+    else:
+        noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 3], mean=0.0, stddev=3, dtype=tf.float32)
+        final_batch = tf.add(tf.subtract(image_batch,repMeanIm),noise)
 
     print("Preparing network...")
     with slim.arg_scope(resnet_v1.resnet_arg_scope()):

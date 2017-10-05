@@ -26,6 +26,9 @@ class CombinatorialTripletSet:
         self.image_size = image_size
         self.crop_size = crop_size
 
+        self.isTraining = isTraining
+        self.isOverfitting = isOverfitting
+
         self.meanFile = mean_file
         meanIm = np.load(self.meanFile)
 
@@ -56,14 +59,13 @@ class CombinatorialTripletSet:
             ctr += 1
 
         # if we're overfitting, limit how much data we have per class
-        if isOverfitting:
+        if self.isOverfitting:
             self.classes = self.classes[:10]
             self.files = self.files[:10]
             for idx in range(len(self.files)):
                 backupFiles = self.files[idx]
                 self.files[idx] = backupFiles[:10]
 
-        self.isTraining = isTraining
         self.indexes = np.arange(0, len(self.files))
 
         self.people_crop_files = glob.glob(os.path.join(peopleDir,'*mask.png'))
@@ -125,12 +127,12 @@ class CombinatorialTripletSet:
         if img is None:
             return None
 
-        if self.isTraining and random.random() > 0.5:
+        if self.isTraining and not self.isOverfitting and random.random() > 0.5:
             img = cv2.flip(img,1)
 
         img = cv2.resize(img, (self.image_size[0], self.image_size[1]))
 
-        if (self.isTraining):
+        if self.isTraining and not self.isOverfitting:
             top = np.random.randint(self.image_size[0] - self.crop_size[0])
             left = np.random.randint(self.image_size[1] - self.crop_size[1])
         else:
