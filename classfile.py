@@ -59,7 +59,7 @@ class CombinatorialTripletSet:
         if isOverfitting:
             for idx in range(len(self.files)):
                 backupFiles = self.files[idx]
-                self.files[idx] = [backupFiles[0] for ix in range(0,10)]
+                self.files[idx] = backupFiles[:10]
 
         self.isTraining = isTraining
         self.indexes = np.arange(0, len(self.files))
