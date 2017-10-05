@@ -49,10 +49,10 @@ def main(margin,output_size,learning_rate,is_overfitting):
     featLayer = 'resnet_v1_50/logits'
     is_training = True
 
-    # margin = 5
-    # output_size = 12
-    # learning_rate = .00005
-    # is_overfitting = True
+    margin = int(margin)
+    output_size = int(output_size)
+    learning_rate = float(learning_rate)
+    is_overfitting = True
 
     batch_size = 100
     num_pos_examples = batch_size/10
