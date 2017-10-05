@@ -55,11 +55,10 @@ class CombinatorialTripletSet:
             self.classes.append(ctr)
             ctr += 1
 
+        # if we're overfitting, limit how much data we have per class
         if isOverfitting:
-            self.files = self.files[:2]
-            for idx in range(2):
-                self.files[idx] = random.sample(self.files[idx],100)
-            self.classes = self.classes[:2]
+            for idx in range(len(self.files)):
+                self.files[idx] = random.sample(self.files[idx],min(20,len(self.files[ix])))
 
         self.isTraining = isTraining
         self.indexes = np.arange(0, len(self.files))
