@@ -37,7 +37,6 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     ckpt_dir = './output/cifar/no_doctoring/ckpts'
     log_dir = './output/cifar/no_doctoring/logs'
-    train_log_file = open(os.path.join(log_dir,str(datetime.now())+'_train.txt'),'a')
     train_filename = './inputs/cifar/train.txt'
     mean_file = './models/cifar/cifar_mean_im.npy'
     pretrained_net = None
@@ -61,6 +60,8 @@ def main(margin,output_size,learning_rate,is_overfitting):
     train_data = CombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training, isOverfitting=is_overfitting)
     numClasses = len(train_data.files)
     numIms = np.sum([len(train_data.files[idx]) for idx in range(0,numClasses)])
+    datestr = datetime.now().strftime("%Y%m%d_%H%M%S")
+    train_log_file = open(os.path.join(log_dir,datestr)+'_lr'+str(learning_rate)+'_outputSz'+str(output_size)+'_margin'+str(margin)+'_train.txt'),'a')
     print '------------'
     print ''
     print 'Going to train with the following parameters:'
