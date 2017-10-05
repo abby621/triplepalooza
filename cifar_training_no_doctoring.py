@@ -21,6 +21,7 @@ from tensorflow.contrib.slim.python.slim.nets import resnet_v1
 
 import signal
 import time
+import sys
 
 def main():
     def handler(signum, frame):
@@ -28,6 +29,7 @@ def main():
         pretrained_net = os.path.join(ckpt_dir, 'checkpoint')
         saver.save(sess, pretrained_net, global_step=step)
         print 'Checkpoint-',step, ' saved!'
+        sys.exit(0)
 
     signal.signal(signal.SIGINT, handler)
 
