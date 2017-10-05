@@ -53,18 +53,22 @@ def main(margin,output_size,learning_rate,is_overfitting):
     output_size = int(output_size)
     learning_rate = float(learning_rate)
     is_overfitting = True
-
+    
     batch_size = 100
     num_pos_examples = batch_size/10
 
     # Create data "batcher"
     train_data = CombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training, isOverfitting=is_overfitting)
+    print '------------'
+    print ''
     print 'Going to train with the following parameters:'
     print 'Num Classes: ',len(train_data.files)
     print 'Margin: ',margin
     print 'Output size: ', output_size
     print 'Learning rate: ',learning_rate
     print 'Overfitting?: ',is_overfitting
+    print ''
+    print '------------'
 
     # Queuing op loads data into input tensor
     image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
