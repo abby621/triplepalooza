@@ -17,9 +17,20 @@ from tensorflow.python.ops import gen_image_ops
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 import tensorflow.contrib.slim as slim
-from tensorflow.contrib.slim.python.slim.nets import resnet_v2
+from tensorflow.contrib.slim.python.slim.nets import resnet_v1
+
+import signal
+import time
 
 def main():
+    def handler(signum, frame):
+        print 'Saving checkpoint before closing'
+        pretrained_net = os.path.join(ckpt_dir, 'checkpoint')
+        saver.save(sess, pretrained_net, global_step=step)
+        print 'Checkpoint-',step, ' saved!'
+
+    signal.signal(signal.SIGINT, handler)
+
     ckpt_dir = './output/cifar/no_doctoring/ckpts'
     log_dir = './output/cifar/no_doctoring/logs'
     train_log_file = open(os.path.join(log_dir,str(datetime.now())+'_train.txt'),'a')
@@ -31,11 +42,12 @@ def main():
     num_iters = 7000
     summary_iters = 10
     save_iters = 1000
-    learning_rate = .0001
-    margin = 10
-    featLayer = 'resnet_v2_50/logits'
+    learning_rate = .0005
+    margin = 5
+    featLayer = 'resnet_v1_50/logits'
+    outputSize = 12
 
-    batch_size = 90
+    batch_size = 100
     num_pos_examples = batch_size/10
 
     # Create data "batcher"
@@ -50,10 +62,10 @@ def main():
     repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
     noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 3], mean=0.0, stddev=3, dtype=tf.float32)
     final_batch = tf.add(tf.subtract(image_batch,repMeanIm),noise)
-    
+
     print("Preparing network...")
-    with slim.arg_scope(resnet_v2.resnet_arg_scope()):
-        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=100, is_training=True)
+    with slim.arg_scope(resnet_v1.resnet_arg_scope()):
+        _, layers = resnet_v1.resnet_v1_50(final_batch, num_classes=outputSize, is_training=True)
 
     feat = tf.squeeze(layers[featLayer])
 
