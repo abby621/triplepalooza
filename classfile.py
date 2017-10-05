@@ -57,6 +57,8 @@ class CombinatorialTripletSet:
 
         # if we're overfitting, limit how much data we have per class
         if isOverfitting:
+            self.classes = self.classes[:10]
+            self.files = self.files[:10]
             for idx in range(len(self.files)):
                 backupFiles = self.files[idx]
                 self.files[idx] = backupFiles[:10]
