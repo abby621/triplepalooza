@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 # python cifar_training_no_doctoring.py margin output_size learning_rate is_overfitting
+# If overfitting:
 # python cifar_training_no_doctoring.py 5 12 .00005 True
 """
 
@@ -56,6 +57,12 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     # Create data "batcher"
     train_data = CombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training, isOverfitting=is_overfitting)
+    print 'Going to train with the following parameters:'
+    print 'Num Classes: ',len(train_data.data)
+    print 'Margin: ',margin
+    print 'Output size: ', output_size
+    print 'Learning rate: ',learning_rate
+    print 'Overfitting?: ',is_overfitting
 
     # Queuing op loads data into input tensor
     image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
@@ -69,7 +76,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     print("Preparing network...")
     with slim.arg_scope(resnet_v1.resnet_arg_scope()):
-        _, layers = resnet_v1.resnet_v1_50(final_batch, num_classes=outputSize, is_training=True)
+        _, layers = resnet_v1.resnet_v1_50(final_batch, num_classes=output_size, is_training=True)
 
     feat = tf.squeeze(layers[featLayer])
 
