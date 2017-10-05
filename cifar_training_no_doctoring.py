@@ -3,6 +3,8 @@
 # python cifar_training_no_doctoring.py margin output_size learning_rate is_overfitting
 # If overfitting:
 # python cifar_training_no_doctoring.py 5 12 .00005 True
+# Else:
+# python cifar_training_no_doctoring.py 5 12 .00005 False
 """
 
 import tensorflow as tf
@@ -58,7 +60,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     # Create data "batcher"
     train_data = CombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training, isOverfitting=is_overfitting)
     print 'Going to train with the following parameters:'
-    print 'Num Classes: ',len(train_data.data)
+    print 'Num Classes: ',len(train_data.files)
     print 'Margin: ',margin
     print 'Output size: ', output_size
     print 'Learning rate: ',learning_rate
