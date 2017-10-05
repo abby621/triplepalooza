@@ -59,7 +59,7 @@ class CombinatorialTripletSet:
             ctr += 1
 
         # if we're overfitting, limit how much data we have per class
-        if self.isOverfitting:
+        if self.isOverfitting == True:
             self.classes = self.classes[:10]
             self.files = self.files[:10]
             for idx in range(len(self.files)):
