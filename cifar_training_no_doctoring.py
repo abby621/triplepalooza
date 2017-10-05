@@ -65,7 +65,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     print ''
     print 'Going to train with the following parameters:'
     print '# Classes: ',numClasses
-    print '# Classes: ',numIms
+    print '# Ims: ',numIms
     print 'Margin: ',margin
     print 'Output size: ', output_size
     print 'Learning rate: ',learning_rate
