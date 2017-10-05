@@ -53,16 +53,19 @@ def main(margin,output_size,learning_rate,is_overfitting):
     output_size = int(output_size)
     learning_rate = float(learning_rate)
     is_overfitting = True
-    
+
     batch_size = 100
     num_pos_examples = batch_size/10
 
     # Create data "batcher"
     train_data = CombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training, isOverfitting=is_overfitting)
+    numClasses = len(train_data.files)
+    numIms = np.sum([len(train_data.files[idx]) for idx in range(0,numClasses)])
     print '------------'
     print ''
     print 'Going to train with the following parameters:'
-    print 'Num Classes: ',len(train_data.files)
+    print '# Classes: ',numClasses
+    print '# Classes: ',numIms
     print 'Margin: ',margin
     print 'Output size: ', output_size
     print 'Learning rate: ',learning_rate
