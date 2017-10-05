@@ -70,17 +70,17 @@ def main(margin,output_size,learning_rate,is_overfitting):
     print '# Classes: ',numClasses
     train_log_file.write('# Classes: '+str(numClasses)+'\n')
     print '# Ims: ',numIms
-    train_log_file.write('# Ims: ',str(numIms)+'\n')
+    train_log_file.write('# Ims: '+str(numIms)+'\n')
     print 'Margin: ',margin
-    train_log_file.write('Margin: ',str(margin)+'\n')
+    train_log_file.write('Margin: '+str(margin)+'\n')
     print 'Output size: ', output_size
-    train_log_file.write('Output size: ',str(output_size)+'\n')
+    train_log_file.write('Output size: '+str(output_size)+'\n')
     print 'Learning rate: ',learning_rate
-    train_log_file.write('Learning rate: ',str(learning_rate)+'\n')
+    train_log_file.write('Learning rate: '+str(learning_rate)+'\n')
     print 'Overfitting?: ',is_overfitting
-    train_log_file.write('Is overfitting?',str(is_overfitting)+'\n')
+    train_log_file.write('Is overfitting?'+str(is_overfitting)+'\n')
     print 'Logging to: ',logfile_path
-    train_log_file.write('Param_str: ',param_str+'\n')
+    train_log_file.write('Param_str: '+param_str+'\n')
     train_log_file.write('----------------\n')
     print ''
     print '------------'
