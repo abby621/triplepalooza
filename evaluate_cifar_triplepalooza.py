@@ -6,7 +6,7 @@ import numpy as np
 from PIL import Image
 import scipy.spatial.distance
 import tensorflow.contrib.slim as slim
-from tensorflow.contrib.slim.python.slim.nets import resnet_v2
+from tensorflow.contrib.slim.python.slim.nets import resnet_v1
 import random
 
 def getDist(feat,otherFeats):
@@ -20,14 +20,14 @@ def getDist(feat,otherFeats):
 
 train_file = './inputs/cifar/train.txt'
 test_file = './inputs/cifar/test.txt'
-train_net = './output/cifar/no_doctoring/ckpts/checkpoint-6999'
-test_net = './output/cifar/no_doctoring/ckpts/checkpoint-6999'
+train_net = './output/cifar/no_doctoring/ckpts/checkpoint-999'
+test_net = './output/cifar/no_doctoring/ckpts/checkpoint-999'
 img_size = [256, 256]
 crop_size = [224, 224]
-featLayer = 'resnet_v2_50/logits'
+featLayer = 'resnet_v1_50/logits'
 mean_file = './models/cifar/cifar_mean_im.npy'
 
-batch_size = 90
+batch_size = 100
 num_pos_examples = batch_size/10
 
 # Create train_data "batcher"
@@ -41,8 +41,8 @@ final_batch = tf.add(tf.subtract(image_batch,repMeanIm),noise)
 label_batch = tf.placeholder(tf.int32, shape=(batch_size))
 
 print("Preparing network...")
-with slim.arg_scope(resnet_v2.resnet_arg_scope()):
-    _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=100, is_training=True)
+with slim.arg_scope(resnet_v1.resnet_arg_scope()):
+    _, layers = resnet_v1.resnet_v1_50(final_batch, num_classes=12, is_training=True)
 
 feat = tf.squeeze(layers[featLayer])
 
