@@ -61,7 +61,8 @@ def main(margin,output_size,learning_rate,is_overfitting):
     numClasses = len(train_data.files)
     numIms = np.sum([len(train_data.files[idx]) for idx in range(0,numClasses)])
     datestr = datetime.now().strftime("%Y%m%d%H%M")
-    logfile_path = os.path.join(log_dir,datestr)+'_lr'+str(learning_rate).replace('.','pt')+'_outputSz'+str(output_size)+'_margin'+str(margin)+'_train.txt'
+    param_str = '_lr'+str(learning_rate).replace('.','pt')+'_outputSz'+str(output_size)+'_margin'+str(margin)
+    logfile_path = os.path.join(log_dir,datestr)+param_str+'_train.txt'
     train_log_file = open(logfile_path,'a')
     print '------------'
     print ''
@@ -179,7 +180,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
         # Save a checkpoint
         if (step + 1) % save_iters == 0 or (step + 1) == num_iters:
             print('Saving checkpoint at iteration: %d' % (step))
-            pretrained_net = os.path.join(ckpt_dir, 'checkpoint')
+            pretrained_net = os.path.join(ckpt_dir, 'checkpoint'+param_str)
             saver.save(sess, pretrained_net, global_step=step)
 
     sess.close()
