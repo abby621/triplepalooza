@@ -109,22 +109,23 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     # expanded_a = tf.expand_dims(feat, 1)
     # expanded_b = tf.expand_dims(feat, 0)
-    # D2 = tf.reduce_sum(tf.squared_difference(expanded_a, expanded_b), 2)
+    # D = tf.reduce_sum(tf.squared_difference(expanded_a, expanded_b), 2)
 
     expanded_a = tf.expand_dims(feat, 1)
     expanded_b = tf.expand_dims(feat, 0)
     D = tf.reduce_sum(tf.squared_difference(expanded_a, expanded_b), 2)
 
-    D_max = tf.reduce_max(D)
-    D_mean, D_var = tf.nn.moments(D, axes=[0,1])
-    lowest_nonzero_distance = tf.reduce_max(-D)
+    if not train_data.isOverfitting:
+        D_max = tf.reduce_max(D)
+        D_mean, D_var = tf.nn.moments(D, axes=[0,1])
+        lowest_nonzero_distance = tf.reduce_max(-D)
 
-    bottom_thresh = 1.2*lowest_nonzero_distance
-    top_thresh = (D_max + D_mean)/2.0
+        bottom_thresh = 1.2*lowest_nonzero_distance
+        top_thresh = (D_max + D_mean)/2.0
 
-    bool_mask = tf.logical_and(D>=bottom_thresh,D<=top_thresh)
+        bool_mask = tf.logical_and(D>=bottom_thresh,D<=top_thresh)
 
-    D2 = tf.multiply(D,tf.cast(bool_mask,tf.float32))
+        D = tf.multiply(D,tf.cast(bool_mask,tf.float32))
 
     posIdx = np.floor(np.arange(0,batch_size)/num_pos_examples).astype('int')
     posIdx10 = num_pos_examples*posIdx
@@ -136,12 +137,12 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     posPairInds = zip(posImInds_flat,anchorInds_flat)
 
-    posDists = tf.reshape(tf.gather_nd(D2,posPairInds),(batch_size,num_pos_examples))
+    posDists = tf.reshape(tf.gather_nd(D,posPairInds),(batch_size,num_pos_examples))
 
     shiftPosDists = tf.reshape(posDists,(1,batch_size,num_pos_examples))
     posDistsRep = tf.tile(shiftPosDists,(batch_size,1,1))
 
-    allDists = tf.tile(tf.expand_dims(D2,2),(1,1,num_pos_examples))
+    allDists = tf.tile(tf.expand_dims(D,2),(1,1,num_pos_examples))
 
     ra, rb, rc = np.meshgrid(np.arange(0,batch_size),np.arange(0,batch_size),np.arange(0,num_pos_examples))
 
