@@ -2,9 +2,9 @@
 """
 # python cifar_training_no_doctoring.py margin output_size learning_rate is_overfitting
 # If overfitting:
-# python cifar_training_no_doctoring.py 5 12 .00005 True
+# python cifar_training_no_doctoring.py 5 12 .00001 True
 # Else:
-# python cifar_training_no_doctoring.py 5 12 .00005 False
+# python cifar_training_no_doctoring.py 5 12 .00001 False
 """
 
 import tensorflow as tf
@@ -115,17 +115,14 @@ def main(margin,output_size,learning_rate,is_overfitting):
     expanded_b = tf.expand_dims(feat, 0)
     D = tf.reduce_sum(tf.squared_difference(expanded_a, expanded_b), 2)
 
-    if not train_data.isOverfitting:
-        D_max = tf.reduce_max(D)
-        D_mean, D_var = tf.nn.moments(D, axes=[0,1])
-        lowest_nonzero_distance = tf.reduce_max(-D)
-
-        bottom_thresh = 1.2*lowest_nonzero_distance
-        top_thresh = (D_max + D_mean)/2.0
-
-        bool_mask = tf.logical_and(D>=bottom_thresh,D<=top_thresh)
-
-        D = tf.multiply(D,tf.cast(bool_mask,tf.float32))
+    # if not train_data.isOverfitting:
+    #     D_max = tf.reduce_max(D)
+    #     D_mean, D_var = tf.nn.moments(D, axes=[0,1])
+    #     lowest_nonzero_distance = tf.reduce_max(-D)
+    #     bottom_thresh = 1.2*lowest_nonzero_distance
+    #     top_thresh = (D_max + D_mean)/2.0
+    #     bool_mask = tf.logical_and(D>=bottom_thresh,D<=top_thresh)
+    #     D = tf.multiply(D,tf.cast(bool_mask,tf.float32))
 
     posIdx = np.floor(np.arange(0,batch_size)/num_pos_examples).astype('int')
     posIdx10 = num_pos_examples*posIdx
