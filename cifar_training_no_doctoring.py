@@ -151,13 +151,13 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
-    # loss1 = tf.multiply(mask,margin + posDistsRep - allDists)
-    # loss2 = tf.maximum(0., loss1)
-    # loss3 = tf.reduce_mean(loss2)
-    loss = tf.log(tf.reduce_sum(tf.exp(posDistsRep))) - tf.log(tf.reduce_sum(tf.exp(margin - allDists)))
+    loss1 = tf.multiply(mask,margin + posDistsRep - allDists)
+    loss2 = tf.maximum(0., loss1)
+    loss3 = tf.reduce_sum(loss2)
+    # loss = tf.log(tf.reduce_sum(tf.exp(posDistsRep))) - tf.log(tf.reduce_sum(tf.exp(margin - allDists)))
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
-    train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
+    train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss3)
     summary_op = tf.summary.merge_all()
     init_op = tf.global_variables_initializer()
 
@@ -182,7 +182,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     for step in range(num_iters):
         start_time1 = time.time()
         batch, labels, ims = train_data.getBatch()
-        _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, label_batch: labels})
+        _, loss_val = sess.run([train_op, loss3], feed_dict={image_batch: batch, label_batch: labels})
         end_time2 = time.time()
         duration = end_time2-start_time1
         out_str = 'Step %d: loss = %.2f (%.3f sec)' % (step, loss_val, duration)
