@@ -150,7 +150,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     loss1 = tf.multiply(mask,margin + posDistsRep - allDists)
     loss2 = tf.maximum(0., loss1)
-    loss3 = tf.reduce_sum(loss2)
+    loss3 = tf.reduce_mean(loss2)
     # loss = tf.log(tf.reduce_sum(tf.exp(posDistsRep))) - tf.log(tf.reduce_sum(tf.exp(margin - allDists)))
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
