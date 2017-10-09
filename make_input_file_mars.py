@@ -1,4 +1,6 @@
-import glob, os
+import glob, os, random
+from PIL import Image
+import numpy as np
 
 train_ims = glob.glob('/project/focus/hong/Embeding/MARS/tra/*/*.jpg')
 test_ims = glob.glob('/project/focus/hong/Embeding/MARS/val/*/*.jpg')
@@ -38,3 +40,13 @@ with open(test_path,'a') as test_file:
         these_ims = testImsByClass[cls]
         im_str = ' '.join(these_ims)
         test_file.write(im_str+'\n')
+
+ims = random.sample(train_ims,1000) + random.sample(test_ims,1000)
+
+addIm = np.array(Image.open(ims[0]),dtype='float32')
+for im in ims[1:]:
+    addIm += np.array(Image.open(im))
+
+addIm /= float(len(ims))
+
+np.save('/project/focus/abby/triplepalooza/models/mars/mean_im.npy',addIm)
