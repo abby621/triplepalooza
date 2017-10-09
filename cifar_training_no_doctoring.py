@@ -157,7 +157,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     loss = tf.log(tf.reduce_sum(tf.exp(posDistsRep))) - tf.log(tf.reduce_sum(tf.exp(m - allDists)))
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
-    train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss3)
+    train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
     summary_op = tf.summary.merge_all()
     init_op = tf.global_variables_initializer()
 
@@ -182,7 +182,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     for step in range(num_iters):
         start_time1 = time.time()
         batch, labels, ims = train_data.getBatch()
-        _, loss_val = sess.run([train_op, loss3], feed_dict={image_batch: batch, label_batch: labels})
+        _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, label_batch: labels})
         end_time2 = time.time()
         duration = end_time2-start_time1
         out_str = 'Step %d: loss = %.2f (%.3f sec)' % (step, loss_val, duration)
