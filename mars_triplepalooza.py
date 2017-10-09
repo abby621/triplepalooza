@@ -36,7 +36,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     signal.signal(signal.SIGINT, handler)
 
     ckpt_dir = './output/mars/ckpts'
-    log_dir = './output/mars/no_doctoring/logs'
+    log_dir = './output/mars/logs'
     train_filename = './inputs/mars/train.txt'
     mean_file = './models/mars/mean_im.npy'
     pretrained_net = None
