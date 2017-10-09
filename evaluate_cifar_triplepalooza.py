@@ -20,8 +20,7 @@ def getDist(feat,otherFeats):
 
 train_file = './inputs/cifar/train.txt'
 test_file = './inputs/cifar/test.txt'
-train_net = './output/cifar/no_doctoring/ckpts/checkpoint-999'
-test_net = './output/cifar/no_doctoring/ckpts/checkpoint-999'
+eval_net = './output/cifar/no_doctoring/ckpts/checkpoint-14999'
 img_size = [256, 256]
 crop_size = [224, 224]
 featLayer = 'resnet_v1_50/logits'
@@ -52,7 +51,7 @@ c.gpu_options.visible_device_list="0,1"
 # TESTING ACCURACY
 sess = tf.Session(config=c)
 saver = tf.train.Saver(max_to_keep=100)
-saver.restore(sess, train_net)
+saver.restore(sess, eval_net)
 
 trainingImsAndLabels = [(train_data.files[ix][iy],train_data.classes[ix]) for ix in range(len(train_data.files)) for iy in range(len(train_data.files[ix]))]
 random.shuffle(trainingImsAndLabels)
@@ -104,7 +103,7 @@ sess.close()
 # TESTING ACCURACY
 sess = tf.Session(config=c)
 saver = tf.train.Saver(max_to_keep=100)
-saver.restore(sess, test_net)
+saver.restore(sess, eval_net)
 
 testingImsAndLabels = [(test_data.files[ix][iy],test_data.classes[ix]) for ix in range(len(test_data.files)) for iy in range(len(test_data.files[ix]))]
 random.shuffle(testingImsAndLabels)
@@ -154,7 +153,7 @@ for idx in range(numTestingIms):
 sess.close()
 
 print '---Triplepalooza--'
-print 'Network: ', test_net
+print 'Network: ', eval_net
 print 'NN Training Accuracy: ',np.mean(trainingAccuracy,axis=0)
 print '---'
 print 'NN Test Accuracy: ',np.mean(testingAccuracy,axis=0)
