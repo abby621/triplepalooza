@@ -20,7 +20,7 @@ def getDist(feat,otherFeats):
 
 train_file = './inputs/cifar/train.txt'
 test_file = './inputs/cifar/test.txt'
-eval_net = './output/cifar/no_doctoring/ckpts/checkpoint-14999'
+eval_net = './output/cifar/no_doctoring/ckpts/checkpoint_lr0pt0001_outputSz12_margin5-14999'
 img_size = [256, 256]
 crop_size = [224, 224]
 featLayer = 'resnet_v1_50/logits'
@@ -63,7 +63,7 @@ trainingLabels = np.empty((numTrainingIms),dtype=np.int32)
 num_iters = numTrainingIms / batch_size
 
 print 'Computing training set features...'
-for step in range(0,num_iters+1):
+for step in range(0,num_iters):
     # print step, '/', num_iters
     if step == num_iters:
         end_ind = numTrainingIms
@@ -115,7 +115,7 @@ testingLabels = np.empty((numTestingIms),dtype=np.int32)
 num_iters = numTestingIms / batch_size
 
 print 'Computing testing set features...'
-for step in range(0,num_iters+1):
+for step in range(0,num_iters):
     # print step, '/', num_iters
     if step == num_iters:
         end_ind = numTestingIms
