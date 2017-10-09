@@ -2,9 +2,9 @@
 """
 # python mars_triplepalooza.py margin output_size learning_rate is_overfitting
 # If overfitting:
-# python mars_triplepalooza.py 5 12 .00001 True
+# python mars_triplepalooza.py 5 12 .0001 True
 # Else:
-# python mars_triplepalooza.py 5 12 .00001 False
+# python mars_triplepalooza.py 5 12 .0001 False
 """
 
 import tensorflow as tf
@@ -98,7 +98,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     if train_data.isOverfitting:
         final_batch = tf.subtract(image_batch,repMeanIm)
     else:
-        noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 3], mean=0.0, stddev=3, dtype=tf.float32)
+        noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 1], mean=0.0, stddev=0.25, dtype=tf.float32)
         final_batch = tf.add(tf.subtract(image_batch,repMeanIm),noise)
 
     print("Preparing network...")
