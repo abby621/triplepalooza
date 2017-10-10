@@ -179,7 +179,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
         _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, label_batch: labels})
         end_time = time.time()
         duration = end_time-start_time
-        if (step + 1) % summary_iters == 0:
+        if step % summary_iters == 0:
             out_str = 'Step %d: loss = %.2f (%.3f sec)' % (step, loss_val, duration)
             print(out_str)
             train_log_file.write(out_str+'\n')
