@@ -2,9 +2,9 @@
 """
 # python mars_triplepalooza.py margin output_size learning_rate is_overfitting
 # If overfitting:
-# python mars_triplepalooza.py 5 12 .0001 True
+# python tc_triplepalooza.py 5 128 .0001 True
 # Else:
-# python mars_triplepalooza.py 5 12 .0001 False
+# python tc_triplepalooza.py 5 12 .0001 False
 """
 
 import tensorflow as tf
@@ -42,7 +42,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     pretrained_net = None
     img_size = [256, 256]
     crop_size = [224, 224]
-    num_iters = 20000
+    num_iters = 200000
     summary_iters = 10
     save_iters = 500
     featLayer = 'resnet_v1_50/logits'
