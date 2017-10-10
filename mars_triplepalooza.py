@@ -19,7 +19,7 @@ from tensorflow.python.ops import gen_image_ops
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 import tensorflow.contrib.slim as slim
-from tensorflow.contrib.slim.python.slim.nets import resnet_v1
+from tensorflow.contrib.slim.python.slim.nets import resnet_v2
 
 import signal
 import time
@@ -45,7 +45,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     num_iters = 20000
     summary_iters = 10
     save_iters = 500
-    featLayer = 'resnet_v1_50/logits'
+    featLayer = 'resnet_v2_50/logits'
     is_training = True
     if is_overfitting.lower()=='true':
         is_overfitting = True
@@ -102,8 +102,8 @@ def main(margin,output_size,learning_rate,is_overfitting):
         final_batch = tf.add(tf.subtract(image_batch,repMeanIm),noise)
 
     print("Preparing network...")
-    with slim.arg_scope(resnet_v1.resnet_arg_scope()):
-        _, layers = resnet_v1.resnet_v1_50(final_batch, num_classes=output_size, is_training=True)
+    with slim.arg_scope(resnet_v2.resnet_arg_scope()):
+        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=True)
 
     feat = tf.nn.l2_normalize(tf.squeeze(layers[featLayer]),0)
 
