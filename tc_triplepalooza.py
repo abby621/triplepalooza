@@ -19,7 +19,7 @@ from tensorflow.python.ops import gen_image_ops
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 import tensorflow.contrib.slim as slim
-from tensorflow.contrib.slim.python.slim.nets import resnet_v1
+from tensorflow.contrib.slim.python.slim.nets import resnet_v2
 
 import signal
 import time
@@ -45,7 +45,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     num_iters = 200000
     summary_iters = 10
     save_iters = 500
-    featLayer = 'resnet_v1_50/logits'
+    featLayer = 'resnet_v2_50/logits'
     is_training = True
     if is_overfitting.lower()=='true':
         is_overfitting = True
@@ -102,8 +102,8 @@ def main(margin,output_size,learning_rate,is_overfitting):
         final_batch = tf.add(tf.subtract(image_batch,repMeanIm),noise)
 
     print("Preparing network...")
-    with slim.arg_scope(resnet_v1.resnet_arg_scope()):
-        _, layers = resnet_v1.resnet_v1_50(final_batch, num_classes=output_size, is_training=True)
+    with slim.arg_scope(resnet_v2.resnet_arg_scope()):
+        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=True)
 
     feat = tf.squeeze(layers[featLayer])
 
@@ -148,13 +148,10 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
-    loss1 = tf.multiply(mask,margin + posDistsRep - allDists)
-    loss2 = tf.maximum(0., loss1)
-    loss3 = tf.reduce_mean(loss2)
-    # loss = tf.log(tf.reduce_sum(tf.exp(posDistsRep))) - tf.log(tf.reduce_sum(tf.exp(margin - allDists)))
+    loss = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
-    train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss3)
+    train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
     summary_op = tf.summary.merge_all()
     init_op = tf.global_variables_initializer()
 
@@ -177,14 +174,15 @@ def main(margin,output_size,learning_rate,is_overfitting):
     print("Start training...")
     ctr  = 0
     for step in range(num_iters):
-        start_time1 = time.time()
+        start_time = time.time()
         batch, labels, ims = train_data.getBatch()
-        _, loss_val = sess.run([train_op, loss3], feed_dict={image_batch: batch, label_batch: labels})
-        end_time2 = time.time()
-        duration = end_time2-start_time1
-        out_str = 'Step %d: loss = %.2f (%.3f sec)' % (step, loss_val, duration)
-        print(out_str)
-        train_log_file.write(out_str+'\n')
+        _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, label_batch: labels})
+        end_time = time.time()
+        duration = end_time-start_time
+        if (step + 1) % summary_iters == 0:
+            out_str = 'Step %d: loss = %.2f (%.3f sec)' % (step, loss_val, duration)
+            print(out_str)
+            train_log_file.write(out_str+'\n')
         # Update the events file.
         # summary_str = sess.run(summary_op)
         # writer.add_summary(summary_str, step)
