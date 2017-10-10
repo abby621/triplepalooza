@@ -105,7 +105,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     with slim.arg_scope(resnet_v1.resnet_arg_scope()):
         _, layers = resnet_v1.resnet_v1_50(final_batch, num_classes=output_size, is_training=True)
 
-    feat = tf.squeeze(layers[featLayer])
+    feat = tf.nn.l2_normalize(tf.squeeze(layers[featLayer]),0)
 
     # expanded_a = tf.expand_dims(feat, 1)
     # expanded_b = tf.expand_dims(feat, 0)
