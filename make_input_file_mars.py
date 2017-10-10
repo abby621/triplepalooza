@@ -43,9 +43,18 @@ with open(test_path,'a') as test_file:
 
 ims = random.sample(train_ims,1000) + random.sample(test_ims,1000)
 
-addIm = np.array(Image.open(ims[0]),dtype='float32')
-for im in ims[1:]:
-    addIm += np.array(Image.open(im))
+imSize = 256
+cropSize = 224
+for idx in range(len(ims)):
+    im_path = ims[idx].strip('\n')
+    img = cv2.resize(np.array(Image.open(im_path)),(imSize, imSize))
+    top = int(round((imSize - cropSize)/2))
+    left = int(round((imSize - cropSize)/2))
+    img2 = img[top:(top+cropSize),left:(left+cropSize),:]
+    if idx == 0:
+        addIm = img2.astype('float32')
+    else:
+        addIm += img2.astype('float32')
 
 addIm /= float(len(ims))
 
