@@ -38,7 +38,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     ckpt_dir = './output/traffickcam/ckpts'
     log_dir = './output/traffickcam/logs'
     train_filename = './inputs/traffickcam/train.txt'
-    mean_file = './models/traffickcam/mean_im.npy'
+    mean_file = './models/traffickcam/tc_mean_im.npy'
     pretrained_net = None
     img_size = [256, 256]
     crop_size = [224, 224]
