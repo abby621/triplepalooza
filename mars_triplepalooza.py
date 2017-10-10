@@ -52,7 +52,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     else:
         is_overfitting = False
 
-    margin = int(margin)
+    margin = float(margin)
     output_size = int(output_size)
     learning_rate = float(learning_rate)
 
