@@ -28,7 +28,7 @@ import sys
 def main(margin,output_size,learning_rate,is_overfitting):
     def handler(signum, frame):
         print 'Saving checkpoint before closing'
-        pretrained_net = os.path.join(ckpt_dir, 'checkpoint')
+        pretrained_net = os.path.join(ckpt_dir, 'checkpoint-'+param_str)
         saver.save(sess, pretrained_net, global_step=step)
         print 'Checkpoint-',step, ' saved!'
         sys.exit(0)
@@ -189,9 +189,13 @@ def main(margin,output_size,learning_rate,is_overfitting):
         # writer.flush()
         #
         # Save a checkpoint
-        if (step + 1) % save_iters == 0 or (step + 1) == num_iters:
+        if (step + 1) % save_iters == 0:
             print('Saving checkpoint at iteration: %d' % (step))
-            pretrained_net = os.path.join(ckpt_dir, 'checkpoint'+param_str)
+            pretrained_net = os.path.join(ckpt_dir, 'checkpoint-'+param_str)
+            saver.save(sess, pretrained_net, global_step=step)
+        if (step + 1) == num_iters:
+            print('Saving final')
+            pretrained_net = os.path.join(ckpt_dir, 'final-'+param_str)
             saver.save(sess, pretrained_net, global_step=step)
 
     sess.close()
