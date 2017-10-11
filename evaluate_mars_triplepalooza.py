@@ -41,7 +41,7 @@ label_batch = tf.placeholder(tf.int32, shape=(batch_size))
 
 print("Preparing network...")
 with slim.arg_scope(resnet_v2.resnet_arg_scope()):
-    _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=12, is_training=True)
+    _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=100, is_training=True)
 
 feat = tf.squeeze(layers[featLayer])
 
