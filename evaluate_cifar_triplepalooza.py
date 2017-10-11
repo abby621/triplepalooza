@@ -10,12 +10,12 @@ from tensorflow.contrib.slim.python.slim.nets import resnet_v1
 import random
 
 def getDist(feat,otherFeats):
-    # dist = (otherFeats - feat)**4
-    # dist = np.sum(dist,axis=1)
-    # dist = np.power(dist,.25)
-    dist = (otherFeats - feat)**2
+    dist = (otherFeats - feat)**4
     dist = np.sum(dist,axis=1)
-    dist = np.sqrt(dist)
+    dist = np.power(dist,.25)
+    # dist = (otherFeats - feat)**2
+    # dist = np.sum(dist,axis=1)
+    # dist = np.sqrt(dist)
     return dist
 
 train_file = './inputs/cifar/train.txt'

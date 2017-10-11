@@ -6,7 +6,7 @@ import numpy as np
 from PIL import Image
 import scipy.spatial.distance
 import tensorflow.contrib.slim as slim
-from tensorflow.contrib.slim.python.slim.nets import resnet_v1
+from tensorflow.contrib.slim.python.slim.nets import resnet_v2
 import random
 
 def getDist(feat,otherFeats):
@@ -20,10 +20,10 @@ def getDist(feat,otherFeats):
 
 train_file = './inputs/mars/train.txt'
 test_file = './inputs/mars/test.txt'
-eval_net = './output/mars/ckpts/checkpoint_lr0pt0001_outputSz12_margin5-9999'
+eval_net = './output/mars/ckpts/final-_lr0pt0001_outputSz100_margin0.3-19999'
 img_size = [256, 256]
 crop_size = [224, 224]
-featLayer = 'resnet_v1_50/logits'
+featLayer = 'resnet_v2_50/logits'
 mean_file = './models/mars/mean_im.npy'
 
 batch_size = 100
@@ -40,8 +40,8 @@ final_batch = tf.add(tf.subtract(image_batch,repMeanIm),noise)
 label_batch = tf.placeholder(tf.int32, shape=(batch_size))
 
 print("Preparing network...")
-with slim.arg_scope(resnet_v1.resnet_arg_scope()):
-    _, layers = resnet_v1.resnet_v1_50(final_batch, num_classes=12, is_training=True)
+with slim.arg_scope(resnet_v2.resnet_arg_scope()):
+    _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=12, is_training=True)
 
 feat = tf.squeeze(layers[featLayer])
 
