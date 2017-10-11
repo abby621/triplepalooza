@@ -180,7 +180,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
         end_time = time.time()
         duration = end_time-start_time
         if step % summary_iters == 0:
-            out_str = 'Step %d: loss = %.2f (%.3f sec)' % (step, loss_val, duration)
+            out_str = 'Step %d: loss = %.6f (%.3f sec)' % (step, loss_val, duration)
             print(out_str)
             train_log_file.write(out_str+'\n')
         # Update the events file.
