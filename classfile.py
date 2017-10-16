@@ -396,3 +396,50 @@ class NonTripletSet:
 
         img = img[top:(top+self.crop_size[0]),left:(left+self.crop_size[1]),:]
         return img
+
+class MarsNonTripletSet(NonTripletSet):
+    def getBatch:
+        batch = np.zeros([self.batchSize, self.crop_size[0], self.crop_size[1], 3])
+        labels = np.zeros([self.batchSize],dtype='int')
+        cams = np.zeros([self.batchSize],dtype='int')
+        ims = np.zeros([self.batchSize],dtype=object)
+
+        for ix in range(0,self.batchSize):
+            randClass = random.choice(self.classes)
+            randIm = random.choice(self.files[randClass])
+
+            person_info = randIm.split('/')[-1].split('.')[0]
+            person_id = person_info[:4]
+            camera = person_info[5:6]
+            tracklet = person_info[6:11]
+            frame = person_info[11:]
+
+            cams[ix] = camera
+
+            randImg = self.getProcessedImage(randIm)
+            while randImg is None:
+                randClass = np.random.choice(self.classes)
+                randIm = random.choice(self.files[randClass])
+                randImg = self.getProcessedImage(randIm)
+
+            batch[ix,:,:,:] = randImg
+            labels[ix] = randClass
+            ims[ix] = randIm
+
+        return batch, labels, cams, ims
+
+    def getBatchFromImageList(self,image_list):
+        batch = np.zeros([len(image_list), self.crop_size[0], self.crop_size[1], 3])
+        cams = np.zeros([len(image_list)],dtype='int')
+        for ix in range(0,len(image_list)):
+            person_info = image_list[ix].split('/')[-1].split('.')[0]
+            person_id = person_info[:4]
+            camera = person_info[5:6]
+            tracklet = person_info[6:11]
+            frame = person_info[11:]
+
+            img = self.getProcessedImage(image_list[ix])
+            batch[ix,:,:,:] = img
+            cams[ix] = camera
+
+        return batch, cams
