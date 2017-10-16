@@ -85,32 +85,21 @@ class CombinatorialTripletSet:
         numClasses = self.batchSize/self.numPos # need to handle the case where we need more classes than we have?
         classes = np.random.choice(self.classes,numClasses,replace=False)
 
-        posClass = classes[0]
-        random.shuffle(self.files[posClass])
-
         batch = np.zeros([self.batchSize, self.crop_size[0], self.crop_size[1], 3])
 
         labels = np.zeros([self.batchSize],dtype='int')
         ims = []
 
-        for i in np.arange(self.numPos):
-            if i < len(self.files[posClass]):
-                img = self.getProcessedImage(self.files[posClass][i])
-                if img is not None:
-                    batch[i,:,:,:] = img
-                labels[i] = posClass
-                ims.append(self.files[posClass][i])
-
-        ctr = self.numPos
-        for negClass in classes[1:]:
-            random.shuffle(self.files[negClass])
+        ctr = 0
+        for cls in classes:
+            random.shuffle(self.files[cls])
             for j in np.arange(self.numPos):
-                if j < len(self.files[negClass]):
-                    img = self.getProcessedImage(self.files[negClass][j])
+                if j < len(self.files[cls]):
+                    img = self.getProcessedImage(self.files[cls][j])
                     if img is not None:
                         batch[ctr,:,:,:] = img
-                    labels[ctr] = negClass
-                    ims.append(self.files[negClass][j])
+                    labels[ctr] = cls
+                    ims.append(self.files[cls][j])
                 ctr += 1
 
         return batch, labels, ims
@@ -163,6 +152,48 @@ class CombinatorialTripletSet:
         new_img[new_img>1] = 1
 
         return new_img
+
+class MarsCombinatorialTripletSet(CombinatorialTripletSet):
+    def getBatch(self):
+        numClasses = self.batchSize/self.numPos # need to handle the case where we need more classes than we have?
+        classes = np.random.choice(self.classes,numClasses,replace=False)
+
+        batch = np.zeros([self.batchSize, self.crop_size[0], self.crop_size[1], 3])
+
+        labels = np.zeros([self.batchSize],dtype='int')
+        cameras = np.empty([self.batchSize],dtype='int')
+        ims = []
+
+        ctr = 0
+        for cls in classes:
+            possibleCams = np.unique([self.files[cls][ix].split('/')[-1].split('.')[0][4:6] for ix in range(len(self.files[cls]))])
+            camsSeen = []
+            j = 0
+            while j < self.numPos:
+                # if we have to double back, we're going to have to allow duplicate entries in the batch
+                if len(camsSeen) == len(possibleCams):
+                    camsSeen = []
+
+                random.shuffle(self.files[cls])
+                im = self.files[cls][0]
+
+                person_info = im.split('/')[-1].split('.')[0]
+                person_id = person_info[:4]
+                camera = person_info[5:6]
+                tracklet = person_info[6:11]
+                frame = person_info[11:]
+                if camera not in camsSeen:
+                    camsSeen.append(camera)
+                    img = self.getProcessedImage(im)
+                    if img is not None:
+                        batch[ctr,:,:,:] = img
+                    labels[ctr] = cls
+                    cameras[ctr] = int(camera)
+                    ims.append(im)
+                    j += 1
+                    ctr += 1
+
+        return batch, labels, cameras, ims
 
 class VanillaTripletSet:
     def __init__(self, image_list, mean_file, image_size, crop_size, batchSize=100, isTraining=True):

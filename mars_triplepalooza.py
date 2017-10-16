@@ -8,7 +8,7 @@
 """
 
 import tensorflow as tf
-from classfile import CombinatorialTripletSet
+from classfile import MarsCombinatorialTripletSet
 import os.path
 import time
 from datetime import datetime
@@ -56,11 +56,11 @@ def main(margin,output_size,learning_rate,is_overfitting):
     output_size = int(output_size)
     learning_rate = float(learning_rate)
 
-    batch_size = 100
-    num_pos_examples = batch_size/10
+    batch_size = 36
+    num_pos_examples = batch_size/6
 
     # Create data "batcher"
-    train_data = CombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training, isOverfitting=is_overfitting)
+    train_data = MarsCombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training, isOverfitting=is_overfitting)
     numClasses = len(train_data.files)
     numIms = np.sum([len(train_data.files[idx]) for idx in range(0,numClasses)])
     datestr = datetime.now().strftime("%Y%m%d%H%M")
@@ -92,6 +92,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
     people_mask_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 1])
     label_batch = tf.placeholder(tf.int32, shape=(batch_size))
+    camera_batch = tf.placeholder(tf.int32, shape=(batch_size))
 
     # after we've doctored everything, we need to remember to subtract off the mean
     repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
@@ -133,8 +134,11 @@ def main(margin,output_size,learning_rate,is_overfitting):
     anchorInds_flat = anchorInds.ravel()
 
     posPairInds = zip(posImInds_flat,anchorInds_flat)
+    posPairCams0 = tf.gather(camera_batch,np.array(posPairInds)[:,0])
+    posPairCams1 = tf.gather(camera_batch,np.array(posPairInds)[:,1])
+    same_cams = tf.subtract(1,tf.cast(tf.equal(posPairCams0,posPairCams1),'int32'))
 
-    posDists = tf.reshape(tf.gather_nd(D,posPairInds),(batch_size,num_pos_examples))
+    posDists = tf.reshape(tf.gather_nd(D,posPairInds)*same_cams,(batch_size,num_pos_examples))
 
     shiftPosDists = tf.reshape(posDists,(1,batch_size,num_pos_examples))
     posDistsRep = tf.tile(shiftPosDists,(batch_size,1,1))
@@ -146,7 +150,9 @@ def main(margin,output_size,learning_rate,is_overfitting):
     bad_negatives = np.floor((ra)/num_pos_examples) == np.floor((rb)/num_pos_examples)
     bad_positives = np.mod(rb,num_pos_examples) == np.mod(rc,num_pos_examples)
 
-    mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
+    same_cam_pos =
+
+    mask = ((1-bad_negatives)*(1-bad_positives)*(1-same_cam_pos)).astype('float32')
 
     loss1 = tf.multiply(mask,margin + posDistsRep - allDists)
     loss2 = tf.maximum(0., loss1)
@@ -178,8 +184,8 @@ def main(margin,output_size,learning_rate,is_overfitting):
     ctr  = 0
     for step in range(num_iters):
         start_time = time.time()
-        batch, labels, ims = train_data.getBatch()
-        _, loss_val = sess.run([train_op, loss3], feed_dict={image_batch: batch, label_batch: labels})
+        batch, labels, cams, ims = train_data.getBatch()
+        _, loss_val = sess.run([train_op, loss3], feed_dict={image_batch: batch, label_batch: labels, camera_batch: cams})
         end_time = time.time()
         duration = end_time-start_time
         if step % summary_iters == 0:
