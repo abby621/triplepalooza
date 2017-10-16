@@ -398,7 +398,7 @@ class NonTripletSet:
         return img
 
 class MarsNonTripletSet(NonTripletSet):
-    def getBatch:
+    def getBatch(self):
         batch = np.zeros([self.batchSize, self.crop_size[0], self.crop_size[1], 3])
         labels = np.zeros([self.batchSize],dtype='int')
         cams = np.zeros([self.batchSize],dtype='int')
