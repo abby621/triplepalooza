@@ -150,7 +150,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     bad_negatives = np.floor((ra)/num_pos_examples) == np.floor((rb)/num_pos_examples)
     bad_positives = np.mod(rb,num_pos_examples) == np.mod(rc,num_pos_examples)
 
-    mask = ((1-bad_negatives)*(1-bad_positives)*(1-same_cam_pos)).astype('float32')
+    mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
     loss1 = tf.multiply(mask,margin + posDistsRep - allDists)
     loss2 = tf.maximum(0., loss1)
