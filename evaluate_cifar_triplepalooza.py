@@ -35,8 +35,7 @@ test_data = NonTripletSet(test_file, mean_file, img_size, crop_size, batch_size,
 
 image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
 repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
-noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 3], mean=0.0, stddev=3, dtype=tf.float32)
-final_batch = tf.add(tf.subtract(image_batch,repMeanIm),noise)
+final_batch = tf.subtract(image_batch,repMeanIm)
 label_batch = tf.placeholder(tf.int32, shape=(batch_size))
 
 print("Preparing network...")
