@@ -56,8 +56,8 @@ def main(margin,output_size,learning_rate,is_overfitting):
     output_size = int(output_size)
     learning_rate = float(learning_rate)
 
-    batch_size = 36
-    num_pos_examples = batch_size/6
+    batch_size = 100
+    num_pos_examples = batch_size/10
 
     # Create data "batcher"
     train_data = MarsCombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training, isOverfitting=is_overfitting)
@@ -138,7 +138,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     posPairCams1 = tf.gather(camera_batch,np.array(posPairInds)[:,1])
     same_cams = tf.subtract(1,tf.cast(tf.equal(posPairCams0,posPairCams1),'int32'))
 
-    posDists = tf.reshape(tf.gather_nd(D,posPairInds)*same_cams,(batch_size,num_pos_examples))
+    posDists = tf.reshape(tf.gather_nd(D,posPairInds)*tf.cast(same_cams,'float32'),(batch_size,num_pos_examples))
 
     shiftPosDists = tf.reshape(posDists,(1,batch_size,num_pos_examples))
     posDistsRep = tf.tile(shiftPosDists,(batch_size,1,1))
@@ -149,7 +149,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     bad_negatives = np.floor((ra)/num_pos_examples) == np.floor((rb)/num_pos_examples)
     bad_positives = np.mod(rb,num_pos_examples) == np.mod(rc,num_pos_examples)
-    
+
     mask = ((1-bad_negatives)*(1-bad_positives)*(1-same_cam_pos)).astype('float32')
 
     loss1 = tf.multiply(mask,margin + posDistsRep - allDists)
