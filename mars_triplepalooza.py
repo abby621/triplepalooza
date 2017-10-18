@@ -2,9 +2,9 @@
 """
 # python mars_triplepalooza.py margin output_size learning_rate is_overfitting
 # If overfitting:
-# python mars_triplepalooza.py .3 100 .0001 True
+# python mars_triplepalooza.py .3 2048 .0001 True
 # Else:
-# python mars_triplepalooza.py .3 100 .0001 False
+# python mars_triplepalooza.py .3 2048 .0001 False
 """
 
 import tensorflow as tf
@@ -19,7 +19,8 @@ from tensorflow.python.ops import gen_image_ops
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 import tensorflow.contrib.slim as slim
-from tensorflow.contrib.slim.python.slim.nets import resnet_v2
+# from tensorflow.contrib.slim.python.slim.nets import resnet_v2
+from resnet import resnet_v2_50, resnet_arg_scope
 
 import signal
 import time
@@ -103,9 +104,9 @@ def main(margin,output_size,learning_rate,is_overfitting):
         final_batch = tf.add(tf.subtract(image_batch,repMeanIm),noise)
 
     print("Preparing network...")
-    with slim.arg_scope(resnet_v2.resnet_arg_scope()):
-        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=True)
-
+    with slim.arg_scope(resnet_arg_scope()):
+        net, layers = resnet_v2_50(final_batch, global_pool=True, num_classes=output_size, is_training=True)
+    
     feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
 
     # expanded_a = tf.expand_dims(feat, 1)
