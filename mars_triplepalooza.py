@@ -34,7 +34,8 @@ def main(margin,output_size,learning_rate,is_overfitting):
         sys.exit(0)
 
     signal.signal(signal.SIGINT, handler)
-
+    tflearn.config.init_training_mode()
+    
     ckpt_dir = './output/mars/ckpts'
     log_dir = './output/mars/logs'
     train_filename = './inputs/mars/train.txt'
@@ -104,7 +105,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     print("Preparing network...")
     with slim.arg_scope(resnet_v2.resnet_arg_scope()):
-        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, isTraining=True)
+        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=True)
 
     feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
     weights = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/logits/weights:0"))
