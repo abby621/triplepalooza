@@ -156,8 +156,8 @@ def main(margin,output_size,learning_rate,is_overfitting):
     loss1 = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
 
     dstr1 = tf.contrib.distributions.Gamma(.5,.5)
-    wmean, wvar = tf.nn.moments(weights, axes=[0,1])
-    dstr2 = tf.contrib.distributions.Normal(loc=wmean,scale=tf.sqrt(wvat))
+    wmean, wvar = tf.nn.moments(tf.abs(weights), axes=[0,1])
+    dstr2 = tf.contrib.distributions.Normal(loc=wmean,scale=tf.sqrt(wvar))
 
     loss2 = lmbd * tf.contrib.distributions.kl_divergence(dstr1, dstr2)
 
