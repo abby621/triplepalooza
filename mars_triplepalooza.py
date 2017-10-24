@@ -20,7 +20,7 @@ from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 import tensorflow.contrib.slim as slim
 from tensorflow.contrib.slim.python.slim.nets import resnet_v2
-
+import tflearn
 import signal
 import time
 import sys
@@ -196,7 +196,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
             train_log_file.write(out_str+'\n')
             wmean = np.mean([np.mean(wgts[ix]) for ix in range(100)])
             wstd = np.mean([np.std(wgts[ix]) for ix in range(100)])
-            print 'mean/std weights: %.6f'%(wmean/wstd)
+            print 'mean weight: %6f | std weight: %.6f'%(wmean,wstd)
         # Update the events file.
         # summary_str = sess.run(summary_op)
         # writer.add_summary(summary_str, step)
