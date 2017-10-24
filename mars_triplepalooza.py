@@ -46,7 +46,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     summary_iters = 10
     save_iters = 500
     featLayer = 'resnet_v2_50/logits'
-    is_training = True
+    isTraining = True
     if is_overfitting.lower()=='true':
         is_overfitting = True
     else:
@@ -60,7 +60,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     num_pos_examples = batch_size/10
 
     # Create data "batcher"
-    train_data = MarsCombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training, isOverfitting=is_overfitting)
+    train_data = MarsCombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=isTraining, isOverfitting=is_overfitting)
     numClasses = len(train_data.files)
     numIms = np.sum([len(train_data.files[idx]) for idx in range(0,numClasses)])
     datestr = datetime.now().strftime("%Y%m%d%H%M")
@@ -104,7 +104,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     print("Preparing network...")
     with slim.arg_scope(resnet_v2.resnet_arg_scope()):
-        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=True)
+        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, isTraining=True)
 
     feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
     weights = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/logits/weights:0"))
