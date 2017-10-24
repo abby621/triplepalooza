@@ -20,7 +20,6 @@ from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 import tensorflow.contrib.slim as slim
 from tensorflow.contrib.slim.python.slim.nets import resnet_v2
-import tflearn
 import signal
 import time
 import sys
