@@ -153,9 +153,9 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
-    lmbd = .1
+    lmbd = .001
     loss1 = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
-    loss2 = tf.multiply(lmbd, tf.reduce_sum(tf.abs(weights)))
+    loss2 = tflearn.losses.L1(weights, wd=lmbd)
 
     loss = loss1 + loss2
 
@@ -195,7 +195,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
             print(out_str)
             train_log_file.write(out_str+'\n')
         if step % 100 == 0:
-            print wgts[0]
+            print 'weights std: ', str(np.mean([np.std(wgts[ix] for ix in range(100)]))
         # Update the events file.
         # summary_str = sess.run(summary_op)
         # writer.add_summary(summary_str, step)
