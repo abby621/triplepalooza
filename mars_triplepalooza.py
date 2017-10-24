@@ -196,7 +196,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
             train_log_file.write(out_str+'\n')
             wmean = np.mean([np.mean(wgts[ix]) for ix in range(100)])
             wstd = np.mean([np.std(wgts[ix]) for ix in range(100)])
-            print wmean, wstd
+            print 'mean/std weights: %.6f'%(wmean/wstd)
         # Update the events file.
         # summary_str = sess.run(summary_op)
         # writer.add_summary(summary_str, step)
