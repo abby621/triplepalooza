@@ -159,7 +159,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     wmean, wvar = tf.nn.moments(weights, axes=[0,1])
     alpha = (wmean/tf.sqrt(wvar))
     beta = (alpha/wmean)
-    dstr2 = tf.contrib.distributions.Gamma(alpha,best)
+    dstr2 = tf.contrib.distributions.Gamma(alpha,beta)
 
     loss2 = lmbd * tf.contrib.distributions.kl_divergence(dstr1, dstr2)
 
