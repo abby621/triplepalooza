@@ -154,7 +154,13 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     lmbd = .1
     loss1 = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
-    loss2 = tf.multiply(lmbd, tf.reduce_sum(tf.abs(weights)))
+
+    dstr1 = tf.contrib.distributions.Gamma(1.,.5)
+    alpha = ((np.mean(weights)/np.std(weights))**2).astype('float32')
+    beta = (a2/np.mean(arr2)).astype('float32')
+    dstr2 = tf.contrib.distributions.Gamma(alpha,best)
+
+    loss2 = lmbd * tf.contrib.distributions.kl_divergence(dstr1, dstr2)
 
     loss = loss1 + loss2
 
@@ -193,9 +199,6 @@ def main(margin,output_size,learning_rate,is_overfitting):
             out_str = 'Step %d: loss = %.6f (loss1: %.6f | loss2: %.6f) (%.3f sec)' % (step, loss_val,ls1,ls2,duration)
             print(out_str)
             train_log_file.write(out_str+'\n')
-            wmean = np.mean([np.mean(wgts[ix]) for ix in range(100)])
-            wstd = np.mean([np.std(wgts[ix]) for ix in range(100)])
-            print 'mean weight: %6f | std weight: %.6f'%(wmean,wstd)
         # Update the events file.
         # summary_str = sess.run(summary_op)
         # writer.add_summary(summary_str, step)
