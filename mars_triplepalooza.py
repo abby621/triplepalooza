@@ -33,8 +33,6 @@ def main(margin,output_size,learning_rate,is_overfitting):
         print 'Checkpoint-',step, ' saved!'
         sys.exit(0)
 
-    tflearn.config.init_training_mode()
-
     signal.signal(signal.SIGINT, handler)
 
     ckpt_dir = './output/mars/ckpts'
@@ -178,6 +176,8 @@ def main(margin,output_size,learning_rate,is_overfitting):
     print("Starting session...")
     sess = tf.Session(config=c)
     sess.run(init_op)
+
+    tflearn.config.init_training_mode()
 
     writer = tf.summary.FileWriter(log_dir, sess.graph)
 
