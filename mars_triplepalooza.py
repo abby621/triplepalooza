@@ -33,9 +33,10 @@ def main(margin,output_size,learning_rate,is_overfitting):
         print 'Checkpoint-',step, ' saved!'
         sys.exit(0)
 
-    signal.signal(signal.SIGINT, handler)
     tflearn.config.init_training_mode()
-    
+
+    signal.signal(signal.SIGINT, handler)
+
     ckpt_dir = './output/mars/ckpts'
     log_dir = './output/mars/logs'
     train_filename = './inputs/mars/train.txt'
@@ -47,7 +48,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     summary_iters = 10
     save_iters = 500
     featLayer = 'resnet_v2_50/logits'
-    isTraining = True
+    is_training = True
     if is_overfitting.lower()=='true':
         is_overfitting = True
     else:
@@ -61,7 +62,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     num_pos_examples = batch_size/10
 
     # Create data "batcher"
-    train_data = MarsCombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=isTraining, isOverfitting=is_overfitting)
+    train_data = MarsCombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training, isOverfitting=is_overfitting)
     numClasses = len(train_data.files)
     numIms = np.sum([len(train_data.files[idx]) for idx in range(0,numClasses)])
     datestr = datetime.now().strftime("%Y%m%d%H%M")
@@ -195,7 +196,6 @@ def main(margin,output_size,learning_rate,is_overfitting):
             out_str = 'Step %d: loss = %.6f (loss1: %.6f | loss2: %.6f) (%.3f sec)' % (step, loss_val,ls1,ls2,duration)
             print(out_str)
             train_log_file.write(out_str+'\n')
-        if step % 100 == 0:
             print 'weights mean: ', str(np.mean([np.mean(wgts[ix]) for ix in range(100)]))
             print 'weights std: ', str(np.mean([np.std(wgts[ix]) for ix in range(100)]))
         # Update the events file.
