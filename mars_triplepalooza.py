@@ -153,11 +153,11 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
-    loss1 = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
-    loss2 = tf.reduce_mean(tf.reduce_sum(tf.abs(weights),axis=1))
-
     lmbd = .001
-    loss = loss1 + lmbd*loss2
+    loss1 = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
+    loss2 = lmbd*tf.reduce_mean(tf.reduce_sum(tf.abs(weights),axis=1))
+
+    loss = loss1 + loss2
 
     # loss = tf.log(tf.reduce_sum(tf.exp(posDistsRep))) - tf.log(tf.reduce_sum(tf.exp(margin - allDists)))
 
