@@ -152,7 +152,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
-    lmbd = .1
+    lmbd = .001
     loss1 = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
 
     dstr1 = tf.contrib.distributions.Gamma(.5,.5)
