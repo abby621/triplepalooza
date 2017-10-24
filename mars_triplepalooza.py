@@ -20,7 +20,7 @@ from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 import tensorflow.contrib.slim as slim
 from tensorflow.contrib.slim.python.slim.nets import resnet_v2
-import tflearn
+
 import signal
 import time
 import sys
@@ -153,9 +153,9 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
-    lmbd = .001
+    lmbd = .1
     loss1 = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
-    loss2 = tflearn.losses.L1(weights, wd=lmbd)
+    loss2 = tf.multiply(lmbd, tf.reduce_sum(tf.abs(weights)))
 
     loss = loss1 + loss2
 
@@ -177,8 +177,6 @@ def main(margin,output_size,learning_rate,is_overfitting):
     sess = tf.Session(config=c)
     sess.run(init_op)
 
-    tflearn.config.init_training_mode()
-
     writer = tf.summary.FileWriter(log_dir, sess.graph)
 
     if pretrained_net:
@@ -196,7 +194,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
             out_str = 'Step %d: loss = %.6f (loss1: %.6f | loss2: %.6f) (%.3f sec)' % (step, loss_val,ls1,ls2,duration)
             print(out_str)
             train_log_file.write(out_str+'\n')
-            print 'weights mean: ', str(np.mean([np.mean(wgts[ix]) for ix in range(100)]))
+            print 'weights std: ', str(np.mean([np.mean(wgts[ix]) for ix in range(100)]))
             print 'weights std: ', str(np.mean([np.std(wgts[ix]) for ix in range(100)]))
         # Update the events file.
         # summary_str = sess.run(summary_op)
