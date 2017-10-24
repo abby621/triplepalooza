@@ -194,8 +194,9 @@ def main(margin,output_size,learning_rate,is_overfitting):
             out_str = 'Step %d: loss = %.6f (loss1: %.6f | loss2: %.6f) (%.3f sec)' % (step, loss_val,ls1,ls2,duration)
             print(out_str)
             train_log_file.write(out_str+'\n')
-            print 'weights std: ', str(np.mean([np.mean(wgts[ix]) for ix in range(100)]))
-            print 'weights std: ', str(np.mean([np.std(wgts[ix]) for ix in range(100)]))
+            wmean = np.mean([np.mean(wgts[ix]) for ix in range(100)])
+            wstd = np.mean([np.std(wgts[ix]) for ix in range(100)])
+            print wmean, wstd
         # Update the events file.
         # summary_str = sess.run(summary_op)
         # writer.add_summary(summary_str, step)
