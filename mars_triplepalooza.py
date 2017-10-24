@@ -195,7 +195,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
             print(out_str)
             train_log_file.write(out_str+'\n')
         if step % 100 == 0:
-            print 'weights std: ', str(np.mean([np.std(wgts[ix] for ix in range(100)])))
+            print 'weights std: ', str(np.mean([np.std(wgts[ix]) for ix in range(100)]))
         # Update the events file.
         # summary_str = sess.run(summary_op)
         # writer.add_summary(summary_str, step)
