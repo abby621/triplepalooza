@@ -2,9 +2,9 @@
 """
 # python mars_triplepalooza.py margin output_size learning_rate is_overfitting
 # If overfitting:
-# python mars_triplepalooza.py .3 2048 .0001 True
+# python mars_triplepalooza.py .3 100 .0001 True
 # Else:
-# python mars_triplepalooza.py .3 2048 .0001 False
+# python mars_triplepalooza.py .3 100 .0001 False
 """
 
 import tensorflow as tf
@@ -19,8 +19,7 @@ from tensorflow.python.ops import gen_image_ops
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 import tensorflow.contrib.slim as slim
-# from tensorflow.contrib.slim.python.slim.nets import resnet_v2
-from resnet import resnet_v2_50, resnet_arg_scope
+from tensorflow.contrib.slim.python.slim.nets import resnet_v2
 
 import signal
 import time
@@ -40,7 +39,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     log_dir = './output/mars/logs'
     train_filename = './inputs/mars/train.txt'
     mean_file = './models/mars/mean_im.npy'
-    pretrained_net = None
+    pretrained_net = './output/mars/ckpts/final-_lr0pt0001_outputSz100_margin0.3-19999'
     img_size = [256, 256]
     crop_size = [224, 224]
     num_iters = 20000
@@ -104,10 +103,13 @@ def main(margin,output_size,learning_rate,is_overfitting):
         final_batch = tf.add(tf.subtract(image_batch,repMeanIm),noise)
 
     print("Preparing network...")
-    with slim.arg_scope(resnet_arg_scope()):
-        net, layers = resnet_v2_50(final_batch, global_pool=True, num_classes=output_size, is_training=True)
-    
+    with slim.arg_scope(resnet_v2.resnet_arg_scope()):
+        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=True)
+
     feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
+    weights = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/logits/weights:0"))
+    l1_regularizer = tf.contrib.layers.l1_regularizer(scale=0.005,scope=None)
+    regularization_penalty = tf.contrib.layers.apply_regularization(l1_regularizer,weights)
 
     # expanded_a = tf.expand_dims(feat, 1)
     # expanded_b = tf.expand_dims(feat, 0)
@@ -153,9 +155,10 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
-    loss1 = tf.multiply(mask,margin + posDistsRep - allDists)
-    loss2 = tf.maximum(0., loss1)
-    loss3 = tf.reduce_mean(loss2)
+    loss1 = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
+
+    loss = loss1 + regularization_penalty
+
     # loss = tf.log(tf.reduce_sum(tf.exp(posDistsRep))) - tf.log(tf.reduce_sum(tf.exp(margin - allDists)))
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
