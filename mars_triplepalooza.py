@@ -108,8 +108,6 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
     weights = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/logits/weights:0"))
-    l1_regularizer = tf.contrib.layers.l1_regularizer(scale=0.005,scope=None)
-    regularization_penalty = tf.contrib.layers.apply_regularization(l1_regularizer,weights)
 
     # expanded_a = tf.expand_dims(feat, 1)
     # expanded_b = tf.expand_dims(feat, 0)
@@ -156,8 +154,9 @@ def main(margin,output_size,learning_rate,is_overfitting):
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
     loss1 = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
+    loss2 = tf.reduce_mean(tf.reduce_sum(tf.abs(weights),axis=1))
 
-    loss = loss1 + regularization_penalty
+    loss = loss1 + loss2
 
     # loss = tf.log(tf.reduce_sum(tf.exp(posDistsRep))) - tf.log(tf.reduce_sum(tf.exp(margin - allDists)))
 
