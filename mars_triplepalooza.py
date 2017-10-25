@@ -204,10 +204,12 @@ def main(margin,output_size,learning_rate,is_overfitting):
             print('Saving checkpoint at iteration: %d' % (step))
             pretrained_net = os.path.join(ckpt_dir, 'checkpoint-'+param_str)
             saver.save(sess, pretrained_net, global_step=step)
+            print 'checkpoint-',pretrained_net+'-'+str(step), ' saved!'
         if (step + 1) == num_iters:
             print('Saving final')
             pretrained_net = os.path.join(ckpt_dir, 'final-'+param_str)
             saver.save(sess, pretrained_net, global_step=step)
+            print 'final-',pretrained_net+'-'+str(step), ' saved!'
 
     sess.close()
     train_log_file.close()
