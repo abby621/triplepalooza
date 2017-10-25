@@ -198,9 +198,9 @@ for label in reppedLabels:
         pil_out_im = Image.fromarray(out_im.astype('uint8'))
 
         person_outfolder = os.path.join(outfolder,'by_person',str(label))
-        if not os.path.exists(feat_outfolder):
+        if not os.path.exists(person_outfolder):
             os.makedirs(person_outfolder)
-        pil_out_im.save(os.path.join(feat_outfolder,'%d_%d_%.2f_%.2f.png'%(ctr,ft,feat1[ft],feat2[ft])))
+        pil_out_im.save(os.path.join(person_outfolder,'%d_%d_%.2f_%.2f.png'%(ctr,ft,feat1[ft],feat2[ft])))
 
         feat_outfolder = os.path.join(outfolder,'by_feature',str(ft))
         if not os.path.exists(feat_outfolder):
