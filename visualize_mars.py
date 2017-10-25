@@ -144,8 +144,8 @@ for label in reppedLabels:
     labels[3] = label3
 
     ctr = 0
-    g, wgts, cvout = sess.run([gap, weights, convOut],feed_dict={image_batch:batch, label_batch:labels,featInd:ft})
-    for ft in bestFeats[:1]:
+    g, wgts, cvout = sess.run([gap, weights, convOut],feed_dict={image_batch:batch, label_batch:labels,featInd:bestFeats[0]})
+    for ft in bestFeats[:3]:
         wgt = wgts[:,ft]
 
         cvout1 = cvout[0,:,:,:].reshape((cvout.shape[1]*cvout.shape[2],cvout.shape[3])).transpose()
@@ -159,7 +159,6 @@ for label in reppedLabels:
         cam1 = cam1 / np.max(cam1)
         if feat1[ft] < 0:
             cam1 = 1 - cam1
-
         cam1 = zoom(cam1,float(crop_size[0])/float(cam1.shape[0]),order=1)
         hm1 = cmap(cam1)
         hm1 = hm1[:,:,:3]*255.
@@ -173,7 +172,6 @@ for label in reppedLabels:
         cam2 = cam2 / np.max(cam2)
         if feat2[ft] < 0:
             cam2 = 1 - cam2
-
         cam2 = zoom(cam2,float(crop_size[0])/float(cam2.shape[0]),order=1)
         hm2 = cmap(cam2)
         hm2 = hm2[:,:,:3]*255.
@@ -196,5 +194,8 @@ for label in reppedLabels:
         # out_im = combine_horz([im1_with_heatmap,im2_with_heatmap,im3_with_heatmap])
         out_im = combine_horz([im1_with_heatmap,im2_with_heatmap])
         pil_out_im = Image.fromarray(out_im.astype('uint8'))
-        pil_out_im.save(os.path.join(outfolder,'%d_%.2f_%.2f.png'%(ft,feat1[ft],feat2[ft])))
+        feat_outfolder = os.path.join(outfolder,'%d'%(ft))
+        if not os.path.exists(feat_outfolder):
+            os.makedirs(feat_outfolder)
+        pil_out_im.save(os.path.join(feat_outfolder,'%d_%.2f_%.2f.png'%(ctr,feat1[ft],feat2[ft])))
         ctr += 1
