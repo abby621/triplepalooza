@@ -194,7 +194,13 @@ for label in reppedLabels:
         # out_im = combine_horz([im1_with_heatmap,im2_with_heatmap,im3_with_heatmap])
         out_im = combine_horz([im1_with_heatmap,im2_with_heatmap])
         pil_out_im = Image.fromarray(out_im.astype('uint8'))
-        feat_outfolder = os.path.join(outfolder,'%d'%(ft))
+
+        person_outfolder = os.path.join(outfolder,'by_person',str(label))
+        if not os.path.exists(feat_outfolder):
+            os.makedirs(person_outfolder)
+        pil_out_im.save(os.path.join(feat_outfolder,'%d_%d_%.2f_%.2f.png'%(ctr,ft,feat1[ft],feat2[ft])))
+
+        feat_outfolder = os.path.join(outfolder,'by_feature',str(ft))
         if not os.path.exists(feat_outfolder):
             os.makedirs(feat_outfolder)
         pil_out_im.save(os.path.join(feat_outfolder,'%d_%.2f_%.2f.png'%(ctr,feat1[ft],feat2[ft])))
