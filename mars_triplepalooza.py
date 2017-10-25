@@ -29,7 +29,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
         print 'Saving checkpoint before closing'
         pretrained_net = os.path.join(ckpt_dir, 'checkpoint-'+param_str)
         saver.save(sess, pretrained_net, global_step=step)
-        print 'Checkpoint-',step, ' saved!'
+        print 'Checkpoint-',pretrained_net+str(step), ' saved!'
         sys.exit(0)
 
     signal.signal(signal.SIGINT, handler)
