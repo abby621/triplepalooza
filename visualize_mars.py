@@ -117,6 +117,8 @@ cmap =matplotlib.cm.get_cmap('jet')
 outfolder = os.path.join('./visualizations/simvis/activation_maps/',datetime.now().strftime("%Y%m%d_%H%M%S"))
 if not os.path.exists(outfolder):
     os.makedirs(outfolder)
+    os.makedirs(os.path.join(outfolder,'by_person'))
+    os.makedirs(os.path.join(outfolder,'by_feature'))
 
 for label in reppedLabels:
     sameInds = random.sample(indsByLabel[label],2)
