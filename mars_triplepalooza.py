@@ -38,7 +38,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     log_dir = './output/mars/logs'
     train_filename = './inputs/mars/train.txt'
     mean_file = './models/mars/mean_im.npy'
-    pretrained_net = './output/mars/ckpts/final-_lr0pt0001_outputSz100_margin0.3-19999'
+    pretrained_net = None
     img_size = [256, 256]
     crop_size = [224, 224]
     num_iters = 20000
