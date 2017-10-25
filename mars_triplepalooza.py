@@ -105,13 +105,9 @@ def main(margin,output_size,learning_rate,is_overfitting):
     with slim.arg_scope(resnet_v2.resnet_arg_scope()):
         _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=True)
 
-    # feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
-    feat = tf.squeeze(tf.nn.l2_normalize(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"),3))
-    weights = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/logits/weights:0"))
-
-    # expanded_a = tf.expand_dims(feat, 1)
-    # expanded_b = tf.expand_dims(feat, 0)
-    # D = tf.reduce_sum(tf.squared_difference(expanded_a, expanded_b), 2)
+    feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
+    # feat = tf.squeeze(tf.nn.l2_normalize(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"),3))
+    # weights = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/logits/weights:0"))
 
     expanded_a = tf.expand_dims(feat, 1)
     expanded_b = tf.expand_dims(feat, 0)
@@ -153,9 +149,10 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
-    lmbd = .000005
+    lmbd = .001
     loss1 = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
-    loss2 = tf.multiply(lmbd, tf.reduce_sum(tf.abs(weights)))
+    # loss2 = tf.multiply(lmbd, tf.reduce_sum(tf.abs(weights)))
+    loss2 = tf.multiply(lmbd, tf.reduce_sum(tf.abs(feat)))
 
     loss = loss1 + loss2
 
