@@ -105,7 +105,8 @@ def main(margin,output_size,learning_rate,is_overfitting):
     with slim.arg_scope(resnet_v2.resnet_arg_scope()):
         _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=True)
 
-    feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
+    # feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
+    feat = tf.squeeze(tf.nn.l2_normalize(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"),3))
     weights = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/logits/weights:0"))
 
     # expanded_a = tf.expand_dims(feat, 1)
@@ -154,14 +155,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     lmbd = .001
     loss1 = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
-
-    dstr1 = tf.contrib.distributions.Gamma(.5,.5)
-    wmean, wvar = tf.nn.moments(tf.abs(weights), axes=[0,1])
-    alpha = (wmean / tf.sqrt(wvar))**2
-    beta = alpha / wmean
-    dstr2 = tf.contrib.distributions.Gamma(alpha,beta)
-
-    loss2 = lmbd * tf.contrib.distributions.kl_divergence(dstr1, dstr2)
+    loss2 = tf.multiply(lmbd, tf.reduce_sum(tf.abs(weights)))
 
     loss = loss1 + loss2
 
