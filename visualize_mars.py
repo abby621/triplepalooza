@@ -2,6 +2,7 @@ import tensorflow as tf
 from classfile import NonTripletSet,CombinatorialTripletSet
 import os
 import time
+from datetime import datetime
 import numpy as np
 from PIL import Image
 import scipy.spatial.distance
@@ -110,8 +111,12 @@ def combine_horz(images):
     new_im[:images[1].shape[1],images[1].shape[0]:images[1].shape[0]*2,2] = images[1][:,:,0]
     return new_im
 
-import matplotlib
+import matplotlib.cm
 cmap =matplotlib.cm.get_cmap('jet')
+
+outfolder = os.path.join('./visualizations/simvis/activation_maps/',datetime.now().strftime("%Y%m%d_%H%M%S"))
+if not os.path.exists(outfolder):
+    os.makedirs(outfolder)
 
 for label in reppedLabels:
     sameInds = random.sample(indsByLabel[label],2)
@@ -139,9 +144,8 @@ for label in reppedLabels:
     labels[3] = label3
 
     ctr = 0
+    g, wgts, cvout = sess.run([gap, weights, convOut],feed_dict={image_batch:batch, label_batch:labels,featInd:ft})
     for ft in bestFeats[:1]:
-        g, wgts, cvout = sess.run([gap, weights, convOut],feed_dict={image_batch:batch, label_batch:labels,featInd:ft})
-
         wgt = wgts[:,ft]
 
         cvout1 = cvout[0,:,:,:].reshape((cvout.shape[1]*cvout.shape[2],cvout.shape[3])).transpose()
@@ -153,6 +157,9 @@ for label in reppedLabels:
         cam1 = wgt.dot(cvout1).reshape(h,w)
         cam1 = cam1 - np.min(cam1)
         cam1 = cam1 / np.max(cam1)
+        if feat1[ft] < 0:
+            cam1 = 1 - cam1
+
         cam1 = zoom(cam1,float(crop_size[0])/float(cam1.shape[0]),order=1)
         hm1 = cmap(cam1)
         hm1 = hm1[:,:,:3]*255.
@@ -164,6 +171,9 @@ for label in reppedLabels:
         cam2 = wgt.dot(cvout2).reshape(h,w)
         cam2 = cam2 - np.min(cam2)
         cam2 = cam2 / np.max(cam2)
+        if feat2[ft] < 0:
+            cam2 = 1 - cam2
+
         cam2 = zoom(cam2,float(crop_size[0])/float(cam2.shape[0]),order=1)
         hm2 = cmap(cam2)
         hm2 = hm2[:,:,:3]*255.
@@ -186,5 +196,5 @@ for label in reppedLabels:
         # out_im = combine_horz([im1_with_heatmap,im2_with_heatmap,im3_with_heatmap])
         out_im = combine_horz([im1_with_heatmap,im2_with_heatmap])
         pil_out_im = Image.fromarray(out_im.astype('uint8'))
-        pil_out_im.save('./visualizations/simvis/%d_%d_%d_%.2f_%.2f.png' % (label,ctr,ft,feat1[ft],feat2[ft]))
+        pil_out_im.save(os.path.join(outfolder,'%d_%.2f_%.2f.png'%(ft,feat1[ft],feat2[ft])))
         ctr += 1
