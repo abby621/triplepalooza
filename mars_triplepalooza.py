@@ -152,7 +152,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     lmbd = .001
     loss1 = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
     # loss2 = tf.multiply(lmbd, tf.reduce_sum(tf.abs(weights)))
-    loss2 = tf.multiply(lmbd, tf.reduce_sum(tf.abs(feat)))
+    loss2 = tf.reduce_mean(tf.multiply(lmbd,tf.reduce_sum(tf.abs(feat),axis=1)))
 
     loss = loss1 + loss2
 
