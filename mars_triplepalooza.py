@@ -184,7 +184,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     for step in range(num_iters):
         start_time = time.time()
         batch, labels, cams, ims = train_data.getBatch()
-        _, loss_val,ls1,ls2,wgts = sess.run([train_op, loss,loss1,loss2,weights], feed_dict={image_batch: batch, label_batch: labels, camera_batch: cams})
+        _, loss_val,ls1,ls2 = sess.run([train_op, loss,loss1,loss2], feed_dict={image_batch: batch, label_batch: labels, camera_batch: cams})
         end_time = time.time()
         duration = end_time-start_time
         if step % summary_iters == 0 or is_overfitting:
