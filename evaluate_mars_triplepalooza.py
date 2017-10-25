@@ -20,7 +20,7 @@ def getDist(feat,otherFeats):
 
 train_file = './inputs/mars/train.txt'
 test_file = './inputs/mars/test.txt'
-eval_net = './output/mars/ckpts/checkpoint-_lr0pt0001_outputSz100_margin0.3-4499'
+eval_net = './output/mars/ckpts/checkpoint-201710251031_lr0pt0005_outputSz100_margin0pt3-2499'
 img_size = [256, 256]
 crop_size = [224, 224]
 featLayer = 'resnet_v2_50/logits'
@@ -42,7 +42,7 @@ print("Preparing network...")
 with slim.arg_scope(resnet_v2.resnet_arg_scope()):
     _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=100, is_training=True)
 
-feat = tf.squeeze(layers[featLayer])
+feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
 
 c = tf.ConfigProto()
 c.gpu_options.visible_device_list="0,1"
