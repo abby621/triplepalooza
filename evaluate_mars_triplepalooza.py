@@ -42,8 +42,8 @@ print("Preparing network...")
 with slim.arg_scope(resnet_v2.resnet_arg_scope()):
     _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=100, is_training=True)
 
-# feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
-feat = tf.squeeze(tf.nn.l2_normalize(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"),3))
+feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
+# feat = tf.squeeze(tf.nn.l2_normalize(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"),3))
 
 c = tf.ConfigProto()
 c.gpu_options.visible_device_list="0,1"
