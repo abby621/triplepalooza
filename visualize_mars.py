@@ -13,7 +13,7 @@ from scipy.ndimage import zoom
 
 train_file = './inputs/mars/train.txt'
 test_file = './inputs/mars/test.txt'
-eval_net = './output/mars/ckpts/checkpoint-201710251031_lr0pt0005_outputSz100_margin0pt3-2499'
+eval_net = './output/mars/ckpts/final-201710251406_lr0pt0001_outputSz100_margin0pt3-19999'
 img_size = [256, 256]
 crop_size = [224, 224]
 featLayer = 'resnet_v2_50/logits'
