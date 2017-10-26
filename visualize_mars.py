@@ -40,7 +40,7 @@ feat = tf.nn.l2_normalize(layers[featLayer],3)
 # feat = tf.nn.l2_normalize(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"),3)
 convOut = tf.nn.l2_normalize(layers[convOutLayer],3)
 weights = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/logits/weights:0"))
-# gap = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"))
+gap = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"))
 
 featInd = tf.placeholder(tf.int32, shape=())
 saliency_map = tf.gradients(tf.gather(tf.squeeze(feat),featInd), final_batch)[0]
