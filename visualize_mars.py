@@ -11,12 +11,9 @@ from tensorflow.contrib.slim.python.slim.nets import resnet_v2
 import random
 from scipy.ndimage import zoom
 
-def getDist(feat,otherFeat):
-    return np.dot(feat,otherFeat)
-
 train_file = './inputs/mars/train.txt'
 test_file = './inputs/mars/test.txt'
-eval_net = './output/mars/ckpts/final-_lr0pt0001_outputSz100_margin0.3-19999'
+eval_net = './output/mars/ckpts/checkpoint-201710251031_lr0pt0005_outputSz100_margin0pt3-2499'
 img_size = [256, 256]
 crop_size = [224, 224]
 featLayer = 'resnet_v2_50/logits'
@@ -40,9 +37,10 @@ with slim.arg_scope(resnet_v2.resnet_arg_scope()):
     _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=100, is_training=True)
 
 feat = tf.nn.l2_normalize(layers[featLayer],3)
+# feat = tf.nn.l2_normalize(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"),3)
 convOut = tf.nn.l2_normalize(layers[convOutLayer],3)
 weights = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/logits/weights:0"))
-gap = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"))
+# gap = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"))
 
 featInd = tf.placeholder(tf.int32, shape=())
 saliency_map = tf.gradients(tf.gather(tf.squeeze(feat),featInd), final_batch)[0]
@@ -145,11 +143,8 @@ for label in reppedLabels:
     labels[1] = label2
     labels[3] = label3
 
-    ctr = 0
     g, wgts, cvout = sess.run([gap, weights, convOut],feed_dict={image_batch:batch, label_batch:labels,featInd:bestFeats[0]})
     for ft in bestFeats[:3]:
-        wgt = wgts[:,ft]
-
         cvout1 = cvout[0,:,:,:].reshape((cvout.shape[1]*cvout.shape[2],cvout.shape[3])).transpose()
         cvout2 = cvout[batch_size/2,:,:,:].reshape((cvout.shape[1]*cvout.shape[2],cvout.shape[3])).transpose()
         cvout3 = cvout[batch_size-1,:,:,:].reshape((cvout.shape[1]*cvout.shape[2],cvout.shape[3])).transpose()
@@ -161,6 +156,7 @@ for label in reppedLabels:
         cam1 = cam1 / np.max(cam1)
         if feat1[ft] < 0:
             cam1 = 1 - cam1
+
         cam1 = zoom(cam1,float(crop_size[0])/float(cam1.shape[0]),order=1)
         hm1 = cmap(cam1)
         hm1 = hm1[:,:,:3]*255.
@@ -174,6 +170,7 @@ for label in reppedLabels:
         cam2 = cam2 / np.max(cam2)
         if feat2[ft] < 0:
             cam2 = 1 - cam2
+
         cam2 = zoom(cam2,float(crop_size[0])/float(cam2.shape[0]),order=1)
         hm2 = cmap(cam2)
         hm2 = hm2[:,:,:3]*255.
@@ -182,28 +179,18 @@ for label in reppedLabels:
         fg2 = Image.fromarray(hm2.astype('uint8'))
         im2_with_heatmap = np.array(Image.blend(bg2,fg2,alpha=.35).getdata()).reshape((crop_size[0],crop_size[1],3))
 
-        # cam3 = wgt.dot(cvout3).reshape(h,w)
-        # cam3 = cam3 - np.min(cam3)
-        # cam3 = cam3 / np.max(cam3)
-        # cam3 = zoom(cam3,float(crop_size[0])/float(cam3.shape[0]),order=1)
-        # hm3 = cmap(cam3)
-        # hm3 = hm3[:,:,:3]*255.
-        #
-        # bg3 = Image.fromarray(squeezed_im3.astype('uint8'))
-        # fg3 = Image.fromarray(hm3.astype('uint8'))
-        # im3_with_heatmap = np.array(Image.blend(bg3,fg3,alpha=.35).getdata()).reshape((crop_size[0],crop_size[1],3))
-
-        # out_im = combine_horz([im1_with_heatmap,im2_with_heatmap,im3_with_heatmap])
         out_im = combine_horz([im1_with_heatmap,im2_with_heatmap])
         pil_out_im = Image.fromarray(out_im.astype('uint8'))
 
         person_outfolder = os.path.join(outfolder,'by_person',str(label))
         if not os.path.exists(person_outfolder):
             os.makedirs(person_outfolder)
+
         pil_out_im.save(os.path.join(person_outfolder,'%d_%d_%.2f_%.2f.png'%(ctr,ft,feat1[ft],feat2[ft])))
 
         feat_outfolder = os.path.join(outfolder,'by_feature',str(ft))
         if not os.path.exists(feat_outfolder):
             os.makedirs(feat_outfolder)
+
         pil_out_im.save(os.path.join(feat_outfolder,'%d_%.2f_%.2f.png'%(ctr,feat1[ft],feat2[ft])))
         ctr += 1
