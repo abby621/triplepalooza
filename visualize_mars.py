@@ -145,6 +145,8 @@ for label in reppedLabels:
 
     g, wgts, cvout = sess.run([gap, weights, convOut],feed_dict={image_batch:batch, label_batch:labels,featInd:bestFeats[0]})
     for ft in bestFeats[:3]:
+        wgt = wgts[:,ft]
+        
         cvout1 = cvout[0,:,:,:].reshape((cvout.shape[1]*cvout.shape[2],cvout.shape[3])).transpose()
         cvout2 = cvout[batch_size/2,:,:,:].reshape((cvout.shape[1]*cvout.shape[2],cvout.shape[3])).transpose()
         cvout3 = cvout[batch_size-1,:,:,:].reshape((cvout.shape[1]*cvout.shape[2],cvout.shape[3])).transpose()
