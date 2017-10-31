@@ -46,6 +46,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     summary_iters = 10
     save_iters = 500
     featLayer = 'resnet_v2_50/logits'
+
     is_training = True
     if is_overfitting.lower()=='true':
         is_overfitting = True
@@ -60,11 +61,11 @@ def main(margin,output_size,learning_rate,is_overfitting):
     num_pos_examples = batch_size/10
 
     # Create data "batcher"
-    train_data = CombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training, isOverfitting=is_overfitting)
+    train_data = MarsCombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training, isOverfitting=is_overfitting)
     numClasses = len(train_data.files)
     numIms = np.sum([len(train_data.files[idx]) for idx in range(0,numClasses)])
     datestr = datetime.now().strftime("%Y%m%d%H%M")
-    param_str = '_lr'+str(learning_rate).replace('.','pt')+'_outputSz'+str(output_size)+'_margin'+str(margin)
+    param_str = datestr+'_lr'+str(learning_rate).replace('.','pt')+'_outputSz'+str(output_size)+'_margin'+str(margin).replace('.','pt')
     logfile_path = os.path.join(log_dir,datestr)+param_str+'_train.txt'
     train_log_file = open(logfile_path,'a')
     print '------------'
@@ -92,6 +93,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
     people_mask_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 1])
     label_batch = tf.placeholder(tf.int32, shape=(batch_size))
+    camera_batch = tf.placeholder(tf.int32, shape=(batch_size))
 
     # after we've doctored everything, we need to remember to subtract off the mean
     repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
@@ -105,11 +107,9 @@ def main(margin,output_size,learning_rate,is_overfitting):
     with slim.arg_scope(resnet_v2.resnet_arg_scope()):
         _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=True)
 
-    feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
-
-    # expanded_a = tf.expand_dims(feat, 1)
-    # expanded_b = tf.expand_dims(feat, 0)
-    # D = tf.reduce_sum(tf.squared_difference(expanded_a, expanded_b), 2)
+    # feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
+    feat = tf.squeeze(tf.nn.l2_normalize(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"),3))
+    # weights = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/logits/weights:0"))
 
     expanded_a = tf.expand_dims(feat, 1)
     expanded_b = tf.expand_dims(feat, 0)
@@ -133,8 +133,11 @@ def main(margin,output_size,learning_rate,is_overfitting):
     anchorInds_flat = anchorInds.ravel()
 
     posPairInds = zip(posImInds_flat,anchorInds_flat)
+    posPairCams0 = tf.gather(camera_batch,np.array(posPairInds)[:,0])
+    posPairCams1 = tf.gather(camera_batch,np.array(posPairInds)[:,1])
+    same_cams = tf.subtract(1,tf.cast(tf.equal(posPairCams0,posPairCams1),'int32'))
 
-    posDists = tf.reshape(tf.gather_nd(D,posPairInds),(batch_size,num_pos_examples))
+    posDists = tf.reshape(tf.gather_nd(D,posPairInds)*tf.cast(same_cams,'float32'),(batch_size,num_pos_examples))
 
     shiftPosDists = tf.reshape(posDists,(1,batch_size,num_pos_examples))
     posDistsRep = tf.tile(shiftPosDists,(batch_size,1,1))
@@ -148,7 +151,15 @@ def main(margin,output_size,learning_rate,is_overfitting):
 
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
-    loss = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
+
+    loss1 = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
+    # loss2 = tf.multiply(lmbd, tf.reduce_sum(tf.abs(weights)))
+    lmbd = .001
+    loss2 = tf.reduce_mean(tf.multiply(lmbd,tf.reduce_sum(tf.abs(feat),axis=1)))
+
+    loss = loss1 + loss2
+
+    # loss = tf.log(tf.reduce_sum(tf.exp(posDistsRep))) - tf.log(tf.reduce_sum(tf.exp(margin - allDists)))
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
     train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
@@ -175,12 +186,12 @@ def main(margin,output_size,learning_rate,is_overfitting):
     ctr  = 0
     for step in range(num_iters):
         start_time = time.time()
-        batch, labels, ims = train_data.getBatch()
-        _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, label_batch: labels})
+        batch, labels, cams, ims = train_data.getBatch()
+        _, loss_val,ls1,ls2 = sess.run([train_op, loss,loss1,loss2], feed_dict={image_batch: batch, label_batch: labels, camera_batch: cams})
         end_time = time.time()
         duration = end_time-start_time
-        if step % summary_iters == 0:
-            out_str = 'Step %d: loss = %.6f (%.3f sec)' % (step, loss_val, duration)
+        if step % summary_iters == 0 or is_overfitting:
+            out_str = 'Step %d: loss = %.6f (loss1: %.6f | loss2: %.6f) (%.3f sec)' % (step, loss_val,ls1,ls2,duration)
             print(out_str)
             train_log_file.write(out_str+'\n')
         # Update the events file.
@@ -193,10 +204,12 @@ def main(margin,output_size,learning_rate,is_overfitting):
             print('Saving checkpoint at iteration: %d' % (step))
             pretrained_net = os.path.join(ckpt_dir, 'checkpoint-'+param_str)
             saver.save(sess, pretrained_net, global_step=step)
+            print 'checkpoint-',pretrained_net+'-'+str(step), ' saved!'
         if (step + 1) == num_iters:
             print('Saving final')
             pretrained_net = os.path.join(ckpt_dir, 'final-'+param_str)
             saver.save(sess, pretrained_net, global_step=step)
+            print 'final-',pretrained_net+'-'+str(step), ' saved!'
 
     sess.close()
     train_log_file.close()
