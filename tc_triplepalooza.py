@@ -93,7 +93,6 @@ def main(margin,output_size,learning_rate,is_overfitting):
     image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
     people_mask_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 1])
     label_batch = tf.placeholder(tf.int32, shape=(batch_size))
-    camera_batch = tf.placeholder(tf.int32, shape=(batch_size))
 
     # after we've doctored everything, we need to remember to subtract off the mean
     repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
@@ -133,11 +132,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     anchorInds_flat = anchorInds.ravel()
 
     posPairInds = zip(posImInds_flat,anchorInds_flat)
-    posPairCams0 = tf.gather(camera_batch,np.array(posPairInds)[:,0])
-    posPairCams1 = tf.gather(camera_batch,np.array(posPairInds)[:,1])
-    same_cams = tf.subtract(1,tf.cast(tf.equal(posPairCams0,posPairCams1),'int32'))
-
-    posDists = tf.reshape(tf.gather_nd(D,posPairInds)*tf.cast(same_cams,'float32'),(batch_size,num_pos_examples))
+    posDists = tf.reshape(tf.gather_nd(D,posPairInds),(batch_size,num_pos_examples))
 
     shiftPosDists = tf.reshape(posDists,(1,batch_size,num_pos_examples))
     posDistsRep = tf.tile(shiftPosDists,(batch_size,1,1))
@@ -186,8 +181,8 @@ def main(margin,output_size,learning_rate,is_overfitting):
     ctr  = 0
     for step in range(num_iters):
         start_time = time.time()
-        batch, labels, cams, ims = train_data.getBatch()
-        _, loss_val,ls1,ls2 = sess.run([train_op, loss,loss1,loss2], feed_dict={image_batch: batch, label_batch: labels, camera_batch: cams})
+        batch, labels, ims = train_data.getBatch()
+        _, loss_val,ls1,ls2 = sess.run([train_op, loss,loss1,loss2], feed_dict={image_batch: batch, label_batch: labels})
         end_time = time.time()
         duration = end_time-start_time
         if step % summary_iters == 0 or is_overfitting:
