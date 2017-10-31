@@ -147,14 +147,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
 
-    loss1 = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
-    # loss2 = tf.multiply(lmbd, tf.reduce_sum(tf.abs(weights)))
-    lmbd = .001
-    loss2 = tf.reduce_mean(tf.multiply(lmbd,tf.reduce_sum(tf.abs(feat),axis=1)))
-
-    loss = loss1 + loss2
-
-    # loss = tf.log(tf.reduce_sum(tf.exp(posDistsRep))) - tf.log(tf.reduce_sum(tf.exp(margin - allDists)))
+    loss = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
     train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
