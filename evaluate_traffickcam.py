@@ -101,6 +101,10 @@ for idx in range(numTrainingIms):
 
 sess.close()
 
+print '---Triplepalooza--'
+print 'Network: ', eval_net
+print 'NN Training Accuracy: ',np.mean(trainingAccuracy,axis=0)
+
 # TESTING ACCURACY
 
 # save out images
