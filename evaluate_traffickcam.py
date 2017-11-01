@@ -15,7 +15,7 @@ import tensorflow.contrib.slim as slim
 from tensorflow.contrib.slim.python.slim.nets import resnet_v2
 
 def getDist(feat,otherFeats):
-    dist = [np.dot(feat,otherFeat) for otherFeat in otherFeats]]
+    dist = [np.dot(feat,otherFeat) for otherFeat in otherFeats]
     return dist
 
 filename = './inputs/traffickcam/test_equal.txt'
@@ -177,7 +177,7 @@ for idx in range(numTestingIms):
         save_path = os.path.join(good_dir,str(ctr)+'_'+str(topHit)+'.jpg')
     else:
         save_path = os.path.join(bad_dir,str(ctr)+'_'+str(topHit)+'.jpg')
-    
+
     new_im.save(save_path)
 
     if idx%10==0:
