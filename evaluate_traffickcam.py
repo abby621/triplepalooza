@@ -12,7 +12,7 @@ import time
 import numpy as np
 from PIL import Image
 import tensorflow.contrib.slim as slim
-from tensorflow.contrib.slim.python.slim.nets import alexnet
+from tensorflow.contrib.slim.python.slim.nets import resnet_v2
 
 filename = './inputs/traffickcam/test_equal.txt'
 pretrained_net = './output/traffickcam/ckpts/checkpoint-201710311223_lr0pt0005_outputSz128_margin0pt3-31499'
@@ -28,8 +28,8 @@ image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_s
 label_batch = tf.placeholder(tf.int32, shape=(batch_size))
 
 print("Preparing network...")
-with slim.arg_scope(alexnet.alexnet_v2_arg_scope()):
-    _, layers = alexnet.alexnet_v2(image_batch,num_classes=100, is_training=False)
+with slim.arg_scope(resnet_v2.resnet_arg_scope()):
+    _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=True)
 
 feat = tf.squeeze(tf.nn.l2_normalize(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"),3))
 
