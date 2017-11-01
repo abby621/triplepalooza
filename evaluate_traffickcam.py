@@ -24,6 +24,8 @@ mean_file = './models/places365/places365CNN_mean.npy'
 batch_size = 30
 num_pos_examples = batch_size/10
 
+output_size = 100
+
 image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
 label_batch = tf.placeholder(tf.int32, shape=(batch_size))
 
