@@ -18,7 +18,8 @@ def getDist(feat,otherFeats):
     dist = [np.dot(feat,otherFeat) for otherFeat in otherFeats]
     return dist
 
-filename = './inputs/traffickcam/test_equal.txt'
+train_file = './inputs/traffickcam/train_equal.txt'
+test_file = './inputs/traffickcam/test_equal.txt'
 pretrained_net = './output/traffickcam/ckpts/checkpoint-201710311223_lr0pt0005_outputSz128_margin0pt3-31499'
 img_size = [256, 256]
 crop_size = [227, 227]
@@ -44,7 +45,8 @@ saver = tf.train.Saver()
 
 # Create data "batcher"
 #image_list, mean_file, image_size, crop_size, batchSize=100, isTraining=True
-data = NonTripletSet(filename, mean_file, img_size, crop_size, batch_size, isTraining=False)
+train_data = NonTripletSet(train_file, mean_file, img_size, crop_size, batch_size, isTraining=False)
+test_data = NonTripletSet(test_file, mean_file, img_size, crop_size, batch_size, isTraining=False)
 
 # c = tf.ConfigProto()
 # c.gpu_options.visible_device_list="3"
