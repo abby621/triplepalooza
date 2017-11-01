@@ -39,7 +39,7 @@ feat = tf.squeeze(tf.nn.l2_normalize(tf.get_default_graph().get_tensor_by_name("
 saver = tf.train.Saver()
 
 # Create data "batcher"
-data = CombinatorialTripletSet(filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=False)
+data = NonTripletSet(filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=False)
 
 # c = tf.ConfigProto()
 # c.gpu_options.visible_device_list="3"
@@ -49,70 +49,186 @@ sess = tf.Session()
 # Here's where we need to load saved weights
 saver.restore(sess, pretrained_net)
 
-allFeats = []
-allLabels = []
-allIms = []
-num_iters = np.sum([len(data.files[ix]) for ix in range(0,len(data.files))]) / batch_size
+trainingImsAndLabels = [(train_data.files[ix][iy],train_data.classes[ix]) for ix in range(len(train_data.files)) for iy in range(len(train_data.files[ix]))]
+random.shuffle(trainingImsAndLabels)
+trainingImsAndLabels = trainingImsAndLabels[:10000]
+numTrainingIms = len(trainingImsAndLabels)
+trainingFeats = np.empty((numTrainingIms,feat.shape[1]),dtype=np.float32)
+trainingIms = np.empty((numTrainingIms),dtype=object)
+trainingLabels = np.empty((numTrainingIms),dtype=np.int32)
+trainingCams = np.empty((numTrainingIms),dtype=np.int32)
+num_iters = numTrainingIms / batch_size
 
-for step in range(num_iters):
-    print float(step)/float(num_iters)
-    start_time = time.time()
-    batch, labels, ims = data.getBatch()
-    f = sess.run(feat, feed_dict={image_batch: batch})
-    for ix in range(0,len(ims)):
-        im = ims[ix]
-        if im not in allIms:
-            allIms.append(im)
-            allFeats.append(f[ix])
-            allLabels.append(labels[ix])
-    duration = time.time() - start_time
-
-def getDist(feat,otherFeats):
-    dist = (otherFeats - feat)**2
-    dist = np.sum(dist,axis=1)
-    dist = np.sqrt(dist)
-    return dist
-
-def combine_horz(ims):
-    images = map(Image.open, [ims[0],ims[1],ims[2],ims[3],ims[4],ims[5],ims[6]])
-    widths, heights = zip(*(i.size for i in images))
-    total_width = sum(widths)
-    max_height = max(heights)
-    new_im = Image.new('RGB', (total_width, max_height))
-    x_offset = 0
-    for im in images:
-        new_im.paste(im, (x_offset,0))
-        x_offset += im.size[0]
-    return new_im
-
-good_dir = '/project/focus/abby/triplepalooza/example_results/good'
-bad_dir = '/project/focus/abby/triplepalooza/example_results/bad'
-
-npAllFeats = np.array(allFeats)
-npAllLabels = np.array(allLabels)
-success = np.zeros((len(npAllFeats),100))
-ctr = 0
-for im,feat,cls in zip(allIms,npAllFeats,npAllLabels):
-    dists = getDist(feat,npAllFeats)
-    sortInds = np.argsort(dists)
-    hits = np.where(npAllLabels[sortInds]==cls)[0][1:]
-    topHit = np.min(hits)-1
-    topHitIm = allIms[sortInds[hits[0]]]
-    topMatchIm1 = allIms[sortInds[1]]
-    topMatchIm2 = allIms[sortInds[2]]
-    topMatchIm3 = allIms[sortInds[3]]
-    topMatchIm4 = allIms[sortInds[4]]
-    topMatchIm5 = allIms[sortInds[5]]
-    new_im = combine_horz([im,topMatchIm1,topMatchIm2,topMatchIm3,topMatchIm4,topMatchIm5,topHitIm])
-    if topHit < 100:
-        print 'Good ', topHit
-        print im, topHitIm
-        save_path = os.path.join(good_dir,str(ctr)+'_'+str(topHit)+'.jpg')
-        success[ctr,topHit:] = 1
+print 'Computing training set features...'
+for step in range(0,num_iters):
+    print step, '/', num_iters
+    if step == num_iters:
+        end_ind = numTrainingIms
     else:
-        save_path = os.path.join(bad_dir,str(ctr)+'_'+str(topHit)+'.jpg')
-        print 'Bad ', topHit
-    new_im.save(save_path)
-    ctr += 1
+        end_ind = step*batch_size+batch_size
 
-np.mean(success,axis=0)
+    il = trainingImsAndLabels[step*batch_size:end_ind]
+    ims = [i[0] for i in il]
+    trainingIms[step*batch_size:end_ind] = ims
+    labels = [i[1] for i in il]
+    trainingLabels[step*batch_size:end_ind] = labels
+    batch, cams = train_data.getBatchFromImageList(ims)
+    trainingCams[step*batch_size:end_ind] = cams
+
+    while len(labels) < batch_size:
+        labels += [labels[-1]]
+        batch = np.vstack((batch,np.expand_dims(batch[-1],0)))
+
+    ff = sess.run(feat, feed_dict={image_batch: batch, label_batch:labels})
+    trainingFeats[step*batch_size:end_ind,:] = ff[:len(il),:]
+
+print 'Computing training set distances...'
+trainingAccuracy = np.zeros((numTrainingIms,100))
+for idx in range(numTrainingIms):
+    thisFeat = trainingFeats[idx,:]
+    thisLabel = trainingLabels[idx]
+    thisCam = trainingCams[idx]
+    sameCamInds = np.where(trainingCams==thisCam)[0]
+    dists = getDist(thisFeat,trainingFeats)
+    dists[sameCamInds] = 100000000000
+    sortedInds = np.argsort(dists)
+    sortedLabels = trainingLabels[sortedInds][:100]
+    if thisLabel in sortedLabels:
+        topHit = np.where(sortedLabels==thisLabel)[0][0]
+        trainingAccuracy[idx,topHit:] = 1
+    if idx%10==0:
+        print idx,': ',np.mean(trainingAccuracy[:idx,:],axis=0)[0]
+
+sess.close()
+
+# TESTING ACCURACY
+sess = tf.Session(config=c)
+saver = tf.train.Saver(max_to_keep=100)
+saver.restore(sess, eval_net)
+
+testingImsAndLabels = [(test_data.files[ix][iy],test_data.classes[ix]) for ix in range(len(test_data.files)) for iy in range(len(test_data.files[ix]))]
+random.shuffle(testingImsAndLabels)
+testingImsAndLabels = testingImsAndLabels[:10000]
+numTestingIms = len(testingImsAndLabels)
+testingFeats = np.empty((numTestingIms,feat.shape[1]),dtype=np.float32)
+testingIms = np.empty((numTestingIms),dtype=object)
+testingLabels = np.empty((numTestingIms),dtype=np.int32)
+testingCams = np.empty((numTestingIms),dtype=np.int32)
+num_iters = numTestingIms / batch_size
+
+print 'Computing testing set features...'
+for step in range(0,num_iters):
+    print step, '/', num_iters
+    if step == num_iters:
+        end_ind = numTestingIms
+    else:
+        end_ind = step*batch_size+batch_size
+
+    il = testingImsAndLabels[step*batch_size:end_ind]
+    ims = [i[0] for i in il]
+    testingIms[step*batch_size:end_ind] = ims
+    labels = [i[1] for i in il]
+    testingLabels[step*batch_size:end_ind] = labels
+    batch, cams = test_data.getBatchFromImageList(ims)
+    testingCams[step*batch_size:end_ind] = cams
+
+    while len(labels) < batch_size:
+        labels += [labels[-1]]
+        batch = np.vstack((batch,np.expand_dims(batch[-1],0)))
+
+    ff = sess.run(feat, feed_dict={image_batch: batch, label_batch:labels})
+    testingFeats[step*batch_size:end_ind,:] = ff[:len(il),:]
+
+print 'Computing testing set distances...'
+testingAccuracy = np.zeros((numTestingIms,100))
+for idx in range(numTestingIms):
+    thisFeat = testingFeats[idx,:]
+    thisLabel = testingLabels[idx]
+    thisCam = testingCams[idx]
+    sameCamInds = np.where(testingCams==thisCam)[0]
+    dists = getDist(thisFeat,testingFeats)
+    dists[sameCamInds] = 100000000000
+    sortedInds = np.argsort(dists)
+    sortedLabels = testingLabels[sortedInds][:100]
+    if thisLabel in sortedLabels:
+        topHit = np.where(sortedLabels==thisLabel)[0][0]
+        testingAccuracy[idx,topHit:] = 1
+    if idx%10==0:
+        print idx,': ',np.mean(testingAccuracy[:idx,:],axis=0)[0]
+
+sess.close()
+
+print '---Triplepalooza--'
+print 'Network: ', eval_net
+print 'NN Training Accuracy: ',np.mean(trainingAccuracy,axis=0)
+print '---'
+print 'NN Test Accuracy: ',np.mean(testingAccuracy,axis=0)
+print '---'
+
+# allFeats = []
+# allLabels = []
+# allIms = []
+# num_iters = np.sum([len(data.files[ix]) for ix in range(0,len(data.files))]) / batch_size
+#
+# for step in range(num_iters):
+#     print float(step)/float(num_iters)
+#     start_time = time.time()
+#     batch, labels, ims = data.getBatch()
+#     f = sess.run(feat, feed_dict={image_batch: batch})
+#     for ix in range(0,len(ims)):
+#         im = ims[ix]
+#         if im not in allIms:
+#             allIms.append(im)
+#             allFeats.append(f[ix])
+#             allLabels.append(labels[ix])
+#     duration = time.time() - start_time
+#
+# def getDist(feat,otherFeats):
+#     dist = (otherFeats - feat)**2
+#     dist = np.sum(dist,axis=1)
+#     dist = np.sqrt(dist)
+#     return dist
+#
+# def combine_horz(ims):
+#     images = map(Image.open, [ims[0],ims[1],ims[2],ims[3],ims[4],ims[5],ims[6]])
+#     widths, heights = zip(*(i.size for i in images))
+#     total_width = sum(widths)
+#     max_height = max(heights)
+#     new_im = Image.new('RGB', (total_width, max_height))
+#     x_offset = 0
+#     for im in images:
+#         new_im.paste(im, (x_offset,0))
+#         x_offset += im.size[0]
+#     return new_im
+#
+# good_dir = '/project/focus/abby/triplepalooza/example_results/good'
+# bad_dir = '/project/focus/abby/triplepalooza/example_results/bad'
+#
+# npAllFeats = np.array(allFeats)
+# npAllLabels = np.array(allLabels)
+# success = np.zeros((len(npAllFeats),100))
+# ctr = 0
+# for im,feat,cls in zip(allIms,npAllFeats,npAllLabels):
+#     dists = getDist(feat,npAllFeats)
+#     sortInds = np.argsort(dists)
+#     hits = np.where(npAllLabels[sortInds]==cls)[0][1:]
+#     topHit = np.min(hits)-1
+#     topHitIm = allIms[sortInds[hits[0]]]
+#     topMatchIm1 = allIms[sortInds[1]]
+#     topMatchIm2 = allIms[sortInds[2]]
+#     topMatchIm3 = allIms[sortInds[3]]
+#     topMatchIm4 = allIms[sortInds[4]]
+#     topMatchIm5 = allIms[sortInds[5]]
+#     new_im = combine_horz([im,topMatchIm1,topMatchIm2,topMatchIm3,topMatchIm4,topMatchIm5,topHitIm])
+#     if topHit < 100:
+#         print 'Good ', topHit
+#         print im, topHitIm
+#         save_path = os.path.join(good_dir,str(ctr)+'_'+str(topHit)+'.jpg')
+#         success[ctr,topHit:] = 1
+#     else:
+#         save_path = os.path.join(bad_dir,str(ctr)+'_'+str(topHit)+'.jpg')
+#         print 'Bad ', topHit
+#     new_im.save(save_path)
+#     ctr += 1
+#
+# np.mean(success,axis=0)
