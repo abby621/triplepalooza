@@ -16,7 +16,10 @@ import tensorflow.contrib.slim as slim
 from tensorflow.contrib.slim.python.slim.nets import resnet_v2
 
 def getDist(feat,otherFeats):
-    dist = [np.dot(feat,otherFeat) for otherFeat in otherFeats]
+    # dist = (otherFeats - feat)**2
+    # dist = np.sum(dist,axis=1)
+    # dist = np.sqrt(dist)
+    dist = np.array([np.dot(feat,otherFeat) for otherFeat in otherFeats])
     return dist
 
 train_file = './inputs/traffickcam/train_equal.txt'
@@ -46,8 +49,8 @@ saver = tf.train.Saver()
 
 # Create data "batcher"
 #image_list, mean_file, image_size, crop_size, batchSize=100, isTraining=True
-train_data = NonTripletSet(train_file, mean_file, img_size, crop_size, batch_size, isTraining=False)
-test_data = NonTripletSet(test_file, mean_file, img_size, crop_size, batch_size, isTraining=False)
+train_data = CombinatorialTripletSet(train_file, mean_file, img_size, crop_size, batch_size, isTraining=False)
+test_data = CombinatorialTripletSet(test_file, mean_file, img_size, crop_size, batch_size, isTraining=False)
 
 # c = tf.ConfigProto()
 # c.gpu_options.visible_device_list="3"
@@ -58,8 +61,9 @@ sess = tf.Session()
 saver.restore(sess, pretrained_net)
 
 trainingImsAndLabels = [(train_data.files[ix][iy],train_data.classes[ix]) for ix in range(len(train_data.files)) for iy in range(len(train_data.files[ix]))]
-random.shuffle(trainingImsAndLabels)
+# random.shuffle(trainingImsAndLabels)
 trainingImsAndLabels = trainingImsAndLabels[:10000]
+random.shuffled(trainingImsAndLabels)
 numTrainingIms = len(trainingImsAndLabels)
 trainingFeats = np.empty((numTrainingIms,feat.shape[1]),dtype=np.float32)
 trainingIms = np.empty((numTrainingIms),dtype=object)
@@ -95,7 +99,7 @@ for idx in range(numTrainingIms):
     thisLabel = trainingLabels[idx]
     dists = getDist(thisFeat,trainingFeats)
     sortedInds = np.argsort(dists)
-    sortedLabels = trainingLabels[sortedInds][:100]
+    sortedLabels = trainingLabels[sortedInds][1:101]
     if thisLabel in sortedLabels:
         topHit = np.where(sortedLabels==thisLabel)[0][0]
         trainingAccuracy[idx,topHit:] = 1
@@ -131,8 +135,9 @@ saver = tf.train.Saver(max_to_keep=100)
 saver.restore(sess, eval_net)
 
 testingImsAndLabels = [(test_data.files[ix][iy],test_data.classes[ix]) for ix in range(len(test_data.files)) for iy in range(len(test_data.files[ix]))]
-random.shuffle(testingImsAndLabels)
+# random.shuffle(trainingImsAndLabels)
 testingImsAndLabels = testingImsAndLabels[:10000]
+random.shuffled(testingImsAndLabels)
 numTestingIms = len(testingImsAndLabels)
 testingFeats = np.empty((numTestingIms,feat.shape[1]),dtype=np.float32)
 testingIms = np.empty((numTestingIms),dtype=object)

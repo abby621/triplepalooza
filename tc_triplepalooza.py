@@ -39,7 +39,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     log_dir = './output/traffickcam/logs'
     train_filename = './inputs/traffickcam/train.txt'
     mean_file = './models/traffickcam/tc_mean_im.npy'
-    pretrained_net = None
+    pretrained_net = './output/traffickcam/ckpts/checkpoint-201710311223_lr0pt0005_outputSz128_margin0pt3-31499'
     img_size = [256, 256]
     crop_size = [224, 224]
     num_iters = 200000
@@ -99,7 +99,7 @@ def main(margin,output_size,learning_rate,is_overfitting):
     if train_data.isOverfitting:
         final_batch = tf.subtract(image_batch,repMeanIm)
     else:
-        noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 1], mean=0.0, stddev=0.25, dtype=tf.float32)
+        noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 1], mean=0.0, stddev=0.025, dtype=tf.float32)
         final_batch = tf.add(tf.subtract(image_batch,repMeanIm),noise)
 
     print("Preparing network...")
@@ -145,7 +145,6 @@ def main(margin,output_size,learning_rate,is_overfitting):
     bad_positives = np.mod(rb,num_pos_examples) == np.mod(rc,num_pos_examples)
 
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
-
 
     loss = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
 
