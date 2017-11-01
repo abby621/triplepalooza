@@ -15,10 +15,10 @@ import tensorflow.contrib.slim as slim
 from tensorflow.contrib.slim.python.slim.nets import alexnet
 
 filename = './inputs/traffickcam/test_equal.txt'
-pretrained_net = './output/ckpts/checkpoint-9999'
+pretrained_net = './output/traffickcam/ckpts/checkpoint-201710311223_lr0pt0005_outputSz128_margin0pt3-31499'
 img_size = [256, 256]
 crop_size = [227, 227]
-featLayer = 'alexnet_v2/fc7'
+# featLayer = 'alexnet_v2/fc7'
 mean_file = './models/places365/places365CNN_mean.npy'
 
 batch_size = 30
@@ -31,7 +31,7 @@ print("Preparing network...")
 with slim.arg_scope(alexnet.alexnet_v2_arg_scope()):
     _, layers = alexnet.alexnet_v2(image_batch,num_classes=100, is_training=False)
 
-feat = tf.squeeze(layers[featLayer])
+feat = tf.squeeze(tf.nn.l2_normalize(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"),3))
 
 # Create a saver for writing loading checkpoints.
 saver = tf.train.Saver()
@@ -39,10 +39,11 @@ saver = tf.train.Saver()
 # Create data "batcher"
 data = CombinatorialTripletSet(filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=False)
 
-c = tf.ConfigProto()
-c.gpu_options.visible_device_list="3"
+# c = tf.ConfigProto()
+# c.gpu_options.visible_device_list="3"
 
-sess = tf.Session(config=c)
+# sess = tf.Session(config=c)
+sess = tf.Session()
 # Here's where we need to load saved weights
 saver.restore(sess, pretrained_net)
 
