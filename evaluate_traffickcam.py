@@ -11,6 +11,7 @@ import os.path
 import time
 import numpy as np
 from PIL import Image
+import random
 import tensorflow.contrib.slim as slim
 from tensorflow.contrib.slim.python.slim.nets import resnet_v2
 
