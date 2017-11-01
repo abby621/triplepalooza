@@ -43,7 +43,8 @@ feat = tf.squeeze(tf.nn.l2_normalize(tf.get_default_graph().get_tensor_by_name("
 saver = tf.train.Saver()
 
 # Create data "batcher"
-data = NonTripletSet(filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=False)
+#image_list, mean_file, image_size, crop_size, batchSize=100, isTraining=True
+data = NonTripletSet(filename, mean_file, img_size, crop_size, batch_size, isTraining=False)
 
 # c = tf.ConfigProto()
 # c.gpu_options.visible_device_list="3"
