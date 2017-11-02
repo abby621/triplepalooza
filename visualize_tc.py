@@ -113,9 +113,9 @@ def combine_horz(images):
     new_im[:images[2].shape[1],images[2].shape[0]*2:images[2].shape[0]*3,0] = images[2][:,:,2]
     new_im[:images[2].shape[1],images[2].shape[0]*2:images[2].shape[0]*3,1] = images[2][:,:,1]
     new_im[:images[2].shape[1],images[2].shape[0]*2:images[2].shape[0]*3,2] = images[2][:,:,0]
-    new_im[:images[2].shape[1],images[2].shape[0]*3:images[2].shape[0]*4,0] = images[2][:,:,2]
-    new_im[:images[2].shape[1],images[2].shape[0]*3:images[2].shape[0]*4,1] = images[2][:,:,1]
-    new_im[:images[2].shape[1],images[2].shape[0]*3:images[2].shape[0]*4,2] = images[2][:,:,0]
+    new_im[:images[2].shape[1],images[2].shape[0]*3:images[2].shape[0]*4,0] = images[3][:,:,2]
+    new_im[:images[2].shape[1],images[2].shape[0]*3:images[2].shape[0]*4,1] = images[3][:,:,1]
+    new_im[:images[2].shape[1],images[2].shape[0]*3:images[2].shape[0]*4,2] = images[3][:,:,0]
     return new_im
 
 import matplotlib.cm
