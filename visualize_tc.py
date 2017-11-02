@@ -153,10 +153,10 @@ for label in reppedLabels:
         squeezed_im1 = np.squeeze(im1)
         label1 = testingLabels[sortedInds[0]]
 
-        # feat2 = testingFeats[sortedInds[1],:]
-        # im2 = test_data.getBatchFromImageList([testingIms[sortedInds[1]]])
-        # squeezed_im2 = np.squeeze(im2)
-        # label2 = testingLabels[sortedInds[1]]
+        feat2 = testingFeats[sortedInds[1],:]
+        im2 = test_data.getBatchFromImageList([testingIms[sortedInds[1]]])
+        squeezed_im2 = np.squeeze(im2)
+        label2 = testingLabels[sortedInds[1]]
 
         feat3 = testingFeats[sortedInds[topHit],:]
         im3 = test_data.getBatchFromImageList([testingIms[sortedInds[topHit]]])
