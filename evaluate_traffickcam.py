@@ -6,7 +6,7 @@ Created on Mon Sep 19 13:02:07 2016
 """
 
 import tensorflow as tf
-from classfile import NonTripletSet
+from classfile import CombinatorialTripletSet
 import os.path
 import time
 import numpy as np
@@ -16,15 +16,15 @@ import tensorflow.contrib.slim as slim
 from tensorflow.contrib.slim.python.slim.nets import resnet_v2
 
 def getDist(feat,otherFeats):
-    # dist = (otherFeats - feat)**2
-    # dist = np.sum(dist,axis=1)
-    # dist = np.sqrt(dist)
-    dist = np.array([np.dot(feat,otherFeat) for otherFeat in otherFeats])
+    dist = (otherFeats - feat)**2
+    dist = np.sum(dist,axis=1)
+    dist = np.sqrt(dist)
+    # dist = np.array([np.dot(feat,otherFeat) for otherFeat in otherFeats])
     return dist
 
 train_file = './inputs/traffickcam/train_equal.txt'
 test_file = './inputs/traffickcam/test_equal.txt'
-pretrained_net = './output/traffickcam/ckpts/checkpoint-201710311223_lr0pt0005_outputSz128_margin0pt3-31499'
+pretrained_net = './output/traffickcam/ckpts/checkpoint-201711011620_lr0pt0001_outputSz128_margin0pt3-22293'
 img_size = [256, 256]
 crop_size = [227, 227]
 # featLayer = 'alexnet_v2/fc7'
@@ -63,7 +63,7 @@ saver.restore(sess, pretrained_net)
 trainingImsAndLabels = [(train_data.files[ix][iy],train_data.classes[ix]) for ix in range(len(train_data.files)) for iy in range(len(train_data.files[ix]))]
 # random.shuffle(trainingImsAndLabels)
 trainingImsAndLabels = trainingImsAndLabels[:10000]
-random.shuffled(trainingImsAndLabels)
+random.shuffle(trainingImsAndLabels)
 numTrainingIms = len(trainingImsAndLabels)
 trainingFeats = np.empty((numTrainingIms,feat.shape[1]),dtype=np.float32)
 trainingIms = np.empty((numTrainingIms),dtype=object)
@@ -109,7 +109,6 @@ for idx in range(numTrainingIms):
 sess.close()
 
 print '---Triplepalooza--'
-print 'Network: ', eval_net
 print 'NN Training Accuracy: ',np.mean(trainingAccuracy,axis=0)
 
 # TESTING ACCURACY
@@ -130,14 +129,15 @@ def combine_horz(ims):
 good_dir = '/project/focus/abby/triplepalooza/example_results/good'
 bad_dir = '/project/focus/abby/triplepalooza/example_results/bad'
 
-sess = tf.Session(config=c)
-saver = tf.train.Saver(max_to_keep=100)
-saver.restore(sess, eval_net)
+# # sess = tf.Session(config=c)
+# sess = tf.Session()
+# # Here's where we need to load saved weights
+# saver.restore(sess, pretrained_net)
 
 testingImsAndLabels = [(test_data.files[ix][iy],test_data.classes[ix]) for ix in range(len(test_data.files)) for iy in range(len(test_data.files[ix]))]
 # random.shuffle(trainingImsAndLabels)
 testingImsAndLabels = testingImsAndLabels[:10000]
-random.shuffled(testingImsAndLabels)
+random.shuffle(testingImsAndLabels)
 numTestingIms = len(testingImsAndLabels)
 testingFeats = np.empty((numTestingIms,feat.shape[1]),dtype=np.float32)
 testingIms = np.empty((numTestingIms),dtype=object)
@@ -167,14 +167,15 @@ for step in range(0,num_iters):
     testingFeats[step*batch_size:end_ind,:] = ff[:len(il),:]
 
 print 'Computing testing set distances...'
+ctr = 0
 testingAccuracy = np.zeros((numTestingIms,100))
 for idx in range(numTestingIms):
+    thisIm = testingIms[idx]
     thisFeat = testingFeats[idx,:]
     thisLabel = testingLabels[idx]
-    thisCam = testingCams[idx]
     dists = getDist(thisFeat,testingFeats)
-    sortedInds = np.argsort(dists)
-    sortedLabels = testingLabels[sortedInds]
+    sortedInds = np.argsort(dists)[1:]
+    sortedLabels = testingLabels[sortedInds][1:]
 
     topHit = np.where(sortedLabels==thisLabel)[0][0]
     topHitIm = testingIms[sortedInds[topHit]]
@@ -183,7 +184,7 @@ for idx in range(numTestingIms):
     topMatchIm3 = testingIms[sortedInds[2]]
     topMatchIm4 = testingIms[sortedInds[3]]
     topMatchIm5 = testingIms[sortedInds[4]]
-    new_im = combine_horz([im,topMatchIm1,topMatchIm2,topMatchIm3,topMatchIm4,topMatchIm5,topHitIm])
+    new_im = combine_horz([thisIm,topMatchIm1,topMatchIm2,topMatchIm3,topMatchIm4,topMatchIm5,topHitIm])
 
     if thisLabel in sortedLabels[:100]:
         testingAccuracy[idx,topHit:] = 1
@@ -195,6 +196,8 @@ for idx in range(numTestingIms):
 
     if idx%10==0:
         print idx,': ',np.mean(testingAccuracy[:idx,:],axis=0)[0]
+
+    ctr += 1
 
 sess.close()
 
