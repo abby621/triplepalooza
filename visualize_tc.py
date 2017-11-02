@@ -195,8 +195,8 @@ for label in reppedLabels:
 
         cam1 = cam1 - np.min(cam1)
         cam1 = cam1 / np.max(cam1)
-        if feat1[ft] < 0:
-            cam1 = 1 - cam1
+        # if feat1[ft] < 0:
+        #     cam1 = 1 - cam1
 
         cam1 = zoom(cam1,float(crop_size[0])/float(cam1.shape[0]),order=1)
         hm1 = cmap(cam1)
@@ -208,8 +208,8 @@ for label in reppedLabels:
 
         cam2 = cam2 - np.min(cam2)
         cam2 = cam2 / np.max(cam2)
-        if feat2[ft] < 0:
-            cam2 = 1 - cam2
+        # if feat2[ft] < 0:
+        #     cam2 = 1 - cam2
 
         cam2 = zoom(cam2,float(crop_size[0])/float(cam2.shape[0]),order=1)
         hm2 = cmap(cam2)
@@ -221,8 +221,8 @@ for label in reppedLabels:
 
         cam3 = cam3 - np.min(cam3)
         cam3 = cam3 / np.max(cam3)
-        if feat3[ft] < 0:
-            cam3 = 1 - cam3
+        # if feat3[ft] < 0:
+        #     cam3 = 1 - cam3
 
         cam3 = zoom(cam3,float(crop_size[0])/float(cam3.shape[0]),order=1)
         hm3 = cmap(cam3)
@@ -234,8 +234,8 @@ for label in reppedLabels:
 
         cam4 = cam4 - np.min(cam4)
         cam4 = cam4 / np.max(cam4)
-        if feat3[ft] < 0:
-            cam4 = 1 - cam4
+        # if feat3[ft] < 0:
+        #     cam4 = 1 - cam4
 
         cam4 = zoom(cam4,float(crop_size[0])/float(cam4.shape[0]),order=1)
         hm4 = cmap(cam4)
