@@ -181,7 +181,7 @@ for label in reppedLabels:
         labels[batch_size/4] = label1
         labels[batch_size/4*3] = label2
 
-        g, wgts, cvout = sess.run([gap, weights, convOut],feed_dict={image_batch:batch, label_batch:labels, featInd:bestFeats[0]})
+        g, wgts, cvout = sess.run([gap, weights, convOut],feed_dict={image_batch:batch, label_batch:labels, featInd:bestFeats1[0]})
 
         ctr = 0
 
