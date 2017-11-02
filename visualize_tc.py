@@ -142,9 +142,6 @@ for label in reppedLabels:
         sortedInds = np.argsort(dists)[1:]
         sortedLabels = testingLabels[sortedInds][1:]
         topHit = np.where(sortedLabels==label)[0][0]
-        topHitIm = testingIms[sortedInds[topHit]]
-        topMatchIm1 = testingIms[sortedInds[0]]
-        topMatchIm2 = testingIms[sortedInds[1]]
 
         feat0 = testingFeats[idx,:]
         im0 = test_data.getBatchFromImageList([testingIms[idx]])
