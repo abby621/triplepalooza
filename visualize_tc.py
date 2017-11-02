@@ -113,9 +113,6 @@ def combine_horz(images):
     new_im[:images[2].shape[1],images[2].shape[0]*2:images[2].shape[0]*3,0] = images[2][:,:,2]
     new_im[:images[2].shape[1],images[2].shape[0]*2:images[2].shape[0]*3,1] = images[2][:,:,1]
     new_im[:images[2].shape[1],images[2].shape[0]*2:images[2].shape[0]*3,2] = images[2][:,:,0]
-    new_im[:images[3].shape[1],images[3].shape[0]*3:images[3].shape[0]*4,0] = images[3][:,:,2]
-    new_im[:images[3].shape[1],images[3].shape[0]*3:images[3].shape[0]*4,1] = images[3][:,:,1]
-    new_im[:images[3].shape[1],images[3].shape[0]*3:images[3].shape[0]*4,2] = images[3][:,:,0]
     return new_im
 
 import matplotlib.cm
@@ -156,21 +153,21 @@ for label in reppedLabels:
         squeezed_im1 = np.squeeze(im1)
         label1 = testingLabels[sortedInds[0]]
 
-        feat2 = testingFeats[sortedInds[1],:]
-        im2 = test_data.getBatchFromImageList([testingIms[sortedInds[1]]])
-        squeezed_im2 = np.squeeze(im2)
-        label2 = testingLabels[sortedInds[1]]
+        # feat2 = testingFeats[sortedInds[1],:]
+        # im2 = test_data.getBatchFromImageList([testingIms[sortedInds[1]]])
+        # squeezed_im2 = np.squeeze(im2)
+        # label2 = testingLabels[sortedInds[1]]
 
         feat3 = testingFeats[sortedInds[topHit],:]
         im3 = test_data.getBatchFromImageList([testingIms[sortedInds[topHit]]])
         squeezed_im3 = np.squeeze(im3)
         label3 = testingLabels[sortedInds[topHit]]
 
-        featDists01 = (feat0*feat1)
-        sortedDists01 = np.sort(featDists01)[::-1]
-        sumTo01 = [np.sum(sortedDists01[:aa]) for aa in range(len(sortedDists01))]
-        cutOffInd01 = np.where(sumTo01>sumTo01[-1]*.5)[0][0]
-        bestFeats01 = np.argsort(-featDists01)
+        featDists = (feat0*feat1)
+        sortedDists = np.sort(featDists)[::-1]
+        sumTo = [np.sum(sortedDists[:aa]) for aa in range(len(sortedDists))]
+        cutOffInd = np.where(sumTo>sumTo[-1]*.5)[0][0]
+        bestFeats = np.argsort(-featDists)
 
         batch[0,:,:,:] = im0
         batch[batch_size/4,:,:,:] = im1
@@ -219,18 +216,18 @@ for label in reppedLabels:
         fg2 = Image.fromarray(hm2.astype('uint8'))
         im2_with_heatmap = np.array(Image.blend(bg2,fg2,alpha=.35).getdata()).reshape((crop_size[0],crop_size[1],3))
 
-        cam3 = cam3 - np.min(cam3)
-        cam3 = cam3 / np.max(cam3)
-        # if feat3[ft] < 0:
-        #     cam3 = 1 - cam3
-
-        cam3 = zoom(cam3,float(crop_size[0])/float(cam3.shape[0]),order=1)
-        hm3 = cmap(cam3)
-        hm3 = hm3[:,:,:3]*255.
-
-        bg3 = Image.fromarray(squeezed_im2.astype('uint8'))
-        fg3 = Image.fromarray(hm3.astype('uint8'))
-        im3_with_heatmap = np.array(Image.blend(bg3,fg3,alpha=.35).getdata()).reshape((crop_size[0],crop_size[1],3))
+        # cam3 = cam3 - np.min(cam3)
+        # cam3 = cam3 / np.max(cam3)
+        # # if feat3[ft] < 0:
+        # #     cam3 = 1 - cam3
+        #
+        # cam3 = zoom(cam3,float(crop_size[0])/float(cam3.shape[0]),order=1)
+        # hm3 = cmap(cam3)
+        # hm3 = hm3[:,:,:3]*255.
+        #
+        # bg3 = Image.fromarray(squeezed_im2.astype('uint8'))
+        # fg3 = Image.fromarray(hm3.astype('uint8'))
+        # im3_with_heatmap = np.array(Image.blend(bg3,fg3,alpha=.35).getdata()).reshape((crop_size[0],crop_size[1],3))
 
         cam4 = cam4 - np.min(cam4)
         cam4 = cam4 / np.max(cam4)
@@ -245,7 +242,7 @@ for label in reppedLabels:
         fg4 = Image.fromarray(hm4.astype('uint8'))
         im4_with_heatmap = np.array(Image.blend(bg4,fg4,alpha=.35).getdata()).reshape((crop_size[0],crop_size[1],3))
 
-        out_im = combine_horz([im1_with_heatmap,im2_with_heatmap,im3_with_heatmap,im4_with_heatmap])
+        out_im = combine_horz([im1_with_heatmap,im2_with_heatmap,im4_with_heatmap])
         pil_out_im = Image.fromarray(out_im.astype('uint8'))
 
         hotel_outfolder = os.path.join(outfolder,'by_hotel',str(label))
