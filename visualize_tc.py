@@ -216,7 +216,7 @@ for label in reppedLabels:
         hm3 = cmap(cam3)
         hm3 = hm3[:,:,:3]*255.
         bg3 = Image.fromarray(squeezed_im0.astype('uint8'))
-        fg3 = Image.fromarray(hm1.astype('uint8'))
+        fg3 = Image.fromarray(hm3.astype('uint8'))
         im3_with_heatmap = np.array(Image.blend(bg3,fg3,alpha=.35).getdata()).reshape((crop_size[0],crop_size[1],3))
 
         cam4 = cam4 - np.min(cam4)
@@ -225,7 +225,7 @@ for label in reppedLabels:
         hm4 = cmap(cam4)
         hm4 = hm4[:,:,:3]*255.
         bg4 = Image.fromarray(squeezed_im2.astype('uint8'))
-        fg4 = Image.fromarray(hm3.astype('uint8'))
+        fg4 = Image.fromarray(hm4.astype('uint8'))
         im4_with_heatmap = np.array(Image.blend(bg4,fg4,alpha=.35).getdata()).reshape((crop_size[0],crop_size[1],3))
 
         out_im = combine_horz([im1_with_heatmap,im2_with_heatmap,im3_with_heatmap,im4_with_heatmap])
