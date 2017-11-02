@@ -166,11 +166,11 @@ for label in reppedLabels:
         squeezed_im3 = np.squeeze(im3)
         label3 = testingLabels[sortedInds[topHit]]
 
-        featDists = (feat0*feat1)
-        sortedDists = np.sort(featDists)[::-1]
-        sumTo = [np.sum(sortedDists[:aa]) for aa in range(len(sortedDists))]
-        cutOffInd = np.where(sumTo>sumTo[-1]*.5)[0][0]
-        bestFeats = np.argsort(-featDists)
+        featDists01 = (feat0*feat1)
+        sortedDists01 = np.sort(featDists01)[::-1]
+        sumTo01 = [np.sum(sortedDists01[:aa]) for aa in range(len(sortedDists01))]
+        cutOffInd01 = np.where(sumTo01>sumTo01[-1]*.5)[0][0]
+        bestFeats01 = np.argsort(-featDists01)
 
         batch[0,:,:,:] = im0
         batch[batch_size/4,:,:,:] = im1
@@ -251,8 +251,8 @@ for label in reppedLabels:
         hotel_outfolder = os.path.join(outfolder,'by_hotel',str(label))
         if not os.path.exists(hotel_outfolder):
             os.makedirs(hotel_outfolder)
-        
-        pil_out_im.save(os.path.join(hotel_outfolder,'%d_%.2d.png'%(idx,cutOffInd)))
+
+        pil_out_im.save(os.path.join(hotel_outfolder,'%d_%d_%d.png'%(idx,topHit,cutOffInd)))
         print idx
 
         # feat_outfolder = os.path.join(outfolder,'by_feature',str(ft))
