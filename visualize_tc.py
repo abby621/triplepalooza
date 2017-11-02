@@ -251,8 +251,8 @@ for label in reppedLabels:
         hotel_outfolder = os.path.join(outfolder,'by_hotel',str(label))
         if not os.path.exists(hotel_outfolder):
             os.makedirs(hotel_outfolder)
-
-        pil_out_im.save(os.path.join(hotel_outfolder,'%d_%d_%.2d.png'%(idx,cutOffInd)))
+        
+        pil_out_im.save(os.path.join(hotel_outfolder,'%d_%.2d.png'%(idx,cutOffInd)))
         print idx
 
         # feat_outfolder = os.path.join(outfolder,'by_feature',str(ft))
