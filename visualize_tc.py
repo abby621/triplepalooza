@@ -62,8 +62,11 @@ writer = tf.summary.FileWriter(logs_path,sess.graph)
 
 testingImsAndLabels = [(test_data.files[ix][iy],test_data.classes[ix]) for ix in range(len(test_data.files)) for iy in range(len(test_data.files[ix]))]
 prunedTestingImsAndLabels = []
+prunedTestingIms = []
 for im, label in testingImsAndLabels:
-    if [im,label] not in prunedTestingImsAndLabels:
+    im_end = im.split('/')[-1]
+    if im_end not in prunedTestingIms:
+        prunedTestingIms.append(im_end)
         prunedTestingImsAndLabels.append([im,label])
 
 testingImsAndLabels = prunedTestingImsAndLabels
@@ -119,9 +122,9 @@ def combine_horz(images):
     return new_im
 
 def combine_vert(images):
-    new_im = np.zeros((images[0].shape[0]*len(images),images[0].shape[1]))
+    new_im = np.zeros((images[0].shape[0]*len(images),images[0].shape[1],3))
     for idx in range(len(images)):
-        new_im[images[idx].shape[1]*idx:images[idx].shape[1]*idx+images[idx].shape[1],:images[idx].shape[0],:] = images[idx]
+        new_im[images[idx].shape[0]*idx:images[idx].shape[0]*idx+images[idx].shape[0],:images[idx].shape[1],:] = images[idx]
 
     return new_im
 
@@ -135,8 +138,8 @@ if not os.path.exists(outfolder):
     # os.makedirs(os.path.join(outfolder,'by_feature'))
 
 def getHeatMap(imIn):
-    cam = np.sum(imIn,axis=0)
-    cam = cam - np.min(cam)
+    # cam = np.sum(imIn,axis=0)
+    cam = imIn - np.min(imIn)
     cam = cam / np.max(cam)
     cam = zoom(cam,float(crop_size[0])/float(cam.shape[0]),order=1)
     hm = cmap(cam)
@@ -160,35 +163,37 @@ for label in reppedLabels:
         dists = getDist(thisFeat,testingFeats)
         sortedInds = np.argsort(dists)[1:]
         sortedLabels = testingLabels[sortedInds][1:]
+        sortedIms = testingIms[sortedInds][1:]
         topHit = np.where(sortedLabels==label)[0][0]
 
         feat0 = testingFeats[idx,:]
-        im0 = test_data.getBatchFromImageList([testingIms[idx]])
+        im0 = test_data.getBatchFromImageList([thisIm])
         squeezed_im0 = np.squeeze(im0)
         label0 = testingLabels[idx]
 
+        # top result
         feat1 = testingFeats[sortedInds[0],:]
         im1 = test_data.getBatchFromImageList([testingIms[sortedInds[0]]])
         squeezed_im1 = np.squeeze(im1)
         label1 = testingLabels[sortedInds[0]]
-
-        feat2 = testingFeats[sortedInds[topHit],:]
-        im2 = test_data.getBatchFromImageList([testingIms[sortedInds[topHit]]])
-        squeezed_im2 = np.squeeze(im2)
-        label2 = testingLabels[sortedInds[topHit]]
-
         featDists1 = (feat0*feat1)
         sortedDists1 = np.sort(featDists1)[::-1]
         sumTo1 = [np.sum(sortedDists1[:aa]) for aa in range(len(sortedDists1))]
         # cutOffInd1 = np.where(sumTo1>sumTo1[-1]*.5)[0][0]
         bestFeats1 = np.argsort(-featDists1)
 
+        # top correct match
+        feat2 = testingFeats[sortedInds[topHit],:]
+        im2 = test_data.getBatchFromImageList([testingIms[sortedInds[topHit]]])
+        squeezed_im2 = np.squeeze(im2)
+        label2 = testingLabels[sortedInds[topHit]]
         featDists2 = (feat0*feat2)
         sortedDists2 = np.sort(featDists2)[::-1]
         sumTo2 = [np.sum(sortedDists2[:aa]) for aa in range(len(sortedDists2))]
         # cutOffInd2 = np.where(sumTo2>sumTo2[-1]*.5)[0][0]
         bestFeats2 = np.argsort(-featDists2)
 
+        # interleave the results in the batch
         batch[0,:,:,:] = im0
         batch[batch_size/4,:,:,:] = im1
         batch[batch_size/4*3,:,:,:] = im2
@@ -200,6 +205,7 @@ for label in reppedLabels:
         g, wgts, cvout = sess.run([gap, weights, convOut],feed_dict={image_batch:batch, label_batch:labels, featInd:bestFeats1[0]})
         bs,h,w,nc = cvout.shape
 
+        # get heat maps
         # top match
         hm1_1 = getHeatMap(cvout[0,:,:,bestFeats1[0]])
         hm1_2 = getHeatMap(cvout[batch_size/4,:,:,bestFeats1[0]])
@@ -209,12 +215,12 @@ for label in reppedLabels:
         hm1_6 = getHeatMap(cvout[batch_size/4,:,:,bestFeats1[2]])
 
         # top correct match
-        hm1_1 = np.zeros(hm1_6.shape)
-        hm1_2 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats1[0]])
-        hm1_3 = np.zeros(hm1_6.shape)
-        hm1_4 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats1[1]])
-        hm1_5 = np.zeros(hm1_6.shape)
-        hm1_6 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats1[2]])
+        hm2_1 = np.zeros(hm1_6.shape)
+        hm2_2 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[0]])
+        hm2_3 = np.zeros(hm1_6.shape)
+        hm2_4 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[1]])
+        hm2_5 = np.zeros(hm1_6.shape)
+        hm2_6 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[2]])
 
         out_im1 = combine_horz([hm1_1,hm1_2,hm1_3,hm1_4,hm1_5,hm1_6])
         out_im2 = combine_horz([hm2_1,hm2_2,hm2_3,hm2_4,hm2_5,hm2_6])
