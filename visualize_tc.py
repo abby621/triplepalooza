@@ -208,23 +208,24 @@ for label in reppedLabels:
         # get heat maps
         # top match
         hm1_1 = getHeatMap(cvout[0,:,:,bestFeats1[0]],squeezed_im0)
-        hm1_2 = getHeatMap(cvout[batch_size/4,:,:,bestFeats1[0]],squeezed_im1)
-        hm1_3 = getHeatMap(cvout[0,:,:,bestFeats1[1]],squeezed_im0)
-        hm1_4 = getHeatMap(cvout[batch_size/4,:,:,bestFeats1[1]],squeezed_im1)
-        hm1_5 = getHeatMap(cvout[0,:,:,bestFeats1[2]],squeezed_im0)
-        hm1_6 = getHeatMap(cvout[batch_size/4,:,:,bestFeats1[2]],squeezed_im1)
+        hm1_2 = getHeatMap(cvout[0,:,:,bestFeats1[1]],squeezed_im0)
+        hm1_3 = getHeatMap(cvout[0,:,:,bestFeats1[2]],squeezed_im0)
+
+        hm2_1 = getHeatMap(cvout[batch_size/4,:,:,bestFeats1[0]],squeezed_im1)
+        hm2_2 = getHeatMap(cvout[batch_size/4,:,:,bestFeats1[1]],squeezed_im1)
+        hm2_3 = getHeatMap(cvout[batch_size/4,:,:,bestFeats1[2]],squeezed_im1)
 
         # top correct match
-        hm2_1 = np.zeros(hm1_6.shape)
-        hm2_2 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[0]],squeezed_im2)
-        hm2_3 = np.zeros(hm1_6.shape)
-        hm2_4 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[1]],squeezed_im2)
-        hm2_5 = np.zeros(hm1_6.shape)
-        hm2_6 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[2]],squeezed_im2)
+        hm3_1 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[0]],squeezed_im2)
+        hm3_2 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[1]],squeezed_im2)
+        hm3_3 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[2]],squeezed_im2)
 
-        out_im1 = combine_horz([hm1_1,hm1_2,hm1_3,hm1_4,hm1_5,hm1_6])
-        out_im2 = combine_horz([hm2_1,hm2_2,hm2_3,hm2_4,hm2_5,hm2_6])
-        out_im3 = combine_vert([out_im1,out_im2])
+        out_im1 = combine_horz([hm1_1,hm1_2,hm1_3])
+        out_im2 = combine_horz([hm2_1,hm2_2,hm2_3])
+        out_im3 = combine_horz([hm3_1,hm3_2,hm3_3])
+
+        # top row = top match; center = query; bottom = top correct match
+        out_im4 = combine_vert([out_im2,out_im1,out_im3])
         pil_out_im = Image.fromarray(out_im3.astype('uint8'))
 
         hotel_outfolder = os.path.join(outfolder,'by_hotel',str(label))
