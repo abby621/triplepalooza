@@ -192,9 +192,9 @@ for label in reppedLabels:
         ctr = 0
 
         cam1 = np.sum(cvout[0,:,:,bestFeats1[:cutOffInd1]],axis=0)
-        cam2 = np.sum(cvout[batch_size/4,:,:,bestFeats1[:0]],axis=0)
-        cam3 = np.sum(cvout[batch_size/4,:,:,bestFeats1[:1]],axis=0)
-        cam4 = np.sum(cvout[batch_size/4,:,:,bestFeats1[:2]],axis=0)
+        cam2 = np.sum(cvout[batch_size/4,:,:,bestFeats1[:1]],axis=0)
+        cam3 = np.sum(cvout[batch_size/4,:,:,bestFeats1[:2]],axis=0)
+        cam4 = np.sum(cvout[batch_size/4,:,:,bestFeats1[:3]],axis=0)
         # cam3 = np.sum(cvout[0,:,:,bestFeats2[:cutOffInd2]],axis=0)
         # cam4 = np.sum(cvout[batch_size/4*3,:,:,bestFeats2[:cutOffInd2]],axis=0)
 
