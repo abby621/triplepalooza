@@ -137,14 +137,14 @@ if not os.path.exists(outfolder):
     os.makedirs(os.path.join(outfolder,'by_hotel'))
     # os.makedirs(os.path.join(outfolder,'by_feature'))
 
-def getHeatMap(imIn):
+def getHeatMap(mask,im):
     # cam = np.sum(imIn,axis=0)
-    cam = imIn - np.min(imIn)
+    cam = mask - np.min(mask)
     cam = cam / np.max(cam)
     cam = zoom(cam,float(crop_size[0])/float(cam.shape[0]),order=1)
     hm = cmap(cam)
     hm = hm[:,:,:3]*255.
-    bg = Image.fromarray(squeezed_im0.astype('uint8'))
+    bg = Image.fromarray(im.astype('uint8'))
     fg = Image.fromarray(hm.astype('uint8'))
     im_with_heatmap = np.array(Image.blend(bg,fg,alpha=.35).getdata()).reshape((crop_size[0],crop_size[1],3))
     return im_with_heatmap
@@ -207,20 +207,20 @@ for label in reppedLabels:
 
         # get heat maps
         # top match
-        hm1_1 = getHeatMap(cvout[0,:,:,bestFeats1[0]])
-        hm1_2 = getHeatMap(cvout[batch_size/4,:,:,bestFeats1[0]])
-        hm1_3 = getHeatMap(cvout[0,:,:,bestFeats1[1]])
-        hm1_4 = getHeatMap(cvout[batch_size/4,:,:,bestFeats1[1]])
-        hm1_5 = getHeatMap(cvout[0,:,:,bestFeats1[2]])
-        hm1_6 = getHeatMap(cvout[batch_size/4,:,:,bestFeats1[2]])
+        hm1_1 = getHeatMap(cvout[0,:,:,bestFeats1[0]],squeezed_im0)
+        hm1_2 = getHeatMap(cvout[batch_size/4,:,:,bestFeats1[0]],squeezed_im1)
+        hm1_3 = getHeatMap(cvout[0,:,:,bestFeats1[1]],squeezed_im0)
+        hm1_4 = getHeatMap(cvout[batch_size/4,:,:,bestFeats1[1]],squeezed_im1)
+        hm1_5 = getHeatMap(cvout[0,:,:,bestFeats1[2]],squeezed_im0)
+        hm1_6 = getHeatMap(cvout[batch_size/4,:,:,bestFeats1[2]],squeezed_im1)
 
         # top correct match
         hm2_1 = np.zeros(hm1_6.shape)
-        hm2_2 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[0]])
+        hm2_2 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[0]],squeezed_im2)
         hm2_3 = np.zeros(hm1_6.shape)
-        hm2_4 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[1]])
+        hm2_4 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[1]],squeezed_im2)
         hm2_5 = np.zeros(hm1_6.shape)
-        hm2_6 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[2]])
+        hm2_6 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[2]],squeezed_im2)
 
         out_im1 = combine_horz([hm1_1,hm1_2,hm1_3,hm1_4,hm1_5,hm1_6])
         out_im2 = combine_horz([hm2_1,hm2_2,hm2_3,hm2_4,hm2_5,hm2_6])
