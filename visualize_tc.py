@@ -162,8 +162,8 @@ for label in reppedLabels:
         thisFeat = testingFeats[idx,:]
         dists = getDist(thisFeat,testingFeats)
         sortedInds = np.argsort(dists)[1:]
-        sortedLabels = testingLabels[sortedInds][1:]
-        sortedIms = testingIms[sortedInds][1:]
+        sortedLabels = testingLabels[sortedInds]
+        sortedIms = testingIms[sortedInds]
         topHit = np.where(sortedLabels==label)[0][0]
 
         feat0 = testingFeats[idx,:]
