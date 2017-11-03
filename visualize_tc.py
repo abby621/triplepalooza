@@ -26,8 +26,8 @@ num_pos_examples = batch_size/10
 output_size = 128
 
 # Create test_data "batcher"
-train_data = CombinatorialTripletSet(train_file, mean_file, img_size, crop_size, batch_size, num_pos_examples)
-test_data = CombinatorialTripletSet(test_file, mean_file, img_size, crop_size, batch_size, num_pos_examples)
+train_data = CombinatorialTripletSet(train_file, mean_file, img_size, crop_size, batch_size, num_pos_examples,is_training=False)
+test_data = CombinatorialTripletSet(test_file, mean_file, img_size, crop_size, batch_size, num_pos_examples,is_training=False)
 
 image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
 repMeanIm = np.tile(np.expand_dims(test_data.meanImage,0),[batch_size,1,1,1])
