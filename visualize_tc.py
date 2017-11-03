@@ -247,7 +247,7 @@ for label in reppedLabels:
         info_file.write('Top correct result: %s\n'%(testingIms[topHit]))
         info_file.write('Top correct result label: %d\n'%(testingLabels[topHit]))
         info_file.write('Top correct result dot product: %.3f'%(sumTo2[-1]))
-        info_file.write('Top correctresult dot product explained by first 3 components: %.3f'%(sumTo2[2]))
+        info_file.write('Top correct result dot product explained by first 3 components: %.3f'%(sumTo2[2]))
         info_file.close()
 
         # feat_outfolder = os.path.join(outfolder,'by_feature',str(ft))
