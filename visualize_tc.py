@@ -169,14 +169,14 @@ for label in reppedLabels:
         sortedDists1 = np.sort(featDists1)[::-1]
         sumTo1 = [np.sum(sortedDists1[:aa]) for aa in range(len(sortedDists1))]
         # cutOffInd1 = np.where(sumTo1>sumTo1[-1]*.5)[0][0]
-        cutOffInd1 = np.where(sumTo1>.25)[0][0]
+        cutOffInd1 = np.where(np.array(sumTo1)>.25)[0][0]
         bestFeats1 = np.argsort(-featDists1)
 
         featDists2 = (feat0*feat2)
         sortedDists2 = np.sort(featDists2)[::-1]
         sumTo2 = [np.sum(sortedDists2[:aa]) for aa in range(len(sortedDists2))]
         # cutOffInd2 = np.where(sumTo2>sumTo2[-1]*.5)[0][0]
-        cutOffInd2 = np.where(sumTo2>.25)[0][0]
+        cutOffInd2 = np.where(np.array(sumTo2)>.25)[0][0]
         bestFeats2 = np.argsort(-featDists2)
 
         batch[0,:,:,:] = im0
