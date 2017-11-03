@@ -235,6 +235,21 @@ for label in reppedLabels:
         pil_out_im.save(os.path.join(hotel_outfolder,'%d_%d_%.3f_%.3f_%.3f_%.3f.png'%(idx,topHit,sumTo1[-1],sumTo1[2],sumTo2[-1],sumTo2[2])))
         print idx
 
+        info_file = open(os.path.join(hotel_outfolder,'%d_%d_%.3f_%.3f_%.3f_%.3f.txt'%(idx,topHit,sumTo1[-1],sumTo1[2],sumTo2[-1],sumTo2[2])),'a')
+        info_file.write('Query image: %s\n'%(thisIm))
+        info_file.write('Query class: %d\n'%(label))
+        info_file.write('\n')
+        info_file.write('Top result: %s\n'%(testingIms[sortedInds[0]]))
+        info_file.write('Top result label: %d\n'%(testingLabels[sortedInds[0]])+'\n'))
+        info_file.write('Top result dot product: %.3f'%(sumTo1[-1])+'\n'))
+        info_file.write('Top result dot product explained by first 3 components: %.3f'%(sumTo1[2])+'\n'))
+        info_file.write('\n')
+        info_file.write('Top correct result: %s\n'%(testingIms[topHit]))
+        info_file.write('Top correct result label: %d\n'%(testingLabels[topHit])+'\n'))
+        info_file.write('Top correct result dot product: %.3f'%(sumTo2[-1])+'\n'))
+        info_file.write('Top correctresult dot product explained by first 3 components: %.3f'%(sumTo2[2])+'\n'))
+        info_file.close()
+
         # feat_outfolder = os.path.join(outfolder,'by_feature',str(ft))
         # if not os.path.exists(feat_outfolder):
         #     os.makedirs(feat_outfolder)
