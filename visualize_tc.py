@@ -169,14 +169,14 @@ for label in reppedLabels:
         sortedDists1 = np.sort(featDists1)[::-1]
         sumTo1 = [np.sum(sortedDists1[:aa]) for aa in range(len(sortedDists1))]
         # cutOffInd1 = np.where(sumTo1>sumTo1[-1]*.5)[0][0]
-        cutOffInd1 = np.where(np.array(sumTo1)>.25)[0][0]
+        cutOffInd1 = 3
         bestFeats1 = np.argsort(-featDists1)
 
         featDists2 = (feat0*feat2)
         sortedDists2 = np.sort(featDists2)[::-1]
         sumTo2 = [np.sum(sortedDists2[:aa]) for aa in range(len(sortedDists2))]
         # cutOffInd2 = np.where(sumTo2>sumTo2[-1]*.5)[0][0]
-        cutOffInd2 = np.where(np.array(sumTo2)>.25)[0][0]
+        cutOffInd2 = 3
         bestFeats2 = np.argsort(-featDists2)
 
         batch[0,:,:,:] = im0
@@ -192,9 +192,11 @@ for label in reppedLabels:
         ctr = 0
 
         cam1 = np.sum(cvout[0,:,:,bestFeats1[:cutOffInd1]],axis=0)
-        cam2 = np.sum(cvout[batch_size/4,:,:,bestFeats1[:cutOffInd1]],axis=0)
-        cam3 = np.sum(cvout[0,:,:,bestFeats2[:cutOffInd2]],axis=0)
-        cam4 = np.sum(cvout[batch_size/4*3,:,:,bestFeats2[:cutOffInd2]],axis=0)
+        cam2 = np.sum(cvout[batch_size/4,:,:,bestFeats1[:0]],axis=0)
+        cam3 = np.sum(cvout[batch_size/4,:,:,bestFeats1[:1]],axis=0)
+        cam4 = np.sum(cvout[batch_size/4,:,:,bestFeats1[:2]],axis=0)
+        # cam3 = np.sum(cvout[0,:,:,bestFeats2[:cutOffInd2]],axis=0)
+        # cam4 = np.sum(cvout[batch_size/4*3,:,:,bestFeats2[:cutOffInd2]],axis=0)
 
         bs,h,w,nc = cvout.shape
 
@@ -221,7 +223,7 @@ for label in reppedLabels:
         cam3 = zoom(cam3,float(crop_size[0])/float(cam3.shape[0]),order=1)
         hm3 = cmap(cam3)
         hm3 = hm3[:,:,:3]*255.
-        bg3 = Image.fromarray(squeezed_im0.astype('uint8'))
+        bg3 = Image.fromarray(squeezed_im1.astype('uint8'))
         fg3 = Image.fromarray(hm3.astype('uint8'))
         im3_with_heatmap = np.array(Image.blend(bg3,fg3,alpha=.35).getdata()).reshape((crop_size[0],crop_size[1],3))
 
@@ -230,9 +232,27 @@ for label in reppedLabels:
         cam4 = zoom(cam4,float(crop_size[0])/float(cam4.shape[0]),order=1)
         hm4 = cmap(cam4)
         hm4 = hm4[:,:,:3]*255.
-        bg4 = Image.fromarray(squeezed_im2.astype('uint8'))
+        bg4 = Image.fromarray(squeezed_im1.astype('uint8'))
         fg4 = Image.fromarray(hm4.astype('uint8'))
         im4_with_heatmap = np.array(Image.blend(bg4,fg4,alpha=.35).getdata()).reshape((crop_size[0],crop_size[1],3))
+
+        # cam3 = cam3 - np.min(cam3)
+        # cam3 = cam3 / np.max(cam3)
+        # cam3 = zoom(cam3,float(crop_size[0])/float(cam3.shape[0]),order=1)
+        # hm3 = cmap(cam3)
+        # hm3 = hm3[:,:,:3]*255.
+        # bg3 = Image.fromarray(squeezed_im0.astype('uint8'))
+        # fg3 = Image.fromarray(hm3.astype('uint8'))
+        # im3_with_heatmap = np.array(Image.blend(bg3,fg3,alpha=.35).getdata()).reshape((crop_size[0],crop_size[1],3))
+        #
+        # cam4 = cam4 - np.min(cam4)
+        # cam4 = cam4 / np.max(cam4)
+        # cam4 = zoom(cam4,float(crop_size[0])/float(cam4.shape[0]),order=1)
+        # hm4 = cmap(cam4)
+        # hm4 = hm4[:,:,:3]*255.
+        # bg4 = Image.fromarray(squeezed_im2.astype('uint8'))
+        # fg4 = Image.fromarray(hm4.astype('uint8'))
+        # im4_with_heatmap = np.array(Image.blend(bg4,fg4,alpha=.35).getdata()).reshape((crop_size[0],crop_size[1],3))
 
         out_im = combine_horz([im1_with_heatmap,im2_with_heatmap,im3_with_heatmap,im4_with_heatmap])
         pil_out_im = Image.fromarray(out_im.astype('uint8'))
@@ -241,7 +261,8 @@ for label in reppedLabels:
         if not os.path.exists(hotel_outfolder):
             os.makedirs(hotel_outfolder)
 
-        pil_out_im.save(os.path.join(hotel_outfolder,'%d_%d_%.3f_%d_%.3f_%d.png'%(idx,topHit,sumTo1[-1],cutOffInd1,sumTo2[-1],cutOffInd2)))
+        # pil_out_im.save(os.path.join(hotel_outfolder,'%d_%d_%.3f_%d_%.3f_%d.png'%(idx,topHit,sumTo1[-1],cutOffInd1,sumTo2[-1],cutOffInd2)))
+        pil_out_im.save(os.path.join(hotel_outfolder,'%d_%d_%.2f.png'%(idx,topHit,sumTo1[-1])))
         print idx
 
         # feat_outfolder = os.path.join(outfolder,'by_feature',str(ft))
