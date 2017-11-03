@@ -61,6 +61,13 @@ merged = tf.summary.merge_all()
 writer = tf.summary.FileWriter(logs_path,sess.graph)
 
 testingImsAndLabels = [(test_data.files[ix][iy],test_data.classes[ix]) for ix in range(len(test_data.files)) for iy in range(len(test_data.files[ix]))]
+prunedTestingImsAndLabels = []
+for im, label in testingImsAndLabels:
+    if [im,label] not in prunedTestingImsAndLabels:
+        prunedTestingImsAndLabels.append([im,label])
+
+testingImsAndLabels = prunedTestingImsAndLabels
+
 # random.shuffle(testingImsAndLabels)
 testingImsAndLabels = testingImsAndLabels[:5000]
 random.shuffle(testingImsAndLabels)
