@@ -245,7 +245,7 @@ for label in reppedLabels:
         info_file.write('Top result dot product explained by first 3 components: %.3f'%(sumTo1[2]))
         info_file.write('\n')
         info_file.write('Top correct result: %s\n'%(testingIms[topHit]))
-        info_file.write('Top correct result label: %d\n'%(testingLabels[topHit])))
+        info_file.write('Top correct result label: %d\n'%(testingLabels[topHit]))
         info_file.write('Top correct result dot product: %.3f'%(sumTo2[-1]))
         info_file.write('Top correctresult dot product explained by first 3 components: %.3f'%(sumTo2[2]))
         info_file.close()
