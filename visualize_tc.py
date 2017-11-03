@@ -226,7 +226,7 @@ for label in reppedLabels:
 
         # top row = top match; center = query; bottom = top correct match
         out_im4 = combine_vert([out_im2,out_im1,out_im3])
-        pil_out_im = Image.fromarray(out_im3.astype('uint8'))
+        pil_out_im = Image.fromarray(out_im4.astype('uint8'))
 
         hotel_outfolder = os.path.join(outfolder,'by_hotel',str(label))
         if not os.path.exists(hotel_outfolder):
