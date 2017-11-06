@@ -12,7 +12,7 @@ import random
 from scipy.ndimage import zoom
 
 train_file = './inputs/traffickcam/train_equal.txt'
-test_file = './inputs/traffickcam/test_equal.txt'
+test_file = './inputs/traffickcam/test_no_duplicates.txt'
 pretrained_net = './output/traffickcam/ckpts/checkpoint-201711011620_lr0pt0001_outputSz128_margin0pt3-22293'
 img_size = [256, 256]
 crop_size = [224, 224]
@@ -156,12 +156,16 @@ def getDist(feat,otherFeats):
     # dist = np.array([np.dot(feat,otherFeat) for otherFeat in otherFeats])
     return dist
 
+def getDotDist(feat,otherFeats):
+    dist = np.array([np.dot(feat,otherFeat) for otherFeat in otherFeats])
+    return dist
+
 for label in reppedLabels:
     for idx in np.where(testingLabels==label)[0]:
         thisIm = testingIms[idx]
         thisFeat = testingFeats[idx,:]
-        dists = getDist(thisFeat,testingFeats)
-        sortedInds = np.argsort(dists)[1:]
+        dists = getDotDist(thisFeat,testingFeats)
+        sortedInds = np.argsort(-dists)[1:]
         sortedLabels = testingLabels[sortedInds]
         sortedIms = testingIms[sortedInds]
         topHit = np.where(sortedLabels==label)[0][0]
@@ -248,13 +252,13 @@ for label in reppedLabels:
         info_file.write('Top result label: %d\n'%(testingLabels[sortedInds[0]]))
         info_file.write('Top result dot product: %.3f\n'%(sumTo1[-1]))
         info_file.write('Top result dot product explained by first 3 components: %.3f\n'%(sumTo1[2]))
-        info_file.write('Top 3 feature indices: %d, %d, %d\n', bestFeats1[0],bestFeats1[2],bestFeats1[2])
+        info_file.write('Top 3 feature indices: %d, %d, %d\n'%(bestFeats1[0],bestFeats1[2],bestFeats1[2]))
         info_file.write('\n')
         info_file.write('Top correct result: %s\n'%(testingIms[sortedInds[topHit]]))
         info_file.write('Top correct result label: %d\n'%(testingLabels[sortedInds[topHit]]))
         info_file.write('Top correct result dot product: %.3f\n'%(sumTo2[-1]))
         info_file.write('Top correct result dot product explained by first 3 components: %.3f\n'%(sumTo2[2]))
-        info_file.write('Top 3 feature indices: %d, %d, %d\n', bestFeats2[0],bestFeats2[2],bestFeats2[2])
+        info_file.write('Top 3 feature indices: %d, %d, %d\n'%(bestFeats2[0],bestFeats2[2],bestFeats2[2]))
         info_file.close()
 
         # feat_outfolder = os.path.join(outfolder,'by_feature',str(ft))
