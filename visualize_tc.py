@@ -248,11 +248,13 @@ for label in reppedLabels:
         info_file.write('Top result label: %d\n'%(testingLabels[sortedInds[0]]))
         info_file.write('Top result dot product: %.3f\n'%(sumTo1[-1]))
         info_file.write('Top result dot product explained by first 3 components: %.3f\n'%(sumTo1[2]))
+        info_file.write('Top 3 feature indices: %d, %d, %d\n', bestFeats1[0],bestFeats1[2],bestFeats1[2])
         info_file.write('\n')
         info_file.write('Top correct result: %s\n'%(testingIms[sortedInds[topHit]]))
         info_file.write('Top correct result label: %d\n'%(testingLabels[sortedInds[topHit]]))
         info_file.write('Top correct result dot product: %.3f\n'%(sumTo2[-1]))
         info_file.write('Top correct result dot product explained by first 3 components: %.3f\n'%(sumTo2[2]))
+        info_file.write('Top 3 feature indices: %d, %d, %d\n', bestFeats2[0],bestFeats2[2],bestFeats2[2])
         info_file.close()
 
         # feat_outfolder = os.path.join(outfolder,'by_feature',str(ft))
