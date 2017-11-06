@@ -11,8 +11,8 @@ from tensorflow.contrib.slim.python.slim.nets import resnet_v2
 import random
 from scipy.ndimage import zoom
 
-train_file = './inputs/traffickcam/train_equal.txt'
-test_file = './inputs/traffickcam/test_no_duplicates.txt'
+#train_file = './inputs/traffickcam/train_equal.txt'
+test_file = './inputs/traffickcam/test_equal_no_duplicates.txt'
 pretrained_net = './output/traffickcam/ckpts/checkpoint-201711011620_lr0pt0001_outputSz128_margin0pt3-22293'
 img_size = [256, 256]
 crop_size = [224, 224]
@@ -26,7 +26,7 @@ num_pos_examples = batch_size/10
 output_size = 128
 
 # Create test_data "batcher"
-train_data = CombinatorialTripletSet(train_file, mean_file, img_size, crop_size, batch_size, num_pos_examples,isTraining=False)
+#train_data = CombinatorialTripletSet(train_file, mean_file, img_size, crop_size, batch_size, num_pos_examples,isTraining=False)
 test_data = CombinatorialTripletSet(test_file, mean_file, img_size, crop_size, batch_size, num_pos_examples,isTraining=False)
 
 image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
@@ -70,7 +70,7 @@ for im, label in testingImsAndLabels:
         prunedTestingImsAndLabels.append([im,label])
 
 testingImsAndLabels = prunedTestingImsAndLabels
-
+print 'num ims in dataset:',len(testingImsAndLabels)
 # random.shuffle(testingImsAndLabels)
 testingImsAndLabels = testingImsAndLabels[:5000]
 random.shuffle(testingImsAndLabels)
