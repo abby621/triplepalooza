@@ -216,16 +216,21 @@ for label in reppedLabels:
         hm2_3 = getHeatMap(cvout[batch_size/4,:,:,bestFeats1[2]],squeezed_im1)
 
         # top correct match
-        hm3_1 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[0]],squeezed_im2)
-        hm3_2 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[1]],squeezed_im2)
-        hm3_3 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[2]],squeezed_im2)
+        hm3_1 = getHeatMap(cvout[0,:,:,bestFeats2[0]],squeezed_im0)
+        hm3_2 = getHeatMap(cvout[0,:,:,bestFeats2[1]],squeezed_im0)
+        hm3_3 = getHeatMap(cvout[0,:,:,bestFeats2[2]],squeezed_im0)
+
+        hm4_1 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[0]],squeezed_im2)
+        hm4_2 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[1]],squeezed_im2)
+        hm4_3 = getHeatMap(cvout[batch_size/4*3,:,:,bestFeats2[2]],squeezed_im2)
 
         out_im1 = combine_horz([hm1_1,hm1_2,hm1_3])
         out_im2 = combine_horz([hm2_1,hm2_2,hm2_3])
         out_im3 = combine_horz([hm3_1,hm3_2,hm3_3])
+        out_im4 = combine_horz([hm4_1,hm4_2,hm4_3])
 
         # top row = top match; center = query; bottom = top correct match
-        out_im4 = combine_vert([out_im2,out_im1,out_im3])
+        out_im4 = combine_vert([out_im1,out_im2,out_im3,out_im4])
         pil_out_im = Image.fromarray(out_im4.astype('uint8'))
 
         hotel_outfolder = os.path.join(outfolder,'by_hotel',str(label))
