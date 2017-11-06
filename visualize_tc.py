@@ -236,7 +236,10 @@ for label in reppedLabels:
         empty_hm = np.zeros((out_im1.shape))
 
         # top row = top match; center = query; bottom = top correct match
-        out_im4 = combine_vert([out_im1,out_im2,empty_hm,out_im3,out_im4])
+        if testingIms[sortedInds[0]] == testingIms[sortedInds[topHit]]:
+            out_im4 = combine_vert([out_im1,out_im2])
+        else:
+            out_im4 = combine_vert([out_im1,out_im2,empty_hm,out_im3,out_im4])
         pil_out_im = Image.fromarray(out_im4.astype('uint8'))
 
         hotel_outfolder = os.path.join(outfolder,'by_hotel',str(label))
