@@ -50,7 +50,7 @@ saliency_map = tf.gradients(tf.gather(tf.squeeze(feat),featInd), final_batch)[0]
 filters = tf.gradients(tf.gather(tf.squeeze(convOut),featInd), final_batch)[0]
 
 c = tf.ConfigProto()
-c.gpu_options.visible_device_list="0,1"
+c.gpu_options.visible_device_list="2,3"
 sess = tf.Session(config=c)
 saver = tf.train.Saver(max_to_keep=100)
 saver.restore(sess, pretrained_net)
