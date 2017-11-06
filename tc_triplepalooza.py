@@ -30,16 +30,16 @@ def main(margin,output_size,learning_rate,is_overfitting):
         print 'Saving checkpoint before closing'
         pretrained_net = os.path.join(ckpt_dir, 'checkpoint-'+param_str)
         saver.save(sess, pretrained_net, global_step=step)
-        print 'Checkpoint-',step, ' saved!'
+        print 'Checkpoint-',pretrained_net+'-'+str(step), ' saved!'
         sys.exit(0)
 
     signal.signal(signal.SIGINT, handler)
 
     ckpt_dir = './output/traffickcam/ckpts'
     log_dir = './output/traffickcam/logs'
-    train_filename = './inputs/traffickcam/train.txt'
+    train_filename = './inputs/traffickcam/train_equal_no_duplicates.txt'
     mean_file = './models/traffickcam/tc_mean_im.npy'
-    pretrained_net = './output/traffickcam/ckpts/checkpoint-201710311223_lr0pt0005_outputSz128_margin0pt3-31499'
+    pretrained_net = None
     img_size = [256, 256]
     crop_size = [224, 224]
     num_iters = 200000
