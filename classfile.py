@@ -58,7 +58,7 @@ class CombinatorialTripletSet:
             if len(temp) > self.numPos:
                 self.files.append(temp)
                 self.classes.append(ctr)
-            ctr += 1
+                ctr += 1
 
         # if we're overfitting, limit how much data we have per class
         if self.isOverfitting == True:
