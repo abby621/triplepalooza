@@ -52,11 +52,12 @@ class CombinatorialTripletSet:
         ctr = 0
         for line in f:
             temp = line.strip('\n').split(' ')
-            if self.isTraining:
-                while len(temp) < self.numPos: # make sure we have at least 10 images available per class
-                    temp.append(random.choice(temp))
-            self.files.append(temp)
-            self.classes.append(ctr)
+            # if self.isTraining:
+            #     while len(temp) < self.numPos: # make sure we have at least 10 images available per class
+            #         temp.append(random.choice(temp))
+            if len(temp) > self.numPos:
+                self.files.append(temp)
+                self.classes.append(ctr)
             ctr += 1
 
         # if we're overfitting, limit how much data we have per class
