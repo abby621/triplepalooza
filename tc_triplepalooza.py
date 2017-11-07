@@ -25,7 +25,7 @@ import signal
 import time
 import sys
 
-def main(margin,output_size,learning_rate,is_overfitting):
+def main(margin,batch_size,output_size,learning_rate,is_overfitting):
     def handler(signum, frame):
         print 'Saving checkpoint before closing'
         pretrained_net = os.path.join(ckpt_dir, 'checkpoint-'+param_str)
@@ -57,8 +57,11 @@ def main(margin,output_size,learning_rate,is_overfitting):
     output_size = int(output_size)
     learning_rate = float(learning_rate)
 
-    batch_size = 100
-    num_pos_examples = batch_size/10
+    if batch_size%5 != 0:
+        print 'Batch size must be divisible by 5!'
+        sys.exit(0)
+
+    num_pos_examples = batch_size/5
 
     # Create data "batcher"
     train_data = CombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training, isOverfitting=is_overfitting)
