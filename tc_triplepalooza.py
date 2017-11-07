@@ -2,9 +2,9 @@
 """
 # python mars_triplepalooza.py margin output_size learning_rate is_overfitting
 # If overfitting:
-# python tc_triplepalooza.py .3 128 .0001 True
+# python tc_triplepalooza.py .3 50 128 .0001 True
 # Else:
-# python tc_triplepalooza.py .3 128 .0001 False
+# python tc_triplepalooza.py .3 50 128 .0001 False
 """
 
 import tensorflow as tf
