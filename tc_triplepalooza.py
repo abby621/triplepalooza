@@ -212,7 +212,8 @@ if __name__ == "__main__":
     if len(args) < 5:
         print 'Expected four input parameters: margin, output_size, learning_rate, is_overfitting'
     margin = args[1]
-    output_size = args[2]
-    learning_rate = args[3]
-    is_overfitting = args[4]
-    main(margin,output_size,learning_rate,is_overfitting)
+    batch_size = args[2]
+    output_size = args[3]
+    learning_rate = args[4]
+    is_overfitting = args[5]
+    main(margin,batch_size,output_size,learning_rate,is_overfitting)
