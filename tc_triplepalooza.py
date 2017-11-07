@@ -54,6 +54,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
         is_overfitting = False
 
     margin = float(margin)
+    batch_size = int(batch_size)
     output_size = int(output_size)
     learning_rate = float(learning_rate)
 
