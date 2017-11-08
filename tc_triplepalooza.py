@@ -58,11 +58,11 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
     output_size = int(output_size)
     learning_rate = float(learning_rate)
 
-    if batch_size%5 != 0:
-        print 'Batch size must be divisible by 5!'
+    if batch_size%4 != 0:
+        print 'Batch size must be divisible by 4!'
         sys.exit(0)
 
-    num_pos_examples = batch_size/5
+    num_pos_examples = batch_size/4
 
     # Create data "batcher"
     train_data = CombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training, isOverfitting=is_overfitting)
