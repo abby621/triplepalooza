@@ -13,7 +13,7 @@ from scipy.ndimage import zoom
 
 #train_file = './inputs/traffickcam/train_equal.txt'
 test_file = './inputs/traffickcam/test_equal_no_duplicates.txt'
-pretrained_net = './output/traffickcam/ckpts/checkpoint-201711011620_lr0pt0001_outputSz128_margin0pt3-22293'
+pretrained_net = './output/traffickcam/ckpts/checkpoint-201711121114_lr0pt0001_outputSz128_margin0pt3-22431'
 img_size = [256, 256]
 crop_size = [224, 224]
 featLayer = 'resnet_v2_50/logits'
