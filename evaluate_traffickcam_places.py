@@ -124,8 +124,8 @@ def combine_horz(ims):
         x_offset += im.size[0]
     return new_im
 
-good_dir = '/project/focus/abby/triplepalooza/example_results/good'
-bad_dir = '/project/focus/abby/triplepalooza/example_results/bad'
+good_dir = '/project/focus/abby/triplepalooza/example_results/places/good'
+bad_dir = '/project/focus/abby/triplepalooza/example_results/places/bad'
 
 # # sess = tf.Session(config=c)
 # sess = tf.Session()
