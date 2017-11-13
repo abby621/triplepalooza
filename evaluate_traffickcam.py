@@ -22,8 +22,8 @@ def getDist(feat,otherFeats):
     # dist = np.array([np.dot(feat,otherFeat) for otherFeat in otherFeats])
     return dist
 
-train_file = './inputs/traffickcam/train_equal.txt'
-test_file = './inputs/traffickcam/test_equal.txt'
+train_file = './inputs/traffickcam/train_equal_no_duplicates.txt'
+test_file = './inputs/traffickcam/test_equal_no_duplicates.txt'
 pretrained_net = './output/traffickcam/ckpts/checkpoint-201711121114_lr0pt0001_outputSz128_margin0pt3-22431'
 img_size = [256, 256]
 crop_size = [227, 227]
@@ -105,8 +105,6 @@ for idx in range(numTrainingIms):
         trainingAccuracy[idx,topHit:] = 1
     if idx%10==0:
         print idx,': ',np.mean(trainingAccuracy[:idx,:],axis=0)[0]
-
-sess.close()
 
 print '---Triplepalooza--'
 print 'NN Training Accuracy: ',np.mean(trainingAccuracy,axis=0)
