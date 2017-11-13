@@ -20,8 +20,8 @@ featLayer = 'resnet_v2_50/logits'
 convOutLayer = 'resnet_v2_50/block4'
 mean_file = './models/mars/mean_im.npy'
 
-batch_size = 100
-num_pos_examples = batch_size/10
+batch_size = 120
+num_pos_examples = batch_size/30
 
 output_size = 128
 
