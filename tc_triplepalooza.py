@@ -39,7 +39,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
     log_dir = './output/traffickcam/logs'
     train_filename = './inputs/traffickcam/train_equal_no_duplicates.txt'
     mean_file = './models/traffickcam/tc_mean_im.npy'
-    pretrained_net = None
+    pretrained_net = os.path.join(cktpt_dir,'checkpoint-201711071459_lr0pt0001_outputSz128_margin0pt3-62478')
     img_size = [256, 256]
     crop_size = [224, 224]
     num_iters = 200000
