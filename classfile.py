@@ -121,6 +121,9 @@ class CombinatorialTripletSet:
         if self.isTraining and not self.isOverfitting and random.random() > 0.5:
             img = cv2.flip(img,1)
 
+        # if self.isTraining:
+        #     img = doctor_im(img)
+
         img = cv2.resize(img, (self.image_size[0], self.image_size[1]))
 
         if self.isTraining and not self.isOverfitting:
