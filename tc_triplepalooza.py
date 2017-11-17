@@ -105,33 +105,33 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
     percent_filters = .4
     percent_text = .1
 
-    # richard's argument: since the data is randomly loaded, we don't need to change the indices that we perform operations on every time; i am on board with this, but had already implemented the random crops, so will leave that for now
-    # apply random rotations
-    num_rotate = int(batch_size*percent_rotate)
-    rotate_inds = np.random.choice(np.arange(0,batch_size),num_rotate,replace=False)
-    rotate_vals = np.random.randint(-65,65,num_rotate).astype('float32')/float(100)
-    rotate_angles = np.zeros((batch_size))
-    rotate_angles[rotate_inds] = rotate_vals
-    rotated_batch = tf.contrib.image.rotate(image_batch,rotate_angles,interpolation='BILINEAR')
-
-    # do random crops
-    num_to_crop = int(batch_size*percent_crop)
-    num_to_not_crop = batch_size - num_to_crop
-    shuffled_inds = tf.random_shuffle(np.arange(0,batch_size,dtype='int32'))
-    crop_inds = tf.slice(shuffled_inds,[0],[num_to_crop])
-    uncropped_inds = tf.slice(shuffled_inds,[num_to_crop],[num_to_not_crop])
-
-    crop_ratio = float(3)/float(5)
-    crop_yx = tf.random_uniform([num_to_crop,2], 0,1-crop_ratio, dtype=tf.float32, seed=0)
-    crop_sz = tf.add(crop_yx,np.tile([crop_ratio,crop_ratio],[num_to_crop, 1]))
-    crop_boxes = tf.concat([crop_yx,crop_sz],axis=1)
-
-    uncropped_boxes = np.tile([0,0,1,1],[num_to_not_crop,1])
-
-    all_inds = tf.concat([crop_inds,uncropped_inds],axis=0)
-    all_boxes = tf.concat([crop_boxes,uncropped_boxes],axis=0)
-
-    cropped_batch = tf.image.crop_and_resize(rotated_batch,all_boxes,all_inds,crop_size)
+    # # richard's argument: since the data is randomly loaded, we don't need to change the indices that we perform operations on every time; i am on board with this, but had already implemented the random crops, so will leave that for now
+    # # apply random rotations
+    # num_rotate = int(batch_size*percent_rotate)
+    # rotate_inds = np.random.choice(np.arange(0,batch_size),num_rotate,replace=False)
+    # rotate_vals = np.random.randint(-65,65,num_rotate).astype('float32')/float(100)
+    # rotate_angles = np.zeros((batch_size))
+    # rotate_angles[rotate_inds] = rotate_vals
+    # rotated_batch = tf.contrib.image.rotate(image_batch,rotate_angles,interpolation='BILINEAR')
+    #
+    # # do random crops
+    # num_to_crop = int(batch_size*percent_crop)
+    # num_to_not_crop = batch_size - num_to_crop
+    # shuffled_inds = tf.random_shuffle(np.arange(0,batch_size,dtype='int32'))
+    # crop_inds = tf.slice(shuffled_inds,[0],[num_to_crop])
+    # uncropped_inds = tf.slice(shuffled_inds,[num_to_crop],[num_to_not_crop])
+    #
+    # crop_ratio = float(3)/float(5)
+    # crop_yx = tf.random_uniform([num_to_crop,2], 0,1-crop_ratio, dtype=tf.float32, seed=0)
+    # crop_sz = tf.add(crop_yx,np.tile([crop_ratio,crop_ratio],[num_to_crop, 1]))
+    # crop_boxes = tf.concat([crop_yx,crop_sz],axis=1)
+    #
+    # uncropped_boxes = np.tile([0,0,1,1],[num_to_not_crop,1])
+    #
+    # all_inds = tf.concat([crop_inds,uncropped_inds],axis=0)
+    # all_boxes = tf.concat([crop_boxes,uncropped_boxes],axis=0)
+    #
+    # cropped_batch = tf.image.crop_and_resize(rotated_batch,all_boxes,all_inds,crop_size)
 
     # insert people masks
     num_people_masks = int(batch_size*percent_people)
@@ -145,60 +145,69 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
 
     masked_masks = tf.add(inv_start_masks,tf.cast(tf.multiply(people_mask_batch,start_masks),dtype=tf.float32))
     masked_masks2 = tf.cast(tf.tile(masked_masks,[1, 1, 1, 3]),dtype=tf.float32)
-    masked_batch = tf.multiply(masked_masks,cropped_batch)
+    # masked_batch = tf.multiply(masked_masks,cropped_batch)
+    masked_batch = tf.multiply(masked_masks,image_batch)
 
-    # apply different filters
-    flt_image = convert_image_dtype(masked_batch, dtypes.float32)
-
-    num_to_filter = int(batch_size*percent_filters)
-
-    filter_inds = np.random.choice(np.arange(0,batch_size),num_to_filter,replace=False)
-    filter_mask = np.zeros(batch_size)
-    filter_mask[filter_inds] = 1
-    filter_mask = filter_mask.astype('float32')
-    inv_filter_mask = np.ones(batch_size)
-    inv_filter_mask[filter_inds] = 0
-    inv_filter_mask = inv_filter_mask.astype('float32')
-
+    # # apply different filters
+    # flt_image = convert_image_dtype(masked_batch, dtypes.float32)
     #
-    hsv = gen_image_ops.rgb_to_hsv(flt_image)
-    hue = array_ops.slice(hsv, [0, 0, 0, 0], [batch_size, -1, -1, 1])
-    saturation = array_ops.slice(hsv, [0, 0, 0, 1], [batch_size, -1, -1, 1])
-    value = array_ops.slice(hsv, [0, 0, 0, 2], [batch_size, -1, -1, 1])
-
-    # hue
-    delta_vals = random_ops.random_uniform([batch_size],-.15,.15)
-    hue_deltas = tf.multiply(filter_mask,delta_vals)
-    hue_deltas2 = tf.expand_dims(tf.transpose(tf.tile(tf.reshape(hue_deltas,[1,1,batch_size]),(crop_size[0],crop_size[1],1)),(2,0,1)),3)
-    hue = math_ops.mod(hue + (hue_deltas2 + 1.), 1.)
-
-    # saturation
-    saturation_factor = random_ops.random_uniform([batch_size],.75,1.25)
-    saturation_factor2 = tf.multiply(filter_mask,saturation_factor)
-    saturation_factor3 = tf.add(inv_filter_mask,saturation_factor2)
-    saturation_factor4 = tf.expand_dims(tf.transpose(tf.tile(tf.reshape(saturation_factor3,[1,1,batch_size]),(crop_size[0],crop_size[1],1)),(2,0,1)),3)
-
-    saturation *= saturation_factor4
-    saturation = clip_ops.clip_by_value(saturation, 0.0, 1.0)
-
-    hsv_altered = array_ops.concat([hue, saturation, value], 3)
-    rgb_altered = gen_image_ops.hsv_to_rgb(hsv_altered)
-
-    # brightness
-    brightness_factor = random_ops.random_uniform([batch_size],-.25,.25)
-    brightness_factor2 = tf.multiply(filter_mask,brightness_factor)
-    brightness_factor3 = tf.expand_dims(tf.transpose(tf.tile(tf.reshape(brightness_factor2,[1,1,batch_size]),(crop_size[0],crop_size[1],1)),(2,0,1)),3)
-    adjusted = math_ops.add(rgb_altered,math_ops.cast(brightness_factor3,dtypes.float32))
-
-    filtered_batch = clip_ops.clip_by_value(adjusted,0.0,1.0)
+    # num_to_filter = int(batch_size*percent_filters)
+    #
+    # filter_inds = np.random.choice(np.arange(0,batch_size),num_to_filter,replace=False)
+    # filter_mask = np.zeros(batch_size)
+    # filter_mask[filter_inds] = 1
+    # filter_mask = filter_mask.astype('float32')
+    # inv_filter_mask = np.ones(batch_size)
+    # inv_filter_mask[filter_inds] = 0
+    # inv_filter_mask = inv_filter_mask.astype('float32')
+    #
+    # #
+    # hsv = gen_image_ops.rgb_to_hsv(flt_image)
+    # hue = array_ops.slice(hsv, [0, 0, 0, 0], [batch_size, -1, -1, 1])
+    # saturation = array_ops.slice(hsv, [0, 0, 0, 1], [batch_size, -1, -1, 1])
+    # value = array_ops.slice(hsv, [0, 0, 0, 2], [batch_size, -1, -1, 1])
+    #
+    # # hue
+    # delta_vals = random_ops.random_uniform([batch_size],-.15,.15)
+    # hue_deltas = tf.multiply(filter_mask,delta_vals)
+    # hue_deltas2 = tf.expand_dims(tf.transpose(tf.tile(tf.reshape(hue_deltas,[1,1,batch_size]),(crop_size[0],crop_size[1],1)),(2,0,1)),3)
+    # hue = math_ops.mod(hue + (hue_deltas2 + 1.), 1.)
+    #
+    # # saturation
+    # saturation_factor = random_ops.random_uniform([batch_size],.75,1.25)
+    # saturation_factor2 = tf.multiply(filter_mask,saturation_factor)
+    # saturation_factor3 = tf.add(inv_filter_mask,saturation_factor2)
+    # saturation_factor4 = tf.expand_dims(tf.transpose(tf.tile(tf.reshape(saturation_factor3,[1,1,batch_size]),(crop_size[0],crop_size[1],1)),(2,0,1)),3)
+    #
+    # saturation *= saturation_factor4
+    # saturation = clip_ops.clip_by_value(saturation, 0.0, 1.0)
+    #
+    # hsv_altered = array_ops.concat([hue, saturation, value], 3)
+    # rgb_altered = gen_image_ops.hsv_to_rgb(hsv_altered)
+    #
+    # # brightness
+    # brightness_factor = random_ops.random_uniform([batch_size],-.25,.25)
+    # brightness_factor2 = tf.multiply(filter_mask,brightness_factor)
+    # brightness_factor3 = tf.expand_dims(tf.transpose(tf.tile(tf.reshape(brightness_factor2,[1,1,batch_size]),(crop_size[0],crop_size[1],1)),(2,0,1)),3)
+    # adjusted = math_ops.add(rgb_altered,math_ops.cast(brightness_factor3,dtypes.float32))
+    #
+    # filtered_batch = clip_ops.clip_by_value(adjusted,0.0,1.0)
+    #
+    # # after we've doctored everything, we need to remember to subtract off the mean
+    # repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
+    # if train_data.isOverfitting:
+    #     final_batch = tf.subtract(filtered_batch,repMeanIm)
+    # else:
+    #     noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 1], mean=0.0, stddev=0.025, dtype=tf.float32)
+    #     final_batch = tf.add(tf.subtract(filtered_batch,repMeanIm),noise)
 
     # after we've doctored everything, we need to remember to subtract off the mean
     repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
     if train_data.isOverfitting:
-        final_batch = tf.subtract(filtered_batch,repMeanIm)
+        final_batch = tf.subtract(masked_batch,repMeanIm)
     else:
-        noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 1], mean=0.0, stddev=0.025, dtype=tf.float32)
-        final_batch = tf.add(tf.subtract(filtered_batch,repMeanIm),noise)
+        noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 1], mean=0.0, stddev=0.0025, dtype=tf.float32)
+        final_batch = tf.add(tf.subtract(masked_batch,repMeanIm),noise)
 
     print("Preparing network...")
     with slim.arg_scope(resnet_v2.resnet_arg_scope()):
