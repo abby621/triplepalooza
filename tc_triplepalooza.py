@@ -39,7 +39,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
     log_dir = './output/traffickcam/logs'
     train_filename = './inputs/traffickcam/train_equal_no_duplicates.txt'
     mean_file = './models/traffickcam/tc_mean_im.npy'
-    pretrained_net = os.path.join(ckpt_dir,'checkpoint-201711071459_lr0pt0001_outputSz128_margin0pt3-62478')
+    pretrained_net = os.path.join(ckpt_dir,'checkpoint-201711170839_lr0pt0001_outputSz128_margin0pt3-74722')
     img_size = [256, 256]
     crop_size = [224, 224]
     num_iters = 200000
@@ -213,8 +213,8 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
     with slim.arg_scope(resnet_v2.resnet_arg_scope()):
         _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=True)
 
-    # feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
-    feat = tf.squeeze(tf.nn.l2_normalize(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"),3))
+    feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
+    # feat = tf.squeeze(tf.nn.l2_normalize(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"),3))
     # weights = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/logits/weights:0"))
 
     expanded_a = tf.expand_dims(feat, 1)
