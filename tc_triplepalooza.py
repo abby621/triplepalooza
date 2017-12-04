@@ -39,7 +39,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
     log_dir = './output/traffickcam/logs'
     train_filename = './inputs/traffickcam/train_equal_no_duplicates.txt'
     mean_file = './models/traffickcam/tc_mean_im.npy'
-    pretrained_net = os.path.join(ckpt_dir,'checkpoint-201711221229_lr0pt0001_outputSz128_margin0pt3-143908')
+    pretrained_net = os.path.join(ckpt_dir,'checkpoint-201712041314_lr0pt0001_outputSz128_margin0pt3-284')
     img_size = [256, 256]
     crop_size = [224, 224]
     num_iters = 200000
@@ -133,7 +133,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
 
     sorted_inds = tf.nn.top_k(-shuffled_inds,sorted=True,k=batch_size).indices
     cropped_batch = tf.gather(tf.image.crop_and_resize(rotated_batch,all_boxes,all_inds,crop_size),sorted_inds)
-    
+
     # insert people masks
     num_people_masks = int(batch_size*percent_people)
     mask_inds = np.random.choice(np.arange(0,batch_size),num_people_masks,replace=False)
@@ -149,66 +149,66 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
     masked_batch = tf.multiply(masked_masks,cropped_batch)
     # masked_batch = tf.multiply(masked_masks,image_batch)
 
-    # # apply different filters
-    # flt_image = convert_image_dtype(masked_batch, dtypes.float32)
+    # apply different filters
+    flt_image = convert_image_dtype(masked_batch, dtypes.float32)
+
+    num_to_filter = int(batch_size*percent_filters)
+
+    filter_inds = np.random.choice(np.arange(0,batch_size),num_to_filter,replace=False)
+    filter_mask = np.zeros(batch_size)
+    filter_mask[filter_inds] = 1
+    filter_mask = filter_mask.astype('float32')
+    inv_filter_mask = np.ones(batch_size)
+    inv_filter_mask[filter_inds] = 0
+    inv_filter_mask = inv_filter_mask.astype('float32')
+
     #
-    # num_to_filter = int(batch_size*percent_filters)
-    #
-    # filter_inds = np.random.choice(np.arange(0,batch_size),num_to_filter,replace=False)
-    # filter_mask = np.zeros(batch_size)
-    # filter_mask[filter_inds] = 1
-    # filter_mask = filter_mask.astype('float32')
-    # inv_filter_mask = np.ones(batch_size)
-    # inv_filter_mask[filter_inds] = 0
-    # inv_filter_mask = inv_filter_mask.astype('float32')
-    #
-    # #
-    # hsv = gen_image_ops.rgb_to_hsv(flt_image)
-    # hue = array_ops.slice(hsv, [0, 0, 0, 0], [batch_size, -1, -1, 1])
-    # saturation = array_ops.slice(hsv, [0, 0, 0, 1], [batch_size, -1, -1, 1])
-    # value = array_ops.slice(hsv, [0, 0, 0, 2], [batch_size, -1, -1, 1])
-    #
-    # # hue
-    # delta_vals = random_ops.random_uniform([batch_size],-.15,.15)
-    # hue_deltas = tf.multiply(filter_mask,delta_vals)
-    # hue_deltas2 = tf.expand_dims(tf.transpose(tf.tile(tf.reshape(hue_deltas,[1,1,batch_size]),(crop_size[0],crop_size[1],1)),(2,0,1)),3)
-    # hue = math_ops.mod(hue + (hue_deltas2 + 1.), 1.)
-    #
-    # # saturation
-    # saturation_factor = random_ops.random_uniform([batch_size],.75,1.25)
-    # saturation_factor2 = tf.multiply(filter_mask,saturation_factor)
-    # saturation_factor3 = tf.add(inv_filter_mask,saturation_factor2)
-    # saturation_factor4 = tf.expand_dims(tf.transpose(tf.tile(tf.reshape(saturation_factor3,[1,1,batch_size]),(crop_size[0],crop_size[1],1)),(2,0,1)),3)
-    #
-    # saturation *= saturation_factor4
-    # saturation = clip_ops.clip_by_value(saturation, 0.0, 1.0)
-    #
-    # hsv_altered = array_ops.concat([hue, saturation, value], 3)
-    # rgb_altered = gen_image_ops.hsv_to_rgb(hsv_altered)
-    #
-    # # brightness
-    # brightness_factor = random_ops.random_uniform([batch_size],-.25,.25)
-    # brightness_factor2 = tf.multiply(filter_mask,brightness_factor)
-    # brightness_factor3 = tf.expand_dims(tf.transpose(tf.tile(tf.reshape(brightness_factor2,[1,1,batch_size]),(crop_size[0],crop_size[1],1)),(2,0,1)),3)
-    # adjusted = math_ops.add(rgb_altered,math_ops.cast(brightness_factor3,dtypes.float32))
-    #
-    # filtered_batch = clip_ops.clip_by_value(adjusted,0.0,1.0)
-    #
-    # # after we've doctored everything, we need to remember to subtract off the mean
-    # repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
-    # if train_data.isOverfitting:
-    #     final_batch = tf.subtract(filtered_batch,repMeanIm)
-    # else:
-    #     noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 1], mean=0.0, stddev=0.025, dtype=tf.float32)
-    #     final_batch = tf.add(tf.subtract(filtered_batch,repMeanIm),noise)
+    hsv = gen_image_ops.rgb_to_hsv(flt_image)
+    hue = array_ops.slice(hsv, [0, 0, 0, 0], [batch_size, -1, -1, 1])
+    saturation = array_ops.slice(hsv, [0, 0, 0, 1], [batch_size, -1, -1, 1])
+    value = array_ops.slice(hsv, [0, 0, 0, 2], [batch_size, -1, -1, 1])
+
+    # hue
+    delta_vals = random_ops.random_uniform([batch_size],-.15,.15)
+    hue_deltas = tf.multiply(filter_mask,delta_vals)
+    hue_deltas2 = tf.expand_dims(tf.transpose(tf.tile(tf.reshape(hue_deltas,[1,1,batch_size]),(crop_size[0],crop_size[1],1)),(2,0,1)),3)
+    hue = math_ops.mod(hue + (hue_deltas2 + 1.), 1.)
+
+    # saturation
+    saturation_factor = random_ops.random_uniform([batch_size],.75,1.25)
+    saturation_factor2 = tf.multiply(filter_mask,saturation_factor)
+    saturation_factor3 = tf.add(inv_filter_mask,saturation_factor2)
+    saturation_factor4 = tf.expand_dims(tf.transpose(tf.tile(tf.reshape(saturation_factor3,[1,1,batch_size]),(crop_size[0],crop_size[1],1)),(2,0,1)),3)
+
+    saturation *= saturation_factor4
+    saturation = clip_ops.clip_by_value(saturation, 0.0, 1.0)
+
+    hsv_altered = array_ops.concat([hue, saturation, value], 3)
+    rgb_altered = gen_image_ops.hsv_to_rgb(hsv_altered)
+
+    # brightness
+    brightness_factor = random_ops.random_uniform([batch_size],-.25,.25)
+    brightness_factor2 = tf.multiply(filter_mask,brightness_factor)
+    brightness_factor3 = tf.expand_dims(tf.transpose(tf.tile(tf.reshape(brightness_factor2,[1,1,batch_size]),(crop_size[0],crop_size[1],1)),(2,0,1)),3)
+    adjusted = math_ops.add(rgb_altered,math_ops.cast(brightness_factor3,dtypes.float32))
+
+    filtered_batch = clip_ops.clip_by_value(adjusted,0.0,1.0)
 
     # after we've doctored everything, we need to remember to subtract off the mean
     repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
     if train_data.isOverfitting:
-        final_batch = tf.subtract(masked_batch,repMeanIm)
+        final_batch = tf.subtract(filtered_batch,repMeanIm)
     else:
         noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 1], mean=0.0, stddev=0.0025, dtype=tf.float32)
-        final_batch = tf.add(tf.subtract(masked_batch,repMeanIm),noise)
+        final_batch = tf.add(tf.subtract(filtered_batch,repMeanIm),noise)
+
+    # # after we've doctored everything, we need to remember to subtract off the mean
+    # repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
+    # if train_data.isOverfitting:
+    #     final_batch = tf.subtract(masked_batch,repMeanIm)
+    # else:
+    #     noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 1], mean=0.0, stddev=0.0025, dtype=tf.float32)
+    #     final_batch = tf.add(tf.subtract(masked_batch,repMeanIm),noise)
 
     print("Preparing network...")
     with slim.arg_scope(resnet_v2.resnet_arg_scope()):
