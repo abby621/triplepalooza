@@ -131,8 +131,9 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
     all_inds = tf.concat([crop_inds,uncropped_inds],axis=0)
     all_boxes = tf.concat([crop_boxes,uncropped_boxes],axis=0)
 
-    cropped_batch = tf.image.crop_and_resize(rotated_batch,all_boxes,all_inds,crop_size)
-
+    sorted_inds = tf.nn.top_k(-shuffled_inds,sorted=True,k=batch_size).indices
+    cropped_batch = tf.gather(tf.image.crop_and_resize(rotated_batch,all_boxes,all_inds,crop_size),sorted_inds)
+    
     # insert people masks
     num_people_masks = int(batch_size*percent_people)
     mask_inds = np.random.choice(np.arange(0,batch_size),num_people_masks,replace=False)
