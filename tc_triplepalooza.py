@@ -39,7 +39,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
     log_dir = './output/traffickcam/logs'
     train_filename = './inputs/traffickcam/train_equal_no_duplicates.txt'
     mean_file = './models/traffickcam/tc_mean_im.npy'
-    pretrained_net = os.path.join(ckpt_dir,'checkpoint-201801031641_lr0pt0001_outputSz128_margin0pt3-87263')
+    pretrained_net = os.path.join(ckpt_dir,'checkpoint-201801031641_lr0pt0001_outputSz128_margin0pt3-84999')
     pretrained_net = None
     img_size = [256, 256]
     crop_size = [224, 224]
@@ -254,7 +254,10 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
     loss = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
-    train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
+    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+    with tf.control_dependencies(update_ops):
+        train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
+
     summary_op = tf.summary.merge_all()
     init_op = tf.global_variables_initializer()
 
