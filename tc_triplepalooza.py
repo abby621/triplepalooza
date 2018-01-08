@@ -118,9 +118,9 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
     # do random crops
     num_to_crop = int(batch_size*percent_crop)
     num_to_not_crop = batch_size - num_to_crop
+
     # shuffled_inds = tf.random_shuffle(np.arange(0,batch_size,dtype='int32'))
-    
-    shuffled_inds = range(batch_size)
+    shuffled_inds = np.arange(0,batch_size,dtype='int32')
     np.random.shuffle(shuffled_inds)
     crop_inds = tf.slice(shuffled_inds,[0],[num_to_crop])
     uncropped_inds = tf.slice(shuffled_inds,[num_to_crop],[num_to_not_crop])
