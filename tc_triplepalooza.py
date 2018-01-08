@@ -268,7 +268,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
     saver = tf.train.Saver(max_to_keep=20)
 
     # tf will consume any GPU it finds on the system. Following lines restrict it to "first" GPU
-    c = tf.ConfigProto(log_device_placement=True)
+    c = tf.ConfigProto()
     c.gpu_options.visible_device_list="0,1"
 
     print("Starting session...")
