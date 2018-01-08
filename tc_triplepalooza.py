@@ -251,7 +251,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
 
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
-    loss = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
+    loss = tf.reduce_sum(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))/batch_size
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
@@ -265,7 +265,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
     saver = tf.train.Saver(max_to_keep=20)
 
     # tf will consume any GPU it finds on the system. Following lines restrict it to "first" GPU
-    c = tf.ConfigProto()
+    c = tf.ConfigProto(log_device_placement=True)
     c.gpu_options.visible_device_list="0,1"
 
     print("Starting session...")
