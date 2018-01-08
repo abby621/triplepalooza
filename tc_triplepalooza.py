@@ -119,8 +119,10 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
     num_to_crop = int(batch_size*percent_crop)
     num_to_not_crop = batch_size - num_to_crop
     # shuffled_inds = tf.random_shuffle(np.arange(0,batch_size,dtype='int32'))
-    shuffled_inds = np.random.choice(np.arange(0,batch_size),num_to_crop,replace=False)
-    crop_inds = tf.slice(shuffled_inds,[0],[num_to_crop])
+    # crop_inds = tf.slice(shuffled_inds,[0],[num_to_crop])
+    # uncropped_inds = tf.slice(shuffled_inds,[num_to_crop],[num_to_not_crop])
+    crop_inds = np.random.choice(np.arange(0,batch_size),num_to_crop,replace=False)
+    uncropped_inds = [aa for aa in range(batch_size) if aa not in shuffled_inds]
     uncropped_inds = tf.slice(shuffled_inds,[num_to_crop],[num_to_not_crop])
 
     crop_ratio = float(3)/float(5)
