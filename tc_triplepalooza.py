@@ -121,13 +121,17 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
 
     shuffled_inds = tf.random_shuffle(np.arange(0,batch_size,dtype='int32'))
     # shuffled_inds = np.arange(0,batch_size,dtype='int32')
-    np.random.shuffle(shuffled_inds)
+    # np.random.shuffle(shuffled_inds)
     crop_inds = tf.slice(shuffled_inds,[0],[num_to_crop])
     uncropped_inds = tf.slice(shuffled_inds,[num_to_crop],[num_to_not_crop])
 
-    crop_ratio = float(3)/float(5)
+    # crop_ratio = float(3)/float(5)
+    # crop_yx = tf.random_uniform([num_to_crop,2], 0,1-crop_ratio, dtype=tf.float32, seed=0)
+    # crop_sz = tf.add(crop_yx,np.tile([crop_ratio,crop_ratio],[num_to_crop, 1]))
+    # crop_boxes = tf.concat([crop_yx,crop_sz],axis=1)
+    crop_ratio = tf.random_uniform([num_to_crop,1], 0, float(3)/float(5), dtype=tf.float32, seed=0)
     crop_yx = tf.random_uniform([num_to_crop,2], 0,1-crop_ratio, dtype=tf.float32, seed=0)
-    crop_sz = tf.add(crop_yx,np.tile([crop_ratio,crop_ratio],[num_to_crop, 1]))
+    crop_sz = tf.add(crop_yx,tf.concat([crop_ratio,crop_ratio],axis=1))
     crop_boxes = tf.concat([crop_yx,crop_sz],axis=1)
 
     uncropped_boxes = np.tile([0,0,1,1],[num_to_not_crop,1])
