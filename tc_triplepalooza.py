@@ -268,14 +268,14 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):
         train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
-    
+
     summary_op = tf.summary.merge_all()
     init_op = tf.global_variables_initializer()
 
     # Create a saver for writing training checkpoints.
     saver = tf.train.Saver(max_to_keep=20)
 
-    # tf will consume any GPU it finds on the system. Following lines restrict it to "first" GPU
+    # tf will consume any GPU it finds on the system. Following lines restrict it to specific gpus
     c = tf.ConfigProto()
     c.gpu_options.visible_device_list="0,1"
 
