@@ -277,7 +277,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
 
     # tf will consume any GPU it finds on the system. Following lines restrict it to "first" GPU
     c = tf.ConfigProto()
-    c.gpu_options.visible_device_list="0,1"
+    # c.gpu_options.visible_device_list="0,1"
 
     print("Starting session...")
     sess = tf.Session(config=c)
@@ -297,9 +297,10 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
         _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, people_mask_batch: people_masks,label_batch: labels})
         end_time = time.time()
         duration = end_time-start_time
+        out_str = 'Step %d: loss = %.6f (%.3f sec)' % (step, loss_val, duration)
+        print(out_str)
         if step % summary_iters == 0 or is_overfitting:
-            out_str = 'Step %d: loss = %.6f (%.3f sec)' % (step, loss_val, duration)
-            print(out_str)
+            # print(out_str)
             train_log_file.write(out_str+'\n')
         # Update the events file.
         # summary_str = sess.run(summary_op)
