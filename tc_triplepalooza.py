@@ -268,56 +268,55 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):
         train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
+        summary_op = tf.summary.merge_all()
+        init_op = tf.global_variables_initializer()
 
-    summary_op = tf.summary.merge_all()
-    init_op = tf.global_variables_initializer()
+        # Create a saver for writing training checkpoints.
+        saver = tf.train.Saver(max_to_keep=20)
 
-    # Create a saver for writing training checkpoints.
-    saver = tf.train.Saver(max_to_keep=20)
+        # tf will consume any GPU it finds on the system. Following lines restrict it to "first" GPU
+        c = tf.ConfigProto()
+        c.gpu_options.visible_device_list="2,3"
 
-    # tf will consume any GPU it finds on the system. Following lines restrict it to "first" GPU
-    c = tf.ConfigProto()
-    c.gpu_options.visible_device_list="2,3"
+        print("Starting session...")
+        sess = tf.Session(config=c)
+        sess.run(init_op)
 
-    print("Starting session...")
-    sess = tf.Session(config=c)
-    sess.run(init_op)
+        writer = tf.summary.FileWriter(log_dir, sess.graph)
 
-    writer = tf.summary.FileWriter(log_dir, sess.graph)
+        if pretrained_net:
+            saver.restore(sess, pretrained_net)
 
-    if pretrained_net:
-        saver.restore(sess, pretrained_net)
-
-    print("Start training...")
-    ctr  = 0
-    for step in range(num_iters):
-        start_time = time.time()
-        batch, labels, ims = train_data.getBatch()
-        people_masks = train_data.getPeopleMasks()
-        _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, people_mask_batch: people_masks,label_batch: labels})
-        end_time = time.time()
-        duration = end_time-start_time
-        out_str = 'Step %d: loss = %.6f (%.3f sec)' % (step, loss_val, duration)
-        print(out_str)
-        if step % summary_iters == 0 or is_overfitting:
-            # print(out_str)
-            train_log_file.write(out_str+'\n')
-        # Update the events file.
-        # summary_str = sess.run(summary_op)
-        # writer.add_summary(summary_str, step)
-        # writer.flush()
-        #
-        # Save a checkpoint
-        if (step + 1) % save_iters == 0:
-            print('Saving checkpoint at iteration: %d' % (step))
-            pretrained_net = os.path.join(ckpt_dir, 'checkpoint-'+param_str)
-            saver.save(sess, pretrained_net, global_step=step)
-            print 'checkpoint-',pretrained_net+'-'+str(step), ' saved!'
-        if (step + 1) == num_iters:
-            print('Saving final')
-            pretrained_net = os.path.join(ckpt_dir, 'final-'+param_str)
-            saver.save(sess, pretrained_net, global_step=step)
-            print 'final-',pretrained_net+'-'+str(step), ' saved!'
+        print("Start training...")
+        ctr  = 0
+        for step in range(num_iters):
+            start_time = time.time()
+            batch, labels, ims = train_data.getBatch()
+            people_masks = train_data.getPeopleMasks()
+            _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, people_mask_batch: people_masks,label_batch: labels})
+            end_time = time.time()
+            duration = end_time-start_time
+            out_str = 'Step %d: loss = %.6f (%.3f sec)' % (step, loss_val, duration)
+            print(out_str)
+            if step % summary_iters == 0 or is_overfitting:
+                # print(out_str)
+                train_log_file.write(out_str+'\n')
+            # Update the events file.
+            # summary_str = sess.run(summary_op)
+            # writer.add_summary(summary_str, step)
+            # writer.flush()
+            #
+            # Save a checkpoint
+            if (step + 1) % save_iters == 0:
+                print('Saving checkpoint at iteration: %d' % (step))
+                pretrained_net = os.path.join(ckpt_dir, 'checkpoint-'+param_str)
+                saver.save(sess, pretrained_net, global_step=step)
+                print 'checkpoint-',pretrained_net+'-'+str(step), ' saved!'
+            if (step + 1) == num_iters:
+                print('Saving final')
+                pretrained_net = os.path.join(ckpt_dir, 'final-'+param_str)
+                saver.save(sess, pretrained_net, global_step=step)
+                print 'final-',pretrained_net+'-'+str(step), ' saved!'
 
     sess.close()
     train_log_file.close()
