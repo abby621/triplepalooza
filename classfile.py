@@ -201,7 +201,7 @@ class MarsCombinatorialTripletSet(CombinatorialTripletSet):
         return batch, labels, cameras, ims
 
 class VanillaTripletSet:
-    def __init__(self, image_list, mean_file, image_size, crop_size, batchSize=100, isTraining=True):
+    def __init__(self, image_list, mean_file, image_size, crop_size, batchSize=100, isTraining=True, isOverfitting=False, isMixed=False):
         self.image_size = image_size
         self.crop_size = crop_size
 
@@ -231,6 +231,13 @@ class VanillaTripletSet:
             self.classes.append(ctr)
             ctr += 1
 
+        if self.isOverfitting == True:
+            self.classes = self.classes[:10]
+            self.files = self.files[:10]
+            for idx in range(len(self.files)):
+                backupFiles = self.files[idx]
+                self.files[idx] = backupFiles[:10]
+
         self.image_size = image_size
         self.crop_size = crop_size
         self.isTraining = isTraining
@@ -256,10 +263,14 @@ class VanillaTripletSet:
                 anchorImg = self.getProcessedImage(anchorIm)
 
             posIm = np.random.choice(self.files[posClass][1:])
+            if isMixed:
+                while ('expedia' in anchorIm and 'expedia' in posIm) or ('expedia' not in anchorIm and 'expedia' not in posIm):
+                    posIm = np.random.choice(self.files[posClass][1:])
+
             posImg = self.getProcessedImage(posIm)
             while posImg is None:
                 posIm = np.random.choice(self.files[posClass][1:])
-                while posIm == anchorIm:
+                while posIm == anchorIm or ('expedia' in anchorIm and 'expedia' in posIm) or ('expedia' not in anchorIm and 'expedia' not in posIm):
                     posIm = np.random.choice(self.files[posClass][1:])
                 posImg = self.getProcessedImage(posIm)
 
@@ -303,12 +314,12 @@ class VanillaTripletSet:
         if img is None:
             return img
 
-        if self.isTraining and random.random() > 0.5:
+        if self.isTraining and random.random() > 0.5 and not self.isOverfitting:
             img = cv2.flip(img,1)
 
         img = cv2.resize(img, (self.image_size[0], self.image_size[1]))
 
-        if (self.isTraining):
+        if self.isTraining and not self.isOverfitting:
             top = np.random.randint(self.image_size[0] - self.crop_size[0])
             left = np.random.randint(self.image_size[1] - self.crop_size[1])
         else:
