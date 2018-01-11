@@ -251,7 +251,7 @@ class VanillaTripletSet:
         selectedClasses = 0
         while selectedClasses < numClasses:
             cls = np.random.choice(self.classes)
-            while cls in classes or cls in basClasses:
+            while cls in classes or cls in badClasses:
                 cls = np.random.choice(self.classes)
 
             files = self.files[cls]
