@@ -256,6 +256,27 @@ class VanillaTripletSet:
 
         return people_crops
 
+    def getImageAsMask(self, image_file):
+        img = cv2.imread(image_file,cv2.IMREAD_GRAYSCALE)
+        if img is None:
+            return None
+
+        # how much of the image should the mask take up
+        scale = np.random.randint(30,70)/float(100)
+        resized_img = cv2.resize(img,(int(self.crop_size[0]*scale),int(self.crop_size[1]*scale)))
+
+        # where should we put the mask?
+        top = np.random.randint(0,self.crop_size[0]-resized_img.shape[0])
+        left = np.random.randint(0,self.crop_size[1]-resized_img.shape[1])
+
+        new_img = np.ones((self.crop_size[0],self.crop_size[1]))*255.0
+        new_img[top:top+resized_img.shape[0],left:left+resized_img.shape[1]] = resized_img
+
+        new_img[new_img<255] = 0
+        new_img[new_img>1] = 1
+
+        return new_img
+
     def getBatch(self):
         numClasses = self.batchSize/3
         classes = np.zeros(numClasses,dtype=np.int)
