@@ -205,6 +205,7 @@ class VanillaTripletSet:
         self.image_size = image_size
         self.crop_size = crop_size
         self.isOverfitting = isOverfitting
+        self.isMixed = isMixed
         self.meanFile = mean_file
         meanIm = np.load(self.meanFile)
 
@@ -263,7 +264,7 @@ class VanillaTripletSet:
                 anchorImg = self.getProcessedImage(anchorIm)
 
             posIm = np.random.choice(self.files[posClass][1:])
-            if isMixed:
+            if self.isMixed:
                 while ('expedia' in anchorIm and 'expedia' in posIm) or ('expedia' not in anchorIm and 'expedia' not in posIm):
                     posIm = np.random.choice(self.files[posClass][1:])
 
