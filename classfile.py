@@ -247,6 +247,21 @@ class VanillaTripletSet:
     def getBatch(self):
         numClasses = self.batchSize/3
         classes = np.random.choice(self.classes,numClasses)
+        classes = np.zeros(self.classes)
+        selectedClasses = 0
+        while selectedClasses < numClasses:
+            cls = np.random.choice(self.classes)
+            while cls in classes:
+                cls = np.random.choice(self.classes)
+
+            files = self.files[cls]
+            num_traffickcam = np.sum([1 for fl in files if 'resized_traffickcam' in fl])
+            num_expedia = np.sum([1 for fl in files if 'resized_expedia' in fl])
+
+            if num_traffickcam > 3 and num_expedia > 3:
+                classes[selectedClasses] = cls
+
+            selectedClasses += 1
 
         batch = np.zeros([self.batchSize, self.crop_size[0], self.crop_size[1], 3])
         labels = np.zeros([self.batchSize],dtype='int')
