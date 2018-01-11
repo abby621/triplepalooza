@@ -243,6 +243,18 @@ class VanillaTripletSet:
         self.crop_size = crop_size
         self.isTraining = isTraining
         self.indexes = np.arange(0, len(self.files))
+        self.people_crop_files = glob.glob(os.path.join(peopleDir,'*mask.png'))
+
+    def getPeopleMasks(self):
+        which_inds = random.sample(np.arange(0,len(self.people_crop_files)),self.batchSize)
+
+        people_crops = np.zeros([self.batchSize,self.crop_size[0],self.crop_size[1]])
+        for ix in range(0,self.batchSize):
+            people_crops[ix,:,:] = self.getImageAsMask(self.people_crop_files[which_inds[ix]])
+
+        people_crops = np.expand_dims(people_crops, axis=3)
+
+        return people_crops
 
     def getBatch(self):
         numClasses = self.batchSize/3
