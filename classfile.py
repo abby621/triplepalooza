@@ -246,7 +246,7 @@ class VanillaTripletSet:
 
     def getBatch(self):
         numClasses = self.batchSize/3
-        classes = np.zeros(self.classes)
+        classes = np.zeros(numClasses)
         basClasses = []
         selectedClasses = 0
         while selectedClasses < numClasses:
