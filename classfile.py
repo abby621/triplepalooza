@@ -246,12 +246,12 @@ class VanillaTripletSet:
 
     def getBatch(self):
         numClasses = self.batchSize/3
-        classes = np.random.choice(self.classes,numClasses)
         classes = np.zeros(self.classes)
+        basClasses = []
         selectedClasses = 0
         while selectedClasses < numClasses:
             cls = np.random.choice(self.classes)
-            while cls in classes:
+            while cls in classes or cls in basClasses:
                 cls = np.random.choice(self.classes)
 
             files = self.files[cls]
@@ -260,6 +260,8 @@ class VanillaTripletSet:
 
             if num_traffickcam > 3 and num_expedia > 3:
                 classes[selectedClasses] = cls
+            else:
+                badClasses.append(cls)
 
             selectedClasses += 1
 
