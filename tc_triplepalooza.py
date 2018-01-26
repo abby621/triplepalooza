@@ -20,12 +20,12 @@ from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 import tensorflow.contrib.slim as slim
 from tensorflow.contrib.slim.python.slim.nets import resnet_v2
-
+import socket
 import signal
 import time
 import sys
 
-def main(margin,batch_size,output_size,learning_rate,is_overfitting):
+def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU):
     def handler(signum, frame):
         print 'Saving checkpoint before closing'
         pretrained_net = os.path.join(ckpt_dir, 'checkpoint-'+param_str)
@@ -267,7 +267,9 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):
-        train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
+        # train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
+        optimizer = tf.train.AdamOptimizer(learning_rate)
+        train_op = slim.learning.create_train_op(loss, optimizer)
 
     summary_op = tf.summary.merge_all()
     init_op = tf.global_variables_initializer()
@@ -277,7 +279,8 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
 
     # tf will consume any GPU it finds on the system. Following lines restrict it to specific gpus
     c = tf.ConfigProto()
-    c.gpu_options.visible_device_list="0,1"
+    if not 'abby' in socket.gethostname().lower():
+        c.gpu_options.visible_device_list=whichGPU
 
     print("Starting session...")
     sess = tf.Session(config=c)
@@ -327,11 +330,12 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting):
 
 if __name__ == "__main__":
     args = sys.argv
-    if len(args) < 5:
-        print 'Expected four input parameters: margin, output_size, learning_rate, is_overfitting'
+    if len(args) < 6:
+        print 'Expected four input parameters: margin, output_size, learning_rate, is_overfitting, whichGPU'
     margin = args[1]
     batch_size = args[2]
     output_size = args[3]
     learning_rate = args[4]
     is_overfitting = args[5]
-    main(margin,batch_size,output_size,learning_rate,is_overfitting)
+    whichGPU = args[6]
+    main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU)
