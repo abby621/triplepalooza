@@ -4,7 +4,7 @@
 # If overfitting:
 # python tc_triplepalooza.py .3 50 128 .0001 True '2'
 # Else:
-# python tc_triplepalooza.py .3 120 128 .0001 False '3'
+# python tc_triplepalooza.py .3 120 128 .00005 False '3'
 """
 
 import tensorflow as tf
@@ -39,8 +39,8 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU):
     log_dir = './output/traffickcam/logs'
     train_filename = './inputs/traffickcam/train_equal_no_duplicates.txt'
     mean_file = './models/traffickcam/tc_mean_im.npy'
-    pretrained_net = os.path.join(ckpt_dir,'checkpoint-201801111434_lr1e-05_outputSz128_margin0pt3-199999')
-    # pretrained_net = None
+    # pretrained_net = os.path.join(ckpt_dir,'checkpoint-201801111434_lr1e-05_outputSz128_margin0pt3-199999')
+    pretrained_net = None
     img_size = [256, 256]
     crop_size = [224, 224]
     num_iters = 200000
