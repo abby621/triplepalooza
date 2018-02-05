@@ -19,7 +19,7 @@ from tensorflow.python.ops import gen_image_ops
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 import tensorflow.contrib.slim as slim
-from tensorflow.contrib.slim.python.slim.nets import resnet_v2
+from nets import resnet_v2
 import socket
 import signal
 import time
@@ -219,7 +219,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU):
 
     print("Preparing network...")
     with slim.arg_scope(resnet_v2.resnet_arg_scope()):
-        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=True)
+        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=False)
 
     feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
     # feat = tf.squeeze(tf.nn.l2_normalize(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"),3))
