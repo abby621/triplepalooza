@@ -130,8 +130,8 @@ class CombinatorialTripletSet:
             top = np.random.randint(self.image_size[0] - self.crop_size[0])
             left = np.random.randint(self.image_size[1] - self.crop_size[1])
         else:
-            top = round((self.image_size[0] - self.crop_size[0])/2)
-            left = round((self.image_size[1] - self.crop_size[1])/2)
+            top = int(round((self.image_size[0] - self.crop_size[0])/2))
+            left = int(round((self.image_size[1] - self.crop_size[1])/2))
 
         img = img[top:(top+self.crop_size[0]),left:(left+self.crop_size[1]),:]
 
@@ -374,8 +374,8 @@ class VanillaTripletSet:
             top = np.random.randint(self.image_size[0] - self.crop_size[0])
             left = np.random.randint(self.image_size[1] - self.crop_size[1])
         else:
-            top = round((self.image_size[0] - self.crop_size[0])/2)
-            left = round((self.image_size[1] - self.crop_size[1])/2)
+            top = int(round((self.image_size[0] - self.crop_size[0])/2))
+            left = int(round((self.image_size[1] - self.crop_size[1])/2))
 
         img = img[top:(top+self.crop_size[0]),left:(left+self.crop_size[1]),:]
         return img
