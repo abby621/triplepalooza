@@ -4,7 +4,7 @@
 # If overfitting:
 # python tc_triplepalooza.py .3 50 128 .0001 True '2'
 # Else:
-# python tc_triplepalooza.py .3 120 128 .00005 False '3'
+# python tc_triplepalooza.py .3 120 128 .0001 False '3'
 """
 
 import tensorflow as tf
@@ -46,7 +46,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU):
     num_iters = 200000
     summary_iters = 10
     save_iters = 5000
-    featLayer = 'resnet_v2_50/logits'
+    featLayer = 'resnet/logits'
 
     is_training = True
     if is_overfitting.lower()=='true':
