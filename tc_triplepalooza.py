@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-# python mars_triplepalooza.py margin output_size learning_rate is_overfitting
-# If overfitting:
-# python tc_triplepalooza.py .3 50 128 .0001 True '2'
-# Else:
-# python tc_triplepalooza.py .3 120 128 .0001 False '3'
+# python mars_triplepalooza.py margin output_size learning_rate is_overfitting l1_weight
+# python tc_triplepalooza.py .3 120 128 .0001 False '3' 0.05
 """
 
 import tensorflow as tf
@@ -58,6 +55,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU):
     batch_size = int(batch_size)
     output_size = int(output_size)
     learning_rate = float(learning_rate)
+    l1_weight = float(l1_weight)
 
     if batch_size%30 != 0:
         print 'Batch size must be divisible by 30!'
@@ -262,7 +260,9 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU):
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
     # loss = tf.reduce_sum(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))/batch_size
-    loss = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
+    base_loss = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
+    l1_loss = tf.multiply(l1_weight, tf.reduce_sum(tf.abs(feat)))
+    loss = base_loss + l1_loss
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
@@ -297,10 +297,10 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU):
         start_time = time.time()
         batch, labels, ims = train_data.getBatch()
         people_masks = train_data.getPeopleMasks()
-        _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, people_mask_batch: people_masks,label_batch: labels})
+        _, loss_val, bl, l1 = sess.run([train_op, loss, base_loss, l1_loss], feed_dict={image_batch: batch, people_mask_batch: people_masks,label_batch: labels})
         end_time = time.time()
         duration = end_time-start_time
-        out_str = 'Step %d: loss = %.6f (%.3f sec)' % (step, loss_val, duration)
+        out_str = 'Step %d: loss = %.6f (%.3f from loss, %.3f from l1) -- (%.3f sec)' % (step, loss_val, b1, l1, duration)
         # print(out_str)
         if step % summary_iters == 0 or is_overfitting:
             print(out_str)
@@ -331,11 +331,12 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU):
 if __name__ == "__main__":
     args = sys.argv
     if len(args) < 6:
-        print 'Expected four input parameters: margin, output_size, learning_rate, is_overfitting, whichGPU'
+        print 'Expected four input parameters: margin, output_size, learning_rate, is_overfitting, whichGPU, l1_weight'
     margin = args[1]
     batch_size = args[2]
     output_size = args[3]
     learning_rate = args[4]
     is_overfitting = args[5]
     whichGPU = args[6]
-    main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU)
+    l1_weight = args[7]
+    main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_weight)
