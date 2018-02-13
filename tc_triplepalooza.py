@@ -28,7 +28,7 @@ import sys
 def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU):
     def handler(signum, frame):
         print 'Saving checkpoint before closing'
-        pretrained_net = os.path.join(ckpt_dir, 'checkpoint-'+param_str)
+        pretrained_net = os.path.join(ckpt_dir, 'checkpoint-nobatchnorm-'+param_str)
         saver.save(sess, pretrained_net, global_step=step)
         print 'Checkpoint-',pretrained_net+'-'+str(step), ' saved!'
         sys.exit(0)
@@ -69,9 +69,9 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU):
     train_data = CombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training, isOverfitting=is_overfitting)
     numClasses = len(train_data.files)
     numIms = np.sum([len(train_data.files[idx]) for idx in range(0,numClasses)])
-    datestr = datetime.now().strftime("%Y%m%d%H%M")
+    datestr = datetime.now().strftime("%Y_%m_%d_%H%M")
     param_str = datestr+'_lr'+str(learning_rate).replace('.','pt')+'_outputSz'+str(output_size)+'_margin'+str(margin).replace('.','pt')
-    logfile_path = os.path.join(log_dir,datestr)+param_str+'_train.txt'
+    logfile_path = os.path.join(log_dir,param_str+'_train.txt')
     train_log_file = open(logfile_path,'a')
     print '------------'
     print ''
@@ -218,8 +218,8 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU):
     #     final_batch = tf.add(tf.subtract(masked_batch,repMeanIm),noise)
 
     print("Preparing network...")
-    with slim.arg_scope(resnet_v2.resnet_arg_scope()):
-        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=False)
+    with slim.arg_scope(resnet_v2.resnet_arg_scope(is_training=True, use_batch_norm=False, updates_collections=None, batch_norm_decay=.7, fused=True)):
+        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=True, scope='resnet')
 
     feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
     # feat = tf.squeeze(tf.nn.l2_normalize(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"),3))
