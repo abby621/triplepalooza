@@ -44,7 +44,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU):
     img_size = [256, 256]
     crop_size = [224, 224]
     num_iters = 200000
-    summary_iters = 10
+    summary_iters = 100
     save_iters = 5000
     featLayer = 'resnet/logits'
 
@@ -301,9 +301,9 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU):
         end_time = time.time()
         duration = end_time-start_time
         out_str = 'Step %d: loss = %.6f (%.3f sec)' % (step, loss_val, duration)
-        print(out_str)
+        # print(out_str)
         if step % summary_iters == 0 or is_overfitting:
-            # print(out_str)
+            print(out_str)
             train_log_file.write(out_str+'\n')
         # Update the events file.
         # summary_str = sess.run(summary_op)
