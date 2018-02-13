@@ -22,7 +22,7 @@ import signal
 import time
 import sys
 
-def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU):
+def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_weight):
     def handler(signum, frame):
         print 'Saving checkpoint before closing'
         pretrained_net = os.path.join(ckpt_dir, 'checkpoint-nobatchnorm-'+param_str)
@@ -300,7 +300,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU):
         _, loss_val, bl, l1 = sess.run([train_op, loss, base_loss, l1_loss], feed_dict={image_batch: batch, people_mask_batch: people_masks,label_batch: labels})
         end_time = time.time()
         duration = end_time-start_time
-        out_str = 'Step %d: loss = %.6f (%.3f from loss, %.3f from l1) -- (%.3f sec)' % (step, loss_val, b1, l1, duration)
+        out_str = 'Step %d: loss = %.6f (%.3f from loss, %.3f from l1) -- (%.3f sec)' % (step, loss_val, bl, l1, duration)
         # print(out_str)
         if step % summary_iters == 0 or is_overfitting:
             print(out_str)
