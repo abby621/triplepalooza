@@ -36,8 +36,8 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     log_dir = './output/traffickcam/logs'
     train_filename = './inputs/traffickcam/train_equal_no_duplicates.txt'
     mean_file = './models/traffickcam/tc_mean_im.npy'
-    # pretrained_net = os.path.join(ckpt_dir,'checkpoint-201801111434_lr1e-05_outputSz128_margin0pt3-199999')
-    pretrained_net = None
+    pretrained_net = os.path.join(ckpt_dir,'checkpoint-nobatchnorm-2018_02_14_1012_lr0pt0001_outputSz256_margin0pt3_l1wgt1e-05-6393')
+    # pretrained_net = None
     img_size = [256, 256]
     crop_size = [224, 224]
     num_iters = 200000
@@ -262,6 +262,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     # loss = tf.reduce_sum(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))/batch_size
     base_loss = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
     l1_loss = tf.multiply(l1_weight, tf.reduce_sum(tf.abs(feat)))
+    l1_loss = l1_loss + tf.multiply(l1_weight, tf.reduce_sum(tf.reduce_mean(tf.reduce_sum(tf.abs(tf.reshape(convOut,[convOut.shape[0],convOut.shape[1]*convOut.shape[2],convOut.shape[3]])),axis=1),axis=1)))
     loss = base_loss + l1_loss
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
