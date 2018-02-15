@@ -216,11 +216,11 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     #     final_batch = tf.add(tf.subtract(masked_batch,repMeanIm),noise)
 
     print("Preparing network...")
-    with slim.arg_scope(resnet_v2.resnet_arg_scope(is_training=True, use_batch_norm=False, updates_collections=None, batch_norm_decay=.7, fused=True)):
-        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=True, scope='resnet')
+    with slim.arg_scope(resnet_v2.resnet_arg_scope(is_training=False, use_batch_norm=False, updates_collections=None, batch_norm_decay=.7, fused=True)):
+        _, layers = resnet_v2.resnet_v2_50(final_batch, use_batch_norm=False,num_classes=output_size, is_training=False, scope='resnet')
 
     feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
-    convOut = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet/postnorm/Relu:0"))
+    convOut = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet/block4/unit_3/bottleneck_v2/add:0"))
     # feat = tf.squeeze(tf.nn.l2_normalize(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"),3))
     # weights = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/logits/weights:0"))
 
@@ -263,7 +263,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     # loss = tf.reduce_sum(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))/batch_size
     base_loss = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
     l1_loss = tf.multiply(l1_weight, tf.reduce_sum(tf.abs(feat)))
-    l1_loss = l1_loss + tf.multiply(l1_weight, tf.reduce_sum(tf.reduce_mean(tf.reduce_sum(tf.abs(tf.reshape(convOut,[convOut.shape[0],convOut.shape[1]*convOut.shape[2],convOut.shape[3]])),axis=1),axis=1)))
+    l1_loss = l1_loss + tf.multiply(l1_weight/10000, tf.reduce_sum(tf.reduce_mean(tf.reduce_sum(tf.abs(tf.reshape(convOut,[convOut.shape[0],convOut.shape[1]*convOut.shape[2],convOut.shape[3]])),axis=1),axis=1)))
     loss = base_loss + l1_loss
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
