@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-# python mars_triplepalooza.py margin output_size learning_rate is_overfitting l1_weight bn_decay
-# python tc_triplepalooza.py .3 120 128 .0001 False '3' 0.05 0.9
+# python tc_finetune.py margin output_size learning_rate is_overfitting l1_weight bn_decay
+# python tc_finetune.py .3 120 128 .0001 False '3' 0.05 0.9
 """
 
 import tensorflow as tf
@@ -43,7 +43,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     num_iters = 200000
     summary_iters = 100
     save_iters = 5000
-    featLayer = 'resnet/logits'
+    featLayer = 'resnet_v2_50/logits'
 
     is_training = True
     if is_overfitting.lower()=='true':
