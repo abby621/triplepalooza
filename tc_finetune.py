@@ -22,7 +22,7 @@ import signal
 import time
 import sys
 
-def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_weight):
+def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_weight,bn_decay):
     def handler(signum, frame):
         print 'Saving checkpoint before closing'
         pretrained_net = os.path.join(ckpt_dir, 'checkpoint-nobatchnorm-'+param_str)
@@ -32,7 +32,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
 
     signal.signal(signal.SIGINT, handler)
 
-    ckpt_dir = './output/traffickcam/ckpts'
+    ckpt_dir = './output/traffickcam/ckpts/finetuning'
     log_dir = './output/traffickcam/logs'
     train_filename = './inputs/traffickcam/train_equal_no_duplicates.txt'
     mean_file = './models/traffickcam/tc_mean_im.npy'
@@ -56,6 +56,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     output_size = int(output_size)
     learning_rate = float(learning_rate)
     l1_weight = float(l1_weight)
+    batch_norm_decay = float(bn_decay)
 
     if batch_size%30 != 0:
         print 'Batch size must be divisible by 30!'
@@ -68,7 +69,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     numClasses = len(train_data.files)
     numIms = np.sum([len(train_data.files[idx]) for idx in range(0,numClasses)])
     datestr = datetime.now().strftime("%Y_%m_%d_%H%M")
-    param_str = datestr+'_lr'+str(learning_rate).replace('.','pt')+'_outputSz'+str(output_size)+'_margin'+str(margin).replace('.','pt')+'_l1wgt'+str(l1_weight).replace('.','pt')
+    param_str = datestr+'_lr'+str(learning_rate).replace('.','pt')+'_outputSz'+str(output_size)+'_margin'+str(margin).replace('.','pt')+'_l1wgt'+str(l1_weight).replace('.','pt')+'_bndecay'+str(batch_norm_decay).replace('.','pt')
     logfile_path = os.path.join(log_dir,param_str+'_train.txt')
     train_log_file = open(logfile_path,'a')
     print '------------'
@@ -216,8 +217,8 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     #     final_batch = tf.add(tf.subtract(masked_batch,repMeanIm),noise)
 
     print("Preparing network...")
-    with slim.arg_scope(resnet_v2.resnet_arg_scope(is_training=False, use_batch_norm=False, updates_collections=None, batch_norm_decay=.7, fused=True)):
-        _, layers = resnet_v2.resnet_v2_50(final_batch, use_batch_norm=False,num_classes=output_size, is_training=False, scope='resnet')
+    with slim.arg_scope(resnet_v2.resnet_arg_scope(updates_collections=None, batch_norm_decay=batch_norm_decay)):
+        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=True)
 
     variables_to_restore = []
     for var in slim.get_model_variables():
@@ -228,7 +229,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
             variables_to_restore.append(var)
 
     feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
-    convOut = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet/block4/unit_3/bottleneck_v2/add:0"))
+    convOut = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/block4/unit_3/bottleneck_v2/add:0"))
     # feat = tf.squeeze(tf.nn.l2_normalize(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"),3))
     # weights = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/logits/weights:0"))
 
@@ -342,7 +343,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
 if __name__ == "__main__":
     args = sys.argv
     if len(args) < 6:
-        print 'Expected four input parameters: margin, output_size, learning_rate, is_overfitting, whichGPU, l1_weight'
+        print 'Expected four input parameters: margin, output_size, learning_rate, is_overfitting, whichGPU, l1_weight,bn_decay'
     margin = args[1]
     batch_size = args[2]
     output_size = args[3]
@@ -350,4 +351,5 @@ if __name__ == "__main__":
     is_overfitting = args[5]
     whichGPU = args[6]
     l1_weight = args[7]
-    main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_weight)
+    bn_decay = args[8]
+    main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_weight,bn_decay)
