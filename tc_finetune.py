@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-# python mars_triplepalooza.py margin output_size learning_rate is_overfitting l1_weight
-# python tc_triplepalooza.py .3 120 128 .0001 False '3' 0.05
+# python mars_triplepalooza.py margin output_size learning_rate is_overfitting l1_weight bn_decay
+# python tc_triplepalooza.py .3 120 128 .0001 False '3' 0.05 0.9
 """
 
 import tensorflow as tf
