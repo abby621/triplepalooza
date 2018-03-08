@@ -37,7 +37,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     train_filename = './inputs/traffickcam/train_equal_no_duplicates.txt'
     mean_file = './models/traffickcam/tc_mean_im.npy'
     # pretrained_net = '/project/focus/abby/triplepalooza/models/ilsvrc-2012/resnet_v2_50.ckpt'
-    pretrained_net = './output/traffickcam/ckpts/finetuning/checkpoint-2018_02_22_1155_lr0pt0001_outputSz128_margin0pt3_l1wgt0pt05_bndecay0pt9-2297'
+    pretrained_net = './output/traffickcam/ckpts/finetuning/final-2018_02_22_1617_lr0pt0001_outputSz128_margin0pt3_l1wgt0pt05_bndecay0pt9-199999'
 
     img_size = [256, 256]
     crop_size = [224, 224]
