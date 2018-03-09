@@ -298,6 +298,8 @@ class VanillaTripletSet:
 
             selectedClasses += 1
 
+        np.random.shuffle(classes)
+
         batch = np.zeros([self.batchSize, self.crop_size[0], self.crop_size[1], 3])
         labels = np.zeros([self.batchSize],dtype='int')
         ims = []
@@ -397,10 +399,9 @@ class MixedSetTripletSet(VanillaTripletSet):
 
             if num_traffickcam > 5 and num_expedia > 5:
                 classes[selectedClasses] = cls
+                selectedClasses += 1
             else:
                 badClasses.append(cls)
-
-            selectedClasses += 1
 
         np.random.shuffle(classes)
 
