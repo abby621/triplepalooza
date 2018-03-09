@@ -230,10 +230,10 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_w
     posFeats = tf.gather(feat, posIdx)
     negFeats = tf.gather(feat, negIdx)
 
-    dPos = tf.reduce_sum(tf.square(posFeats - ancFeats), 1)
-    dNeg = tf.reduce_sum(tf.square(negFeats - ancFeats), 1)
+    dPos = tf.reshape(tf.reduce_sum(tf.square(posFeats - ancFeats), 1),(4,batch_size/9))
+    dNeg = tf.reshape(tf.reduce_sum(tf.square(negFeats - ancFeats), 1),(4,batch_size/9))
 
-    loss = tf.maximum(0., margin + tf.reduce_min(dPos) - tf.reduce_min(dNeg))
+    loss = tf.maximum(0., margin + tf.reduce_min(dPos,axis=0) - tf.reduce_min(dNeg,axis=0))
     loss = tf.reduce_mean(loss)
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
