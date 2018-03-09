@@ -430,15 +430,15 @@ class MixedSetTripletSet(VanillaTripletSet):
             else:
                 pos_ims = [f for f in self.files[posClass] if 'expedia' in f and f != anchorIm]
 
+            np.random.shuffle(pos_ims)
+
             used = []
             for idx in range(4):
-                im = random.choice(pos_ims)
+                im = np.random.choice(pos_ims)
                 posImg = self.getProcessedImage(im)
-                while posImg is None or im in used:
-                    posIm = np.random.choice(pos_ims)
-                    while im == anchorIm or im in used:
-                        im = np.random.choice(self.files[posClass][1:])
-                    posImg = self.getProcessedImage(posIm)
+                while posImg is None or im in used or im == anchorIm:
+                    im = np.random.choice(pos_ims)
+                    posImg = self.getProcessedImage(im)
 
                 used.append(im)
                 batch[ctr,:,:,:] = posImg
