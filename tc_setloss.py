@@ -228,7 +228,7 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_w
 
     ancFeats = tf.reshape(tf.tile(tf.expand_dims(tf.gather(feat, idx),1),(1,4,1)),[batch_size/9*4,output_size])
     posFeats = tf.gather(feat, posIdx)
-    negFeats = tf.gather(feat, tf.add(idx,2))
+    negFeats = tf.gather(feat, negIdx)
 
     dPos = tf.reduce_sum(tf.square(posFeats - ancFeats), 1)
     dNeg = tf.reduce_sum(tf.square(negFeats - ancFeats), 1)
