@@ -431,9 +431,10 @@ class MixedSetTripletSet(VanillaTripletSet):
                 pos_ims = [f for f in self.files[posClass] if 'expedia' in f and f != anchorIm]
 
             used = []
-            for im in pos_ims:
+            for idx in range(4):
+                im = random.choice(pos_ims)
                 posImg = self.getProcessedImage(im)
-                while posImg is None:
+                while posImg is None or im in used:
                     posIm = np.random.choice(pos_ims)
                     while im == anchorIm or im in used:
                         im = np.random.choice(self.files[posClass][1:])
