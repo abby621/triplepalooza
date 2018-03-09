@@ -273,9 +273,9 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_w
         end_time = time.time()
         duration = end_time-start_time
         out_str = 'Step %d: loss = %.6f -- (%.3f sec)' % (step, loss_val, duration)
-        # print(out_str)
+        print(out_str)
         if step % summary_iters == 0:
-            print(out_str)
+            # print(out_str)
             train_log_file.write(out_str+'\n')
         # Update the events file.
         # summary_str = sess.run(summary_op)
