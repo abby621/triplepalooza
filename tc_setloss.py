@@ -226,7 +226,7 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_w
     posIdx = tf.reshape(tf.tile(tf.expand_dims(idx,1),[1,4]),[4*batch_size/9]) + tf.tile(tf.range(1,5),[batch_size/9])
     negIdx = tf.reshape(tf.tile(tf.expand_dims(idx,1),[1,4]),[4*batch_size/9]) + tf.tile(tf.range(5,9),[batch_size/9])
 
-    ancFeats = tf.gather(feat, idx)
+    ancFeats = tf.reshape(tf.tile(tf.expand_dims(tf.gather(feat, idx),1),(1,4,1)),[batch_size/9*4,output_size])
     posFeats = tf.gather(feat, posIdx)
     negFeats = tf.gather(feat, tf.add(idx,2))
 
