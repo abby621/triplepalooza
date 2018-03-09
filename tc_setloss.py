@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 # python tc_setloss.py margin batch_size output_size learning_rate whichGPU is_finetuning l1_weight bn_decay
-# chop off last layer: python tc_setloss.py .3 120 128 .0001 '3' True 0.05 0.9
-# don't chop off last layer: python tc_setloss.py .3 120 128 .0001 '3' False 0.05 0.9
+# chop off last layer: python tc_setloss.py .3 126 128 .0001 '3' True 0.05 0.9
+# don't chop off last layer: python tc_setloss.py .3 126 128 .0001 '3' False 0.05 0.9
 """
 
 import tensorflow as tf
@@ -230,8 +230,8 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_w
     posFeats = tf.gather(feat, posIdx)
     negFeats = tf.gather(feat, tf.add(idx,2))
 
-    dPos = tf.reduce_sum(tf.square(posFeats - ancFeat), 1)
-    dNeg = tf.reduce_sum(tf.square(negFeats - ancFeat), 1)
+    dPos = tf.reduce_sum(tf.square(posFeats - ancFeats), 1)
+    dNeg = tf.reduce_sum(tf.square(negFeats - ancFeats), 1)
 
     loss = tf.maximum(0., margin + tf.reduce_min(dPos) - tf.reduce_min(dNeg))
     loss = tf.reduce_mean(loss)
