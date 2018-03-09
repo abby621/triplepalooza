@@ -226,12 +226,13 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_w
     posIdx = tf.reshape(tf.tile(tf.expand_dims(idx,1),[1,4]),[4*batch_size/9]) + tf.tile(tf.range(1,5),[batch_size/9])
     negIdx = tf.reshape(tf.tile(tf.expand_dims(idx,1),[1,4]),[4*batch_size/9]) + tf.tile(tf.range(5,9),[batch_size/9])
 
-    ancFeats = tf.reshape(tf.tile(tf.expand_dims(tf.gather(feat, idx),1),(1,4,1)),[batch_size/9*4,output_size])
+    ancFeat = tf.expand_dims(tf.gather(feat, idx),1)
+    ancFeats = tf.reshape(tf.tile(ancFeat,(1,4,1)),[batch_size/9*4,output_size])
     posFeats = tf.gather(feat, posIdx)
     negFeats = tf.gather(feat, negIdx)
 
-    dPos = tf.reshape(tf.reduce_sum(tf.square(posFeats - ancFeats), 1),(4,batch_size/9))
-    dNeg = tf.reshape(tf.reduce_sum(tf.square(negFeats - ancFeats), 1),(4,batch_size/9))
+    dPos = tf.reshape(tf.reduce_sum(tf.square(posFeats - ancFeats), 1),(batch_size/9,4))
+    dNeg = tf.reshape(tf.reduce_sum(tf.square(negFeats - ancFeats), 1),(batch_size/9,4))
 
     loss = tf.maximum(0., margin + tf.reduce_min(dPos,axis=0) - tf.reduce_min(dNeg,axis=0))
     loss = tf.reduce_mean(loss)
