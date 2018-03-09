@@ -43,7 +43,7 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_w
     img_size = [256, 256]
     crop_size = [224, 224]
     num_iters = 200000
-    summary_iters = 100
+    summary_iters = 10
     save_iters = 5000
     featLayer = 'resnet_v2_50/logits'
 
@@ -294,9 +294,6 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_w
 
     sess.close()
     train_log_file.close()
-
-      #  coord.request_stop()
-       # coord.join(threads)
 
 if __name__ == "__main__":
     args = sys.argv
