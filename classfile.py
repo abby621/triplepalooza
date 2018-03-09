@@ -425,22 +425,24 @@ class MixedSetTripletSet(VanillaTripletSet):
             ims.append(anchorIm)
             ctr += 1
 
-            for pos_idx in range(4):
-                posIm = np.random.choice(self.files[posClass][1:])
-                if self.isMixed:
-                    while ('expedia' in anchorIm and 'expedia' in posIm) or ('expedia' not in anchorIm and 'expedia' not in posIm):
-                        posIm = np.random.choice(self.files[posClass][1:])
+            if 'expedia' in anchorIm:
+                pos_ims = [f for f in self.files[posClass] if 'expedia' not in f and f != anchorIm]
+            else:
+                pos_ims = [f for f in self.files[posClass] if 'expedia' in f and f != anchorIm]
 
-                posImg = self.getProcessedImage(posIm)
+            used = []
+            for im in pos_ims:
+                posImg = self.getProcessedImage(im)
                 while posImg is None:
-                    posIm = np.random.choice(self.files[posClass][1:])
-                    while posIm == anchorIm or ('expedia' in anchorIm and 'expedia' in posIm) or ('expedia' not in anchorIm and 'expedia' not in posIm):
-                        posIm = np.random.choice(self.files[posClass][1:])
+                    posIm = np.random.choice(pos_ims)
+                    while im == anchorIm or im in used:
+                        im = np.random.choice(self.files[posClass][1:])
                     posImg = self.getProcessedImage(posIm)
 
+                used.append(im)
                 batch[ctr,:,:,:] = posImg
                 labels[ctr] = posClass
-                ims.append(posIm)
+                ims.append(im)
                 ctr += 1
 
             for neg_idx in range(4):
