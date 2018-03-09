@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-# python tc_finetune.py margin output_size learning_rate is_overfitting l1_weight bn_decay
-# python tc_finetune.py .3 120 128 .0001 False '3' 0.05 0.9
+# python tc_finetune.py margin batch_size output_size learning_rate whichGPU is_finetuning l1_weight bn_decay
+# chop off last layer: python tc_finetune.py .3 120 128 .0001 '3' True 0.05 0.9
+# don't chop off last layer: python tc_finetune.py .3 120 128 .0001 '3' False 0.05 0.9
 """
 
 import tensorflow as tf
@@ -22,7 +23,7 @@ import signal
 import time
 import sys
 
-def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_weight,bn_decay):
+def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_weight,bn_decay):
     def handler(signum, frame):
         print 'Saving checkpoint before closing'
         pretrained_net = os.path.join(ckpt_dir, 'checkpoint-'+param_str)
@@ -47,10 +48,6 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     featLayer = 'resnet_v2_50/logits'
 
     is_training = True
-    if is_overfitting.lower()=='true':
-        is_overfitting = True
-    else:
-        is_overfitting = False
 
     margin = float(margin)
     batch_size = int(batch_size)
@@ -66,7 +63,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     num_pos_examples = batch_size/30
 
     # Create data "batcher"
-    train_data = CombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training, isOverfitting=is_overfitting)
+    train_data = CombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training)
     numClasses = len(train_data.files)
     numIms = np.sum([len(train_data.files[idx]) for idx in range(0,numClasses)])
     datestr = datetime.now().strftime("%Y_%m_%d_%H%M")
@@ -86,8 +83,6 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     train_log_file.write('Output size: '+str(output_size)+'\n')
     print 'Learning rate: ',learning_rate
     train_log_file.write('Learning rate: '+str(learning_rate)+'\n')
-    print 'Overfitting?: ',is_overfitting
-    train_log_file.write('Is overfitting?'+str(is_overfitting)+'\n')
     print 'Logging to: ',logfile_path
     train_log_file.write('Param_str: '+param_str+'\n')
     train_log_file.write('----------------\n')
@@ -224,7 +219,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     variables_to_restore = []
     for var in slim.get_model_variables():
         excluded = False
-        if var.op.name.startswith('resnet_v2_50/logits') or 'momentum' in var.op.name.lower():
+        if is_finetuning.lower() == 'true' and var.op.name.startswith('resnet_v2_50/logits') or 'momentum' in var.op.name.lower():
             excluded = True
         if not excluded:
             variables_to_restore.append(var)
@@ -315,7 +310,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
         duration = end_time-start_time
         out_str = 'Step %d: loss = %.6f (%.6f from loss, %.6f from l1) -- (%.3f sec)' % (step, loss_val, bl, l1, duration)
         # print(out_str)
-        if step % summary_iters == 0 or is_overfitting:
+        if step % summary_iters == 0:
             print(out_str)
             train_log_file.write(out_str+'\n')
         # Update the events file.
@@ -343,14 +338,14 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
 
 if __name__ == "__main__":
     args = sys.argv
-    if len(args) < 6:
-        print 'Expected four input parameters: margin, output_size, learning_rate, is_overfitting, whichGPU, l1_weight,bn_decay'
+    if len(args) < 9:
+        print 'Expected input parameters: margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_weight,bn_decay'
     margin = args[1]
     batch_size = args[2]
     output_size = args[3]
     learning_rate = args[4]
-    is_overfitting = args[5]
-    whichGPU = args[6]
+    whichGPU = args[5]
+    is_finetuning = args[6]
     l1_weight = args[7]
     bn_decay = args[8]
-    main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_weight,bn_decay)
+    main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_weight,bn_decay)
