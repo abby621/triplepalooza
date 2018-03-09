@@ -380,6 +380,85 @@ class VanillaTripletSet:
         img = img[top:(top+self.crop_size[0]),left:(left+self.crop_size[1]),:]
         return img
 
+class MixedSetTripletSet(VanillaTripletSet):
+    def getBatch(self):
+        numClasses = self.batchSize/9
+        classes = np.zeros(numClasses,dtype=np.int)
+        badClasses = []
+        selectedClasses = 0
+        while selectedClasses < numClasses:
+            cls = np.random.choice(self.classes)
+            while cls in classes or cls in badClasses:
+                cls = np.random.choice(self.classes)
+
+            files = self.files[cls]
+            num_traffickcam = np.sum([1 for fl in files if 'resized_traffickcam' in fl])
+            num_expedia = np.sum([1 for fl in files if 'resized_expedia' in fl])
+
+            if num_traffickcam > 5 and num_expedia > 5:
+                classes[selectedClasses] = cls
+            else:
+                badClasses.append(cls)
+
+            selectedClasses += 1
+
+        batch = np.zeros([self.batchSize, self.crop_size[0], self.crop_size[1], 3])
+        labels = np.zeros([self.batchSize],dtype='int')
+        ims = []
+        dont_use_flag = np.zeros([self.batchSize],dtype='bool')
+
+        ctr = 0
+        for posClass in classes:
+            random.shuffle(self.files[posClass])
+            anchorIm = self.files[posClass][0]
+            anchorImg = self.getProcessedImage(anchorIm)
+            while anchorImg is None:
+                random.shuffle(self.files[posClass])
+                anchorIm = self.files[posClass][0]
+                anchorImg = self.getProcessedImage(anchorIm)
+
+            batch[ctr,:,:,:] = anchorImg
+            labels[ctr] = posClass
+            ims.append(anchorIm)
+            ctr += 1
+
+            for pos_idx in range(4):
+                posIm = np.random.choice(self.files[posClass][1:])
+                if self.isMixed:
+                    while ('expedia' in anchorIm and 'expedia' in posIm) or ('expedia' not in anchorIm and 'expedia' not in posIm):
+                        posIm = np.random.choice(self.files[posClass][1:])
+
+                posImg = self.getProcessedImage(posIm)
+                while posImg is None:
+                    posIm = np.random.choice(self.files[posClass][1:])
+                    while posIm == anchorIm or ('expedia' in anchorIm and 'expedia' in posIm) or ('expedia' not in anchorIm and 'expedia' not in posIm):
+                        posIm = np.random.choice(self.files[posClass][1:])
+                    posImg = self.getProcessedImage(posIm)
+
+                batch[ctr,:,:,:] = posImg
+                labels[ctr] = posClass
+                ims.append(posIm)
+                ctr += 1
+
+            for neg_idx in range(4):
+                negClass = np.random.choice(self.classes)
+                while negClass == posClass:
+                    negClass = np.random.choice(self.classes)
+
+                random.shuffle(self.files[negClass])
+                negIm = np.random.choice(self.files[negClass])
+                negImg = self.getProcessedImage(negIm)
+                while negImg is None:
+                    negIm = np.random.choice(self.files[negClass])
+                    negImg = self.getProcessedImage(negIm)
+
+                batch[ctr,:,:,:] = negImg
+                labels[ctr] = negClass
+                ims.append(negIm)
+                ctr += 1
+
+        return batch, labels, ims
+
 class NonTripletSet:
     def __init__(self, image_list, mean_file, image_size, crop_size, batchSize=100, isTraining=True):
         self.image_size = image_size
