@@ -37,8 +37,8 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_w
     log_dir = './output/traffickcam/logs'
     train_filename = './inputs/traffickcam/train.txt'
     mean_file = './models/traffickcam/tc_mean_im.npy'
-    # pretrained_net = '/project/focus/abby/triplepalooza/models/ilsvrc-2012/resnet_v2_50.ckpt'
-    pretrained_net = './output/traffickcam/ckpts/finetuning/checkpoint-2018_03_08_1004_lr1e-06_outputSz128_margin0pt4_l1wgt0pt05_bndecay0pt9-20880'
+    pretrained_net = '/project/focus/abby/triplepalooza/models/ilsvrc-2012/resnet_v2_50.ckpt'
+    # pretrained_net = './output/traffickcam/ckpts/finetuning/checkpoint-2018_03_08_1004_lr1e-06_outputSz128_margin0pt4_l1wgt0pt05_bndecay0pt9-20880'
     img_size = [256, 256]
     crop_size = [224, 224]
     num_iters = 200000
