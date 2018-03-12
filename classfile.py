@@ -134,6 +134,7 @@ class CombinatorialTripletSet:
             left = int(round((self.image_size[1] - self.crop_size[1])/2))
 
         img = img[top:(top+self.crop_size[0]),left:(left+self.crop_size[1]),:]
+        img = img - self.meanImage
 
         return img
 
@@ -380,6 +381,8 @@ class VanillaTripletSet:
             left = int(round((self.image_size[1] - self.crop_size[1])/2))
 
         img = img[top:(top+self.crop_size[0]),left:(left+self.crop_size[1]),:]
+        img = img - self.meanImage
+
         return img
 
 class MixedSetTripletSet(VanillaTripletSet):
@@ -529,6 +532,7 @@ class NonTripletSet:
             left = int(round((self.image_size[1] - self.crop_size[1])/2))
 
         img = img[top:(top+self.crop_size[0]),left:(left+self.crop_size[1]),:]
+        img = img - self.meanImage
         return img
 
 class MarsNonTripletSet(NonTripletSet):
