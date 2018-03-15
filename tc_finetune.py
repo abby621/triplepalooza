@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-# python tc_finetune.py margin batch_size output_size learning_rate whichGPU is_finetuning l1_weight bn_decay
-# chop off last layer: python tc_finetune.py .3 120 128 .0001 '3' True 0.05 0.9
-# don't chop off last layer: python tc_finetune.py .3 120 128 .0001 '3' False 0.05 0.9
+# python tc_finetune.py margin batch_size output_size learning_rate whichGPU is_finetuning bn_decay pretrained_net
+# chop off last layer: python tc_finetune.py .3 120 128 .0001 '3' True 0.9 '/pless_nfs/home/datasets/traffickcam/resnet_v2_50.ckpt'
+# don't chop off last layer: python tc_finetune.py .3 120 128 .0001 '3' False 0.9 '/pless_nfs/home/datasets/traffickcam/resnet_v2_50.ckpt'
 """
 
 import tensorflow as tf
@@ -23,7 +23,7 @@ import signal
 import time
 import sys
 
-def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_weight,bn_decay):
+def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,bn_decay,pretrained_net):
     def handler(signum, frame):
         print 'Saving checkpoint before closing'
         pretrained_net = os.path.join(ckpt_dir, 'checkpoint-'+param_str)
@@ -37,8 +37,6 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_w
     log_dir = './output/traffickcam/logs'
     train_filename = './inputs/traffickcam/train_equal_no_duplicates.txt'
     mean_file = './models/traffickcam/tc_mean_im.npy'
-    # pretrained_net = '/project/focus/abby/triplepalooza/models/ilsvrc-2012/resnet_v2_50.ckpt'
-    pretrained_net = './output/traffickcam/ckpts/finetuning/checkpoint-2018_03_09_1354_lr1e-07_outputSz128_margin0pt4_l1wgt0pt05_bndecay0pt9-73540'
 
     img_size = [256, 256]
     crop_size = [224, 224]
@@ -53,7 +51,6 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_w
     batch_size = int(batch_size)
     output_size = int(output_size)
     learning_rate = float(learning_rate)
-    l1_weight = float(l1_weight)
     batch_norm_decay = float(bn_decay)
 
     if batch_size%30 != 0:
@@ -67,7 +64,7 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_w
     numClasses = len(train_data.files)
     numIms = np.sum([len(train_data.files[idx]) for idx in range(0,numClasses)])
     datestr = datetime.now().strftime("%Y_%m_%d_%H%M")
-    param_str = datestr+'_lr'+str(learning_rate).replace('.','pt')+'_outputSz'+str(output_size)+'_margin'+str(margin).replace('.','pt')+'_l1wgt'+str(l1_weight).replace('.','pt')+'_bndecay'+str(batch_norm_decay).replace('.','pt')
+    param_str = datestr+'_lr'+str(learning_rate).replace('.','pt')+'_outputSz'+str(output_size)+'_margin'+str(margin).replace('.','pt')+'_bndecay'+str(batch_norm_decay).replace('.','pt')
     logfile_path = os.path.join(log_dir,param_str+'_train.txt')
     train_log_file = open(logfile_path,'a')
     print '------------'
@@ -266,11 +263,7 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_w
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
     # loss = tf.reduce_sum(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))/batch_size
-    base_loss = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
-    # l1_loss = tf.multiply(l1_weight, tf.reduce_sum(tf.abs(feat)))
-    # l1_loss = l1_loss + tf.multiply(l1_weight/10000, tf.reduce_sum(tf.reduce_mean(tf.reduce_sum(tf.abs(tf.reshape(convOut,[convOut.shape[0],convOut.shape[1]*convOut.shape[2],convOut.shape[3]])),axis=1),axis=1)))
-    l1_loss = tf.constant(0.0)
-    loss = base_loss + l1_loss
+    loss = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
@@ -305,10 +298,10 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_w
         start_time = time.time()
         batch, labels, ims = train_data.getBatch()
         people_masks = train_data.getPeopleMasks()
-        _, loss_val, bl, l1 = sess.run([train_op, loss, base_loss, l1_loss], feed_dict={image_batch: batch, people_mask_batch: people_masks,label_batch: labels})
+        _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, people_mask_batch: people_masks,label_batch: labels})
         end_time = time.time()
         duration = end_time-start_time
-        out_str = 'Step %d: loss = %.6f (%.6f from loss, %.6f from l1) -- (%.3f sec)' % (step, loss_val, bl, l1, duration)
+        out_str = 'Step %d: loss = %.6f -- (%.3f sec)' % (step, loss_val,duration)
         # print(out_str)
         if step % summary_iters == 0:
             print(out_str)
@@ -339,13 +332,13 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_w
 if __name__ == "__main__":
     args = sys.argv
     if len(args) < 9:
-        print 'Expected input parameters: margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_weight,bn_decay'
+        print 'Expected input parameters: margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,bn_decay'
     margin = args[1]
     batch_size = args[2]
     output_size = args[3]
     learning_rate = args[4]
     whichGPU = args[5]
     is_finetuning = args[6]
-    l1_weight = args[7]
-    bn_decay = args[8]
-    main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,l1_weight,bn_decay)
+    bn_decay = args[7]
+    pretrained_net = args[8]
+    main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,bn_decay,pretrained_net)
