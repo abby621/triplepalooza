@@ -35,7 +35,7 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,bn_d
 
     ckpt_dir = './output/traffickcam/ckpts/finetuning'
     log_dir = './output/traffickcam/logs'
-    train_filename = './inputs/traffickcam/train_equal_no_duplicates.txt'
+    train_filename = './inputs/traffickcam/train.txt'
     mean_file = './models/traffickcam/tc_mean_im.npy'
 
     img_size = [256, 256]
@@ -137,22 +137,8 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,bn_d
     sorted_inds = tf.nn.top_k(-shuffled_inds,sorted=True,k=batch_size).indices
     cropped_batch = tf.gather(tf.image.crop_and_resize(rotated_batch,all_boxes,all_inds,crop_size),sorted_inds)
 
-    # insert people masks
-    num_people_masks = int(batch_size*percent_people)
-    mask_inds = np.random.choice(np.arange(0,batch_size),num_people_masks,replace=False)
-
-    start_masks = np.zeros([batch_size, crop_size[0], crop_size[0], 1],dtype='float32')
-    start_masks[mask_inds,:,:,:] = 1
-
-    inv_start_masks = np.ones([batch_size, crop_size[0], crop_size[0], 1],dtype='float32')
-    inv_start_masks[mask_inds,:,:,:] = 0
-
-    masked_masks = tf.add(inv_start_masks,tf.cast(tf.multiply(people_mask_batch,start_masks),dtype=tf.float32))
-    masked_masks2 = tf.cast(tf.tile(masked_masks,[1, 1, 1, 3]),dtype=tf.float32)
-    masked_batch = tf.multiply(masked_masks,cropped_batch)
-
     # apply different filters
-    flt_image = convert_image_dtype(masked_batch, dtypes.float32)
+    flt_image = convert_image_dtype(cropped_batch, dtypes.float32)
 
     num_to_filter = int(batch_size*percent_filters)
 
@@ -199,7 +185,21 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,bn_d
     # after we've doctored everything, we need to remember to subtract off the mean
     repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
     noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 1], mean=0.0, stddev=0.0025, dtype=tf.float32)
-    final_batch = tf.add(tf.subtract(filtered_batch,repMeanIm),noise)
+    mean_substracted_batch = tf.add(tf.subtract(filtered_batch,repMeanIm),noise)
+
+    # insert people masks
+    num_people_masks = int(batch_size*percent_people)
+    mask_inds = np.random.choice(np.arange(0,batch_size),num_people_masks,replace=False)
+
+    start_masks = np.zeros([batch_size, crop_size[0], crop_size[0], 1],dtype='float32')
+    start_masks[mask_inds,:,:,:] = 1
+
+    inv_start_masks = np.ones([batch_size, crop_size[0], crop_size[0], 1],dtype='float32')
+    inv_start_masks[mask_inds,:,:,:] = 0
+
+    masked_masks = tf.add(inv_start_masks,tf.cast(tf.multiply(people_mask_batch,start_masks),dtype=tf.float32))
+    masked_masks2 = tf.cast(tf.tile(masked_masks,[1, 1, 1, 3]),dtype=tf.float32)
+    final_batch = tf.multiply(masked_masks,mean_substracted_batch)
 
     # after we've doctored everything, we need to remember to subtract off the mean
     # repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
