@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-# python tc_finetune.py margin batch_size output_size learning_rate whichGPU is_finetuning bn_decay pretrained_net
-# chop off last layer: python tc_finetune.py .3 120 128 .0001 '3' True 0.9 '/pless_nfs/home/datasets/traffickcam/resnet_v2_50.ckpt'
-# don't chop off last layer: python tc_finetune.py .3 120 128 .0001 '3' False 0.9 '/pless_nfs/home/datasets/traffickcam/resnet_v2_50.ckpt'
+# python tc_finetune.py margin batch_size output_size learning_rate whichGPU is_finetuning pretrained_net
+# chop off last layer: python tc_finetune.py .3 120 128 .0001 '3' True '/pless_nfs/home/datasets/traffickcam/resnet_v2_50.ckpt'
+# don't chop off last layer: python tc_finetune.py .3 120 128 .0001 '3' False '/pless_nfs/home/datasets/traffickcam/resnet_v2_50.ckpt'
 """
 
 import tensorflow as tf
@@ -51,7 +51,6 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,bn_d
     batch_size = int(batch_size)
     output_size = int(output_size)
     learning_rate = float(learning_rate)
-    batch_norm_decay = float(bn_decay)
 
     if batch_size%30 != 0:
         print 'Batch size must be divisible by 30!'
@@ -64,7 +63,7 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,bn_d
     numClasses = len(train_data.files)
     numIms = np.sum([len(train_data.files[idx]) for idx in range(0,numClasses)])
     datestr = datetime.now().strftime("%Y_%m_%d_%H%M")
-    param_str = datestr+'_lr'+str(learning_rate).replace('.','pt')+'_outputSz'+str(output_size)+'_margin'+str(margin).replace('.','pt')+'_bndecay'+str(batch_norm_decay).replace('.','pt')
+    param_str = datestr+'_lr'+str(learning_rate).replace('.','pt')+'_outputSz'+str(output_size)+'_margin'+str(margin).replace('.','pt')
     logfile_path = os.path.join(log_dir,param_str+'_train.txt')
     train_log_file = open(logfile_path,'a')
     print '------------'
@@ -182,11 +181,6 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,bn_d
 
     filtered_batch = clip_ops.clip_by_value(adjusted,0.0,255.0)
 
-    # after we've doctored everything, we need to remember to subtract off the mean
-    repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
-    noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 1], mean=0.0, stddev=0.0025, dtype=tf.float32)
-    mean_substracted_batch = tf.add(tf.subtract(filtered_batch,repMeanIm),noise)
-
     # insert people masks
     num_people_masks = int(batch_size*percent_people)
     mask_inds = np.random.choice(np.arange(0,batch_size),num_people_masks,replace=False)
@@ -199,18 +193,15 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,bn_d
 
     masked_masks = tf.add(inv_start_masks,tf.cast(tf.multiply(people_mask_batch,start_masks),dtype=tf.float32))
     masked_masks2 = tf.cast(tf.tile(masked_masks,[1, 1, 1, 3]),dtype=tf.float32)
-    final_batch = tf.multiply(masked_masks,mean_substracted_batch)
+    masked_batch = tf.multiply(masked_masks,filtered_batch)
 
     # after we've doctored everything, we need to remember to subtract off the mean
-    # repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
-    # if train_data.isOverfitting:
-    #     final_batch = tf.subtract(masked_batch,repMeanIm)
-    # else:
-    #     noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 1], mean=0.0, stddev=0.0025, dtype=tf.float32)
-    #     final_batch = tf.add(tf.subtract(masked_batch,repMeanIm),noise)
+    repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
+    noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 1], mean=0.0, stddev=0.0025, dtype=tf.float32)
+    final_batch = tf.add(tf.subtract(masked_batch,repMeanIm),noise)
 
     print("Preparing network...")
-    with slim.arg_scope(resnet_v2.resnet_arg_scope(updates_collections=None, batch_norm_decay=batch_norm_decay)):
+    with slim.arg_scope(resnet_v2.resnet_arg_scope()):
         _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=True)
 
     variables_to_restore = []
@@ -331,14 +322,13 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,bn_d
 
 if __name__ == "__main__":
     args = sys.argv
-    if len(args) < 9:
-        print 'Expected input parameters: margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,bn_decay'
+    if len(args) < 8:
+        print 'Expected input parameters: margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning'
     margin = args[1]
     batch_size = args[2]
     output_size = args[3]
     learning_rate = args[4]
     whichGPU = args[5]
     is_finetuning = args[6]
-    bn_decay = args[7]
-    pretrained_net = args[8]
-    main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,bn_decay,pretrained_net)
+    pretrained_net = args[7]
+    main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,pretrained_net)
