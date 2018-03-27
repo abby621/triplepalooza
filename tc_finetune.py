@@ -89,7 +89,7 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,pret
     # Queuing op loads data into input tensor
     image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
     people_mask_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 1])
-    same_user_batch = tf.placeholder(tf.int32, shape=(batch_size,batch_size))
+    same_user_batch = tf.placeholder(tf.float32, shape=(batch_size,batch_size))
     label_batch = tf.placeholder(tf.int32, shape=(batch_size))
 
     # doctor image params
@@ -305,10 +305,10 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,pret
                 if date1 == date2:
                     same_user_pairs.append((im1_ind,im2_ind))
 
-        same_user_mask = np.ones((batch_size,batch_size),dtype='int32')
+        same_user_mask = np.ones((batch_size,batch_size),dtype='float32')
         for im1,im2 in same_user_pairs:
-            same_user_mask[im1,im2] = 0
-            same_user_mask[im2,im1] = 0
+            same_user_mask[im1,im2] = 0.
+            same_user_mask[im2,im1] = 0.
 
         people_masks = train_data.getPeopleMasks()
 
