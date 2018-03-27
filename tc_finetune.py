@@ -22,6 +22,7 @@ import socket
 import signal
 import time
 import sys
+import itertools
 
 def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,pretrained_net):
     def handler(signum, frame):
@@ -88,6 +89,7 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,pret
     # Queuing op loads data into input tensor
     image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
     people_mask_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 1])
+    same_user_batch = tf.placeholder(tf.int32, shape=(batch_size,batch_size))
     label_batch = tf.placeholder(tf.int32, shape=(batch_size))
 
     # doctor image params
@@ -220,6 +222,7 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,pret
     expanded_a = tf.expand_dims(feat, 1)
     expanded_b = tf.expand_dims(feat, 0)
     D = tf.reduce_sum(tf.squared_difference(expanded_a, expanded_b), 2)
+    D = D * same_user_batch # set the distance for any pairs from the same user = 0
 
     # if not train_data.isOverfitting:
     #     D_max = tf.reduce_max(D)
@@ -288,8 +291,28 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,pret
     for step in range(num_iters):
         start_time = time.time()
         batch, labels, ims = train_data.getBatch()
+
+        # create a mask of which image pairs are from the same user -- we don't want to include those in the loss
+        tc_inds = [ix for ix in range(batch_size) if 'resized_traffickcam' in ims[ix]]
+        tc_labels = [labels[ix] for ix in tc_inds]
+        unique_tc_labels = np.unique(tc_labels)
+        same_user_pairs = []
+        for label in unique_tc_labels:
+            im_inds = np.where(tc_labels==label)[0]
+            for im1_ind,im2_ind in itertools.combinations(im_inds,2):
+                date1 = ims[tc_inds[im1_ind]].split('/')[-1][:13]
+                date2 = ims[tc_inds[im2_ind]].split('/')[-1][:13]
+                if date1 == date2:
+                    same_user_pairs.append((im1_ind,im2_ind))
+
+        same_user_mask = np.ones((batch_size,batch_size))
+        for im1,im2 in same_user_pairs:
+            same_user_mask[im1,im2] = 0
+            same_user_mask[im2,im1] = 0
+
         people_masks = train_data.getPeopleMasks()
-        _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, people_mask_batch: people_masks,label_batch: labels})
+
+        _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, people_mask_batch: people_masks, same_user_batch: same_user_mask, label_batch: labels})
         end_time = time.time()
         duration = end_time-start_time
         out_str = 'Step %d: loss = %.6f -- (%.3f sec)' % (step, loss_val,duration)
