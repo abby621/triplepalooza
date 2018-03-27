@@ -305,7 +305,7 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,pret
                 if date1 == date2:
                     same_user_pairs.append((im1_ind,im2_ind))
 
-        same_user_mask = np.ones((batch_size,batch_size))
+        same_user_mask = np.ones((batch_size,batch_size),dtype='int32')
         for im1,im2 in same_user_pairs:
             same_user_mask[im1,im2] = 0
             same_user_mask[im2,im1] = 0
