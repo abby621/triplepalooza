@@ -42,7 +42,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     num_iters = 200000
     summary_iters = 100
     save_iters = 5000
-    featLayer = 'resnet/logits'
+    featLayer = 'resnet_v2/logits'
 
     is_training = True
     if is_overfitting.lower()=='true':
