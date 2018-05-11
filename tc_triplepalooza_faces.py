@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 # python mars_triplepalooza.py margin output_size learning_rate is_overfitting l1_weight
-# python tc_triplepalooza.py .3 120 128 .0001 False '3' 0.05
+# python tc_triplepalooza.py .3 120 128 .0001 False '0' 0.05
 """
 
 import tensorflow as tf
@@ -259,11 +259,11 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
 
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
-    # loss = tf.reduce_sum(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))/batch_size
-    base_loss = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
-    l1_loss = tf.multiply(l1_weight, tf.reduce_sum(tf.abs(feat)))
-    l1_loss = l1_loss + tf.multiply(l1_weight/10000, tf.reduce_sum(tf.reduce_mean(tf.reduce_sum(tf.abs(tf.reshape(convOut,[convOut.shape[0],convOut.shape[1]*convOut.shape[2],convOut.shape[3]])),axis=1),axis=1)))
-    loss = base_loss + l1_loss
+    loss = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
+    # base_loss = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
+    # l1_loss = tf.multiply(l1_weight, tf.reduce_sum(tf.abs(feat)))
+    # l1_loss = l1_loss + tf.multiply(l1_weight/10000, tf.reduce_sum(tf.reduce_mean(tf.reduce_sum(tf.abs(tf.reshape(convOut,[convOut.shape[0],convOut.shape[1]*convOut.shape[2],convOut.shape[3]])),axis=1),axis=1)))
+    # loss = base_loss + l1_loss
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
