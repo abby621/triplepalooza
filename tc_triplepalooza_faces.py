@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-# python mars_triplepalooza.py margin output_size learning_rate is_overfitting l1_weight
-# python tc_triplepalooza.py .3 120 128 .0001 False '0' 0.05
+# python tc_triplepalooza_faces.py margin batch_size output_size learning_rate is_overfitting l1_weight
+# python tc_triplepalooza_faces.py .3 120 128 .0001 False '0' 0.05
 """
 
 import tensorflow as tf
@@ -93,7 +93,6 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
 
     # Queuing op loads data into input tensor
     image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
-    people_mask_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 1])
     label_batch = tf.placeholder(tf.int32, shape=(batch_size))
 
     # doctor image params
@@ -142,22 +141,8 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     sorted_inds = tf.nn.top_k(-shuffled_inds,sorted=True,k=batch_size).indices
     cropped_batch = tf.gather(tf.image.crop_and_resize(rotated_batch,all_boxes,all_inds,crop_size),sorted_inds)
 
-    # insert people masks
-    num_people_masks = int(batch_size*percent_people)
-    mask_inds = np.random.choice(np.arange(0,batch_size),num_people_masks,replace=False)
-
-    start_masks = np.zeros([batch_size, crop_size[0], crop_size[0], 1],dtype='float32')
-    start_masks[mask_inds,:,:,:] = 1
-
-    inv_start_masks = np.ones([batch_size, crop_size[0], crop_size[0], 1],dtype='float32')
-    inv_start_masks[mask_inds,:,:,:] = 0
-
-    masked_masks = tf.add(inv_start_masks,tf.cast(tf.multiply(people_mask_batch,start_masks),dtype=tf.float32))
-    masked_masks2 = tf.cast(tf.tile(masked_masks,[1, 1, 1, 3]),dtype=tf.float32)
-    masked_batch = tf.multiply(masked_masks,cropped_batch)
-
     # apply different filters
-    flt_image = convert_image_dtype(masked_batch, dtypes.float32)
+    flt_image = convert_image_dtype(cropped_batch, dtypes.float32)
 
     num_to_filter = int(batch_size*percent_filters)
 
@@ -215,8 +200,8 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     #     final_batch = tf.add(tf.subtract(masked_batch,repMeanIm),noise)
 
     print("Preparing network...")
-    with slim.arg_scope(resnet_v2.resnet_arg_scope(is_training=False, use_batch_norm=False, updates_collections=None, batch_norm_decay=.7, fused=True)):
-        _, layers = resnet_v2.resnet_v2_50(final_batch, use_batch_norm=False,num_classes=output_size, is_training=False, scope='resnet')
+    with slim.arg_scope(resnet_v2.resnet_arg_scope()):
+        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=True)
 
     feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
     convOut = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet/block4/unit_3/bottleneck_v2/add:0"))
@@ -297,11 +282,10 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     for step in range(num_iters):
         start_time = time.time()
         batch, labels, ims = train_data.getBatch()
-        people_masks = train_data.getPeopleMasks()
-        _, loss_val, bl, l1 = sess.run([train_op, loss, base_loss, l1_loss], feed_dict={image_batch: batch, people_mask_batch: people_masks,label_batch: labels})
+        _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, label_batch: labels})
         end_time = time.time()
         duration = end_time-start_time
-        out_str = 'Step %d: loss = %.6f (%.6f from loss, %.6f from l1) -- (%.3f sec)' % (step, loss_val, bl, l1, duration)
+        out_str = 'Step %d: loss = %.6f -- (%.3f sec)' % (step, loss_val, duration)
         # print(out_str)
         if step % summary_iters == 0 or is_overfitting:
             print(out_str)
@@ -332,7 +316,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
 if __name__ == "__main__":
     args = sys.argv
     if len(args) < 6:
-        print 'Expected four input parameters: margin, output_size, learning_rate, is_overfitting, whichGPU, l1_weight'
+        print 'Expected four input parameters: margin, batch_size, output_size, learning_rate, is_overfitting, whichGPU, l1_weight'
     margin = args[1]
     batch_size = args[2]
     output_size = args[3]
