@@ -45,11 +45,6 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU):
     featLayer = 'resnet_v2_50/logits'
 
     is_training = True
-    if is_overfitting.lower()=='true':
-        is_overfitting = True
-    else:
-        is_overfitting = False
-
     margin = float(margin)
     batch_size = int(batch_size)
     output_size = int(output_size)
