@@ -203,6 +203,7 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU):
 
     expanded_a = tf.expand_dims(feat, 1)
     expanded_b = tf.expand_dims(feat, 0)
+    # TODO: rewrite to use dot distance (1 - dot)
     D = tf.reduce_sum(tf.squared_difference(expanded_a, expanded_b), 2)
 
     # if not train_data.isOverfitting:
