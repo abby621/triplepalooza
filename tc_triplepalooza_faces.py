@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 # python tc_triplepalooza_faces.py margin batch_size output_size learning_rate whichGPU
-# python tc_triplepalooza_faces.py .3 120 128 .0001 '2'
+# python tc_triplepalooza_faces.py .3 120 128 .0000001 '3'
 """
 
 import tensorflow as tf
@@ -25,7 +25,7 @@ import sys
 def main(margin,batch_size,output_size,learning_rate,whichGPU):
     def handler(signum, frame):
         print 'Saving checkpoint before closing'
-        pretrained_net = os.path.join(ckpt_dir, 'checkpoint-nobatchnorm-'+param_str)
+        pretrained_net = os.path.join(ckpt_dir, 'checkpoint-'+param_str)
         saver.save(sess, pretrained_net, global_step=step)
         print 'Checkpoint-',pretrained_net+'-'+str(step), ' saved!'
         sys.exit(0)
@@ -36,7 +36,7 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU):
     log_dir = './output/vggfaces/logs'
     train_filename = './inputs/vggfaces/train.txt'
     mean_file = './models/vggfaces/meanIm.npy'
-    pretrained_net = None
+    pretrained_net = './output/vggfaces/ckpts/checkpoint-nobatchnorm-2018_05_14_1001_lr0pt0005_outputSz128_margin0pt3-3060'
     img_size = [256, 256]
     crop_size = [224, 224]
     num_iters = 200000
