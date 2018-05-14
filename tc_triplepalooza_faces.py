@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-# python tc_triplepalooza_faces.py margin batch_size output_size learning_rate is_overfitting l1_weight
-# python tc_triplepalooza_faces.py .3 120 128 .0001 False '0' 0.05
+# python tc_triplepalooza_faces.py margin batch_size output_size learning_rate
+# python tc_triplepalooza_faces.py .3 120 128 .0001 '0' 0.05
 """
 
 import tensorflow as tf
@@ -22,7 +22,7 @@ import signal
 import time
 import sys
 
-def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_weight):
+def main(margin,batch_size,output_size,learning_rate,whichGPU):
     def handler(signum, frame):
         print 'Saving checkpoint before closing'
         pretrained_net = os.path.join(ckpt_dir, 'checkpoint-nobatchnorm-'+param_str)
@@ -54,7 +54,6 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     batch_size = int(batch_size)
     output_size = int(output_size)
     learning_rate = float(learning_rate)
-    l1_weight = float(l1_weight)
 
     if batch_size%30 != 0:
         print 'Batch size must be divisible by 30!'
@@ -82,9 +81,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     print 'Output size: ', output_size
     train_log_file.write('Output size: '+str(output_size)+'\n')
     print 'Learning rate: ',learning_rate
-    train_log_file.write('Learning rate: '+str(learning_rate)+'\n')
-    print 'Overfitting?: ',is_overfitting
-    train_log_file.write('Is overfitting?'+str(is_overfitting)+'\n')
+    train_log_file.write('Learning rate: '+str(learning_rate)+'\n'
     print 'Logging to: ',logfile_path
     train_log_file.write('Param_str: '+param_str+'\n')
     train_log_file.write('----------------\n')
@@ -287,7 +284,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
         duration = end_time-start_time
         out_str = 'Step %d: loss = %.6f -- (%.3f sec)' % (step, loss_val, duration)
         # print(out_str)
-        if step % summary_iters == 0 or is_overfitting:
+        if step % summary_iters == 0:
             print(out_str)
             train_log_file.write(out_str+'\n')
         # Update the events file.
@@ -315,13 +312,11 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
 
 if __name__ == "__main__":
     args = sys.argv
-    if len(args) < 6:
-        print 'Expected four input parameters: margin, batch_size, output_size, learning_rate, is_overfitting, whichGPU, l1_weight'
+    if len(args) < 5:
+        print 'Expected four input parameters: margin, batch_size, output_size, learning_rate, whichGPU'
     margin = args[1]
     batch_size = args[2]
     output_size = args[3]
     learning_rate = args[4]
-    is_overfitting = args[5]
-    whichGPU = args[6]
-    l1_weight = args[7]
-    main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_weight)
+    whichGPU = args[5]
+    main(margin,batch_size,output_size,learning_rate,whichGPU)
