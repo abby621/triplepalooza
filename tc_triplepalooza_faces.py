@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-# python tc_triplepalooza_faces.py margin batch_size output_size learning_rate
-# python tc_triplepalooza_faces.py .3 120 128 .0001 '0' 0.05
+# python tc_triplepalooza_faces.py margin batch_size output_size learning_rate whichGPU
+# python tc_triplepalooza_faces.py .3 120 128 .0001 '2'
 """
 
 import tensorflow as tf
