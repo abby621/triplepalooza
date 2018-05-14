@@ -36,7 +36,8 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU):
     log_dir = './output/vggfaces/logs'
     train_filename = './inputs/vggfaces/train.txt'
     mean_file = './models/vggfaces/meanIm.npy'
-    pretrained_net = './output/vggfaces/ckpts/checkpoint-nobatchnorm-2018_05_14_1001_lr0pt0005_outputSz128_margin0pt3-3060'
+    # pretrained_net = './output/vggfaces/ckpts/checkpoint-nobatchnorm-2018_05_14_1001_lr0pt0005_outputSz128_margin0pt3-3060'
+    pretrained_net = None
     img_size = [256, 256]
     crop_size = [224, 224]
     num_iters = 200000
@@ -203,8 +204,7 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU):
 
     expanded_a = tf.expand_dims(feat, 1)
     expanded_b = tf.expand_dims(feat, 0)
-    # TODO: rewrite to use dot distance (1 - dot)
-    D = tf.reduce_sum(tf.squared_difference(expanded_a, expanded_b), 2)
+    D = 1 - tf.reduce_sum(tf.multiply(expanded_a, expanded_b), 2)
 
     # if not train_data.isOverfitting:
     #     D_max = tf.reduce_max(D)
