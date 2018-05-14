@@ -81,7 +81,7 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU):
     print 'Output size: ', output_size
     train_log_file.write('Output size: '+str(output_size)+'\n')
     print 'Learning rate: ',learning_rate
-    train_log_file.write('Learning rate: '+str(learning_rate)+'\n'
+    train_log_file.write('Learning rate: '+str(learning_rate)+'\n')
     print 'Logging to: ',logfile_path
     train_log_file.write('Param_str: '+param_str+'\n')
     train_log_file.write('----------------\n')
