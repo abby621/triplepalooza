@@ -42,8 +42,8 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,pret
     img_size = [256, 256]
     crop_size = [224, 224]
     num_iters = 200000
-    summary_iters = 100
-    save_iters = 5000
+    summary_iters = 10
+    save_iters = 500
     featLayer = 'resnet_v2_50/logits'
 
     is_training = True
