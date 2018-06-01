@@ -169,7 +169,7 @@ class iNatCombinatorialTripletSet(CombinatorialTripletSet):
         enough_same = False
         while len(classes) < numClasses:
             cls = np.random.choice(self.classes)
-            super_cat = self.files[cls].split('/')[6]
+            super_cat = self.files[cls][0].split('/')[6]
             if base_super_cat is None:
                 base_super_cat = super_cat
                 classes.append(cls)
@@ -184,7 +184,7 @@ class iNatCombinatorialTripletSet(CombinatorialTripletSet):
         batch = np.zeros([self.batchSize, self.crop_size[0], self.crop_size[1], 3])
         labels = np.zeros([self.batchSize],dtype='int')
         ims = []
-        
+
         ctr = 0
         for cls in classes:
             random.shuffle(self.files[cls])
