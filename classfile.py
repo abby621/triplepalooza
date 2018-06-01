@@ -166,6 +166,7 @@ class iNatCombinatorialTripletSet(CombinatorialTripletSet):
         base_super_cat = None
 
         classes = []
+        numSame = 0
         enough_same = False
         while len(classes) < numClasses:
             cls = np.random.choice(self.classes)
@@ -177,9 +178,13 @@ class iNatCombinatorialTripletSet(CombinatorialTripletSet):
                 if not enough_same:
                     if not cls in classes and super_cat == base_super_cat:
                         classes.append(cls)
+                        numSame += 1
+                        if numSame > numClasses - 2:
+                            enough_same = True
                 else:
                     if not cls in classes and super_cat != base_super_cat:
                         classes.append(cls)
+
 
         batch = np.zeros([self.batchSize, self.crop_size[0], self.crop_size[1], 3])
         labels = np.zeros([self.batchSize],dtype='int')
