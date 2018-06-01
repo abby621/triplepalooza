@@ -185,7 +185,6 @@ class iNatCombinatorialTripletSet(CombinatorialTripletSet):
                     if not cls in classes and super_cat != base_super_cat:
                         classes.append(cls)
 
-
         batch = np.zeros([self.batchSize, self.crop_size[0], self.crop_size[1], 3])
         labels = np.zeros([self.batchSize],dtype='int')
         ims = []
