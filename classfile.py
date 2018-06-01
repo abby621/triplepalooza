@@ -168,10 +168,12 @@ class iNatCombinatorialTripletSet(CombinatorialTripletSet):
         classes = []
         numSame = 0
         enough_same = False
+        numTries = 0
         while len(classes) < numClasses:
+            numTries += 1
             cls = np.random.choice(self.classes)
             super_cat = self.files[cls][0].split('/')[6]
-            if base_super_cat is None:
+            if base_super_cat is None or numTries > 5000:
                 base_super_cat = super_cat
                 classes.append(cls)
             else:
