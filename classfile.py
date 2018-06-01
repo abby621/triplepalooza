@@ -158,6 +158,47 @@ class CombinatorialTripletSet:
 
         return new_img
 
+class iNatCombinatorialTripletSet(CombinatorialTripletSet):
+    def getBatch(self):
+        numClasses = self.batchSize/self.numPos # need to handle the case where we need more classes than we have?
+        # classes = np.random.choice(self.classes,numClasses,replace=False)
+        
+        base_super_cat = None
+
+        classes = []
+        enough_same = False
+        while len(classes) < numClasses:
+            cls = np.random.choice(self.classes)
+            super_cat = self.files[cls].split('/')[6]
+            if base_super_cat is None:
+                base_super_cat = super_cat
+                classes.append(cls)
+            else:
+                if not enough_same:
+                    if not cls in classes and super_cat == base_super_cat:
+                        classes.append(cls)
+                else:
+                    if not cls in classes and super_cat != base_super_cat:
+                        classes.append(cls)
+
+        batch = np.zeros([self.batchSize, self.crop_size[0], self.crop_size[1], 3])
+        labels = np.zeros([self.batchSize],dtype='int')
+        ims = []
+        
+        ctr = 0
+        for cls in classes:
+            random.shuffle(self.files[cls])
+            for j in np.arange(self.numPos):
+                if j < len(self.files[cls]):
+                    img = self.getProcessedImage(self.files[cls][j])
+                    if img is not None:
+                        batch[ctr,:,:,:] = img
+                    labels[ctr] = cls
+                    ims.append(self.files[cls][j])
+                ctr += 1
+
+        return batch, labels, ims    
+
 class MarsCombinatorialTripletSet(CombinatorialTripletSet):
     def getBatch(self):
         numClasses = self.batchSize/self.numPos # need to handle the case where we need more classes than we have?
