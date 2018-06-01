@@ -177,11 +177,9 @@ class iNatCombinatorialTripletSet(CombinatorialTripletSet):
             else:
                 if len(classes) < numClasses - 2:
                     if not cls in classes and super_cat == base_super_cat:
-                        print cls, super_cat
                         classes.append(cls)
                 else:
                     if not cls in classes and super_cat != base_super_cat:
-                        print cls, super_cat
                         classes.append(cls)
 
         batch = np.zeros([self.batchSize, self.crop_size[0], self.crop_size[1], 3])
