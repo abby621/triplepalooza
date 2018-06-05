@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-# python mars_triplepalooza.py margin output_size learning_rate is_overfitting l1_weight
-# python tc_triplepalooza.py .3 120 128 .0001 False '3' 0.05
+# python tc_triplepalooza.py margin batch_size output_size learning_rate whichGPU is_finetuning
+# python tc_triplepalooza.py .3 120 128 .0001 '3' False
 """
 
 import tensorflow as tf
@@ -21,41 +21,36 @@ import socket
 import signal
 import time
 import sys
+import itertools
 
-def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_weight):
+def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,pretrained_net):
     def handler(signum, frame):
         print 'Saving checkpoint before closing'
-        pretrained_net = os.path.join(ckpt_dir, 'checkpoint-nobatchnorm-'+param_str)
+        pretrained_net = os.path.join(ckpt_dir, 'checkpoint-'+param_str)
         saver.save(sess, pretrained_net, global_step=step)
         print 'Checkpoint-',pretrained_net+'-'+str(step), ' saved!'
         sys.exit(0)
 
     signal.signal(signal.SIGINT, handler)
 
-    ckpt_dir = './output/traffickcam/ckpts'
+    ckpt_dir = './output/traffickcam/ckpts/for_wacv'
     log_dir = './output/traffickcam/logs'
-    train_filename = './inputs/traffickcam/train_equal_no_duplicates.txt'
+    train_filename = './inputs/traffickcam/train.txt'
     mean_file = './models/traffickcam/tc_mean_im.npy'
-    # pretrained_net = os.path.join(ckpt_dir,'checkpoint-nobatchnorm-2018_02_14_1012_lr0pt0001_outputSz256_margin0pt3_l1wgt1e-05-6393')
-    pretrained_net = None
+
     img_size = [256, 256]
     crop_size = [224, 224]
     num_iters = 200000
     summary_iters = 100
     save_iters = 5000
-    featLayer = 'resnet/logits'
+    featLayer = 'resnet_v2_50/logits'
 
     is_training = True
-    if is_overfitting.lower()=='true':
-        is_overfitting = True
-    else:
-        is_overfitting = False
 
     margin = float(margin)
     batch_size = int(batch_size)
     output_size = int(output_size)
     learning_rate = float(learning_rate)
-    l1_weight = float(l1_weight)
 
     if batch_size%30 != 0:
         print 'Batch size must be divisible by 30!'
@@ -64,11 +59,11 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     num_pos_examples = batch_size/30
 
     # Create data "batcher"
-    train_data = CombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training, isOverfitting=is_overfitting)
+    train_data = CombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training)
     numClasses = len(train_data.files)
     numIms = np.sum([len(train_data.files[idx]) for idx in range(0,numClasses)])
     datestr = datetime.now().strftime("%Y_%m_%d_%H%M")
-    param_str = datestr+'_lr'+str(learning_rate).replace('.','pt')+'_outputSz'+str(output_size)+'_margin'+str(margin).replace('.','pt')+'_l1wgt'+str(l1_weight).replace('.','pt')
+    param_str = datestr+'_lr'+str(learning_rate).replace('.','pt')+'_outputSz'+str(output_size)+'_margin'+str(margin).replace('.','pt')
     logfile_path = os.path.join(log_dir,param_str+'_train.txt')
     train_log_file = open(logfile_path,'a')
     print '------------'
@@ -84,8 +79,6 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     train_log_file.write('Output size: '+str(output_size)+'\n')
     print 'Learning rate: ',learning_rate
     train_log_file.write('Learning rate: '+str(learning_rate)+'\n')
-    print 'Overfitting?: ',is_overfitting
-    train_log_file.write('Is overfitting?'+str(is_overfitting)+'\n')
     print 'Logging to: ',logfile_path
     train_log_file.write('Param_str: '+param_str+'\n')
     train_log_file.write('----------------\n')
@@ -95,6 +88,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     # Queuing op loads data into input tensor
     image_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 3])
     people_mask_batch = tf.placeholder(tf.float32, shape=[batch_size, crop_size[0], crop_size[0], 1])
+    same_user_batch = tf.placeholder(tf.float32, shape=(batch_size,batch_size))
     label_batch = tf.placeholder(tf.int32, shape=(batch_size))
 
     # doctor image params
@@ -143,22 +137,8 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     sorted_inds = tf.nn.top_k(-shuffled_inds,sorted=True,k=batch_size).indices
     cropped_batch = tf.gather(tf.image.crop_and_resize(rotated_batch,all_boxes,all_inds,crop_size),sorted_inds)
 
-    # insert people masks
-    num_people_masks = int(batch_size*percent_people)
-    mask_inds = np.random.choice(np.arange(0,batch_size),num_people_masks,replace=False)
-
-    start_masks = np.zeros([batch_size, crop_size[0], crop_size[0], 1],dtype='float32')
-    start_masks[mask_inds,:,:,:] = 1
-
-    inv_start_masks = np.ones([batch_size, crop_size[0], crop_size[0], 1],dtype='float32')
-    inv_start_masks[mask_inds,:,:,:] = 0
-
-    masked_masks = tf.add(inv_start_masks,tf.cast(tf.multiply(people_mask_batch,start_masks),dtype=tf.float32))
-    masked_masks2 = tf.cast(tf.tile(masked_masks,[1, 1, 1, 3]),dtype=tf.float32)
-    masked_batch = tf.multiply(masked_masks,cropped_batch)
-
     # apply different filters
-    flt_image = convert_image_dtype(masked_batch, dtypes.float32)
+    flt_image = convert_image_dtype(cropped_batch, dtypes.float32)
 
     num_to_filter = int(batch_size*percent_filters)
 
@@ -202,40 +182,35 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
 
     filtered_batch = clip_ops.clip_by_value(adjusted,0.0,255.0)
 
+    # insert people masks
+    num_people_masks = int(batch_size*percent_people)
+    mask_inds = np.random.choice(np.arange(0,batch_size),num_people_masks,replace=False)
+
+    start_masks = np.zeros([batch_size, crop_size[0], crop_size[0], 1],dtype='float32')
+    start_masks[mask_inds,:,:,:] = 1
+
+    inv_start_masks = np.ones([batch_size, crop_size[0], crop_size[0], 1],dtype='float32')
+    inv_start_masks[mask_inds,:,:,:] = 0
+
+    masked_masks = tf.add(inv_start_masks,tf.cast(tf.multiply(people_mask_batch,start_masks),dtype=tf.float32))
+    masked_masks2 = tf.cast(tf.tile(masked_masks,[1, 1, 1, 3]),dtype=tf.float32)
+    masked_batch = tf.multiply(masked_masks,filtered_batch)
+
     # after we've doctored everything, we need to remember to subtract off the mean
     repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
-    noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 1], mean=0.0, stddev=0.0025, dtype=tf.float32)
-    final_batch = tf.add(tf.subtract(filtered_batch,repMeanIm),noise)
-
-    # after we've doctored everything, we need to remember to subtract off the mean
-    # repMeanIm = np.tile(np.expand_dims(train_data.meanImage,0),[batch_size,1,1,1])
-    # if train_data.isOverfitting:
-    #     final_batch = tf.subtract(masked_batch,repMeanIm)
-    # else:
-    #     noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 1], mean=0.0, stddev=0.0025, dtype=tf.float32)
-    #     final_batch = tf.add(tf.subtract(masked_batch,repMeanIm),noise)
+    noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 1], mean=0.0, stddev=0.00025, dtype=tf.float32)
+    final_batch = tf.add(tf.subtract(masked_batch,repMeanIm),noise)
 
     print("Preparing network...")
-    with slim.arg_scope(resnet_v2.resnet_arg_scope(is_training=False, use_batch_norm=False, updates_collections=None, batch_norm_decay=.7, fused=True)):
-        _, layers = resnet_v2.resnet_v2_50(final_batch, use_batch_norm=False,num_classes=output_size, is_training=False, scope='resnet')
+    with slim.arg_scope(resnet_v2.resnet_arg_scope()):
+        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=True)
 
     feat = tf.squeeze(tf.nn.l2_normalize(layers[featLayer],3))
-    convOut = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet/block4/unit_3/bottleneck_v2/add:0"))
-    # feat = tf.squeeze(tf.nn.l2_normalize(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/pool5:0"),3))
-    # weights = tf.squeeze(tf.get_default_graph().get_tensor_by_name("resnet_v2_50/logits/weights:0"))
 
     expanded_a = tf.expand_dims(feat, 1)
     expanded_b = tf.expand_dims(feat, 0)
-    D = tf.reduce_sum(tf.squared_difference(expanded_a, expanded_b), 2)
-
-    # if not train_data.isOverfitting:
-    #     D_max = tf.reduce_max(D)
-    #     D_mean, D_var = tf.nn.moments(D, axes=[0,1])
-    #     lowest_nonzero_distance = tf.reduce_max(-D)
-    #     bottom_thresh = 1.2*lowest_nonzero_distance
-    #     top_thresh = (D_max + D_mean)/2.0
-    #     bool_mask = tf.logical_and(D>=bottom_thresh,D<=top_thresh)
-    #     D = tf.multiply(D,tf.cast(bool_mask,tf.float32))
+    D = 1 - tf.reduce_sum(tf.multiply(expanded_a, expanded_b), 2)
+    D = D * same_user_batch # set the distance for any pairs from the same user = 0
 
     posIdx = np.floor(np.arange(0,batch_size)/num_pos_examples).astype('int')
     posIdx10 = num_pos_examples*posIdx
@@ -260,11 +235,7 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
 
     mask = ((1-bad_negatives)*(1-bad_positives)).astype('float32')
 
-    # loss = tf.reduce_sum(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))/batch_size
-    base_loss = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
-    l1_loss = tf.multiply(l1_weight, tf.reduce_sum(tf.abs(feat)))
-    l1_loss = l1_loss + tf.multiply(l1_weight/10000, tf.reduce_sum(tf.reduce_mean(tf.reduce_sum(tf.abs(tf.reshape(convOut,[convOut.shape[0],convOut.shape[1]*convOut.shape[2],convOut.shape[3]])),axis=1),axis=1)))
-    loss = base_loss + l1_loss
+    loss = tf.reduce_mean(tf.maximum(0.,tf.multiply(mask,margin + posDistsRep - allDists)))
 
     # slightly counterintuitive to not define "init_op" first, but tf vars aren't known until added to graph
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
@@ -290,28 +261,41 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
 
     writer = tf.summary.FileWriter(log_dir, sess.graph)
 
-    if pretrained_net:
-        saver.restore(sess, pretrained_net)
-
     print("Start training...")
     ctr  = 0
     for step in range(num_iters):
         start_time = time.time()
         batch, labels, ims = train_data.getBatch()
+
+        # create a mask of which image pairs are from the same user -- we don't want to include those in the loss
+        tc_inds = [ix for ix in range(batch_size) if 'resized_traffickcam' in ims[ix]]
+        tc_labels = [labels[ix] for ix in tc_inds]
+        unique_tc_labels = np.unique(tc_labels)
+        same_user_pairs = []
+        for label in unique_tc_labels:
+            im_inds = np.where(tc_labels==label)[0]
+            for im1_ind,im2_ind in itertools.combinations(im_inds,2):
+                date1 = ims[tc_inds[im1_ind]].split('/')[-1][:13]
+                date2 = ims[tc_inds[im2_ind]].split('/')[-1][:13]
+                if date1 == date2:
+                    same_user_pairs.append((im1_ind,im2_ind))
+
+        same_user_mask = np.ones((batch_size,batch_size),dtype='float32')
+        for im1,im2 in same_user_pairs:
+            same_user_mask[im1,im2] = 0.
+            same_user_mask[im2,im1] = 0.
+
         people_masks = train_data.getPeopleMasks()
-        _, loss_val, bl, l1 = sess.run([train_op, loss, base_loss, l1_loss], feed_dict={image_batch: batch, people_mask_batch: people_masks,label_batch: labels})
+
+        _, loss_val = sess.run([train_op, loss], feed_dict={image_batch: batch, people_mask_batch: people_masks, same_user_batch: same_user_mask, label_batch: labels})
         end_time = time.time()
         duration = end_time-start_time
-        out_str = 'Step %d: loss = %.6f (%.6f from loss, %.6f from l1) -- (%.3f sec)' % (step, loss_val, bl, l1, duration)
+        out_str = 'Step %d: loss = %.6f -- (%.3f sec)' % (step, loss_val,duration)
         # print(out_str)
-        if step % summary_iters == 0 or is_overfitting:
+        if step % summary_iters == 0:
             print(out_str)
             train_log_file.write(out_str+'\n')
-        # Update the events file.
-        # summary_str = sess.run(summary_op)
-        # writer.add_summary(summary_str, step)
-        # writer.flush()
-        #
+
         # Save a checkpoint
         if (step + 1) % save_iters == 0:
             print('Saving checkpoint at iteration: %d' % (step))
@@ -327,18 +311,14 @@ def main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_
     sess.close()
     train_log_file.close()
 
-      #  coord.request_stop()
-       # coord.join(threads)
-
 if __name__ == "__main__":
     args = sys.argv
-    if len(args) < 6:
-        print 'Expected four input parameters: margin, output_size, learning_rate, is_overfitting, whichGPU, l1_weight'
+    if len(args) < 7:
+        print 'Expected input parameters: margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning'
     margin = args[1]
     batch_size = args[2]
     output_size = args[3]
     learning_rate = args[4]
-    is_overfitting = args[5]
-    whichGPU = args[6]
-    l1_weight = args[7]
-    main(margin,batch_size,output_size,learning_rate,is_overfitting,whichGPU,l1_weight)
+    whichGPU = args[5]
+    is_finetuning = args[6]
+    main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning)
