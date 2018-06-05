@@ -248,7 +248,7 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,pret
     init_op = tf.global_variables_initializer()
 
     # Create a saver for writing training checkpoints.
-    saver = tf.train.Saver(max_to_keep=20)
+    saver = tf.train.Saver(max_to_keep=1000)
 
     # tf will consume any GPU it finds on the system. Following lines restrict it to specific gpus
     c = tf.ConfigProto()
