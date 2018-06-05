@@ -23,7 +23,7 @@ import time
 import sys
 import itertools
 
-def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,pretrained_net):
+def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning):
     def handler(signum, frame):
         print 'Saving checkpoint before closing'
         pretrained_net = os.path.join(ckpt_dir, 'checkpoint-'+param_str)
