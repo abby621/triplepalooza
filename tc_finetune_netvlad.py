@@ -51,11 +51,11 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,pret
     output_size = int(output_size)
     learning_rate = float(learning_rate)
 
-    if batch_size%30 != 0:
-        print 'Batch size must be divisible by 30!'
+    if batch_size%10 != 0:
+        print 'Batch size must be divisible by 10!'
         sys.exit(0)
 
-    num_pos_examples = batch_size/30
+    num_pos_examples = batch_size/10
 
     # Create data "batcher"
     train_data = CombinatorialTripletSet(train_filename, mean_file, img_size, crop_size, batch_size, num_pos_examples, isTraining=is_training)
