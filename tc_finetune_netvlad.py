@@ -200,10 +200,6 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,pret
     noise = tf.random_normal(shape=[batch_size, crop_size[0], crop_size[0], 1], mean=0.0, stddev=0.0025, dtype=tf.float32)
     final_batch = tf.add(tf.subtract(masked_batch,repMeanIm),noise)
 
-    print("Preparing network...")
-    with slim.arg_scope(resnet_v2.resnet_arg_scope()):
-        _, layers = resnet_v2.resnet_v2_50(final_batch, num_classes=output_size, is_training=True)
-
     variables_to_restore = []
     for var in tf.trainable_variables():
         excluded = False
@@ -212,7 +208,7 @@ def main(margin,batch_size,output_size,learning_rate,whichGPU,is_finetuning,pret
         if not excluded:
             variables_to_restore.append(var)
 
-    feat = tf.squeeze(nets.vgg16NetvladPca(image_batch))
+    feat = tf.squeeze(nets.vgg16NetvladPca(final_batch))
     expanded_a = tf.expand_dims(feat, 1)
     expanded_b = tf.expand_dims(feat, 0)
     D = tf.reduce_sum(tf.squared_difference(expanded_a, expanded_b), 2)
