@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 # python tc_finetune.py margin batch_size output_size learning_rate whichGPU is_finetuning pretrained_net
-# chop off last layer: python tc_finetune_netvlad.py .3 120 128 .0001 '3' True '/project/focus/abby/triplepalooza/models/netvlad/pretrained'
-# don't chop off last layer: python tc_finetune_netvlad.py .3 120 128 .0001 '3' False '/project/focus/abby/triplepalooza/models/netvlad/pretrained'
+# chop off last layer: python tc_finetune_netvlad.py .3 120 128 .0001 '2' True '/project/focus/abby/triplepalooza/models/netvlad/pretrained'
+# don't chop off last layer: python tc_finetune_netvlad.py .3 120 128 .0001 '2' False '/project/focus/abby/triplepalooza/models/netvlad/pretrained'
 """
 
 import tensorflow as tf
 from classfile import CombinatorialTripletSet
-import os.path
+import os
 import time
 from datetime import datetime
 import numpy as np
